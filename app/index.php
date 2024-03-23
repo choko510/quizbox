@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="modal.css">
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <?php
     if(!isset($_COOKIE['id'])){
         $cookie_id = uniqid();
@@ -108,8 +109,6 @@
             document.getElementById("ritu").textContent = "正答率:"+ritu;
         }
         
-        
-
         async function iconmodal() {
             id = Cookies.get('id')
             password = Cookies.get('password')
@@ -119,7 +118,85 @@
             const ritu = Math.round(scores.correct / total * 100) + "%";
             MicroModal.show('modal-1');
             displayScores(scores.correct, scores.bad,total,ritu);
+            drawChart();
             await fetchRanking();
+        }
+
+        async function fetchData(id, password) {
+            const response = await fetch(`http://localhost:8000/get/${id}/${password}`);
+            const data = await response.json();
+            return data;
+        }
+
+        // グラフを描画する関数
+        async function drawChart() {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        id = Cookies.get('id')
+        password = Cookies.get('password')
+        const data = await fetchData(id, password);
+
+        // ラベル(日付)とデータ(値)を抽出
+        const labels = Object.keys(data.correct);
+
+        const correctData = Object.values(data.correct);
+        const badData = Object.values(data.bad);
+
+        // 正答率とトータルを計算する
+        const totalData = correctData.map((correct, index) => correct + badData[index]);
+        //const accuracyData = correctData.map((correct, index) => correct / totalData[index] * 100);
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+            labels: labels,
+            datasets: [
+                {
+                label: '正解数',
+                data: correctData,
+                borderColor: 'green',
+                fill: false
+                },
+                {
+                label: '不正解数',
+                data: badData,
+                borderColor: 'red',
+                fill: false
+                },
+
+                {
+                label: 'トータル',
+                data: totalData,
+                borderColor: 'purple',
+                fill: false
+                }
+            ]
+            },
+            options: {
+            scales: {
+                xAxes: [{
+                type: 'time',
+                time: {
+                    unit: 'day'
+                }
+                }],
+                yAxes: [
+                {
+                    id: 'count', // 左側の縦軸
+                    type: 'linear',
+                    position: 'left',
+                },
+                {
+                    id: 'percentage', // 右側の縦軸
+                    type: 'linear',
+                    position: 'right',
+                    ticks: {
+                    callback: value => `${value}%` // %表示
+                    }
+                }
+                ]
+            }
+            }
+        });
         }
     </script>
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
@@ -141,6 +218,10 @@
                         <p id="ritu">
                             正答率:0%
                         </p>
+                        <div class="chart">
+                            <canvas id="myChart"></canvas>
+                        </div>
+                        
                     </div>
                     <div>
                         <h1>ランキング</h1>
