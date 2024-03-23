@@ -111,7 +111,7 @@ class DB:
         session = Session()
         user = session.query(Ticket).filter_by(userid=id).first()
         session.close()
-        return {"correct": user.correctdata, "bad": user.baddata}
+        return {"correct":json.loads(user.correctdata),"bad":json.loads(user.baddata)}
     
     async def get(id):
         Session = sessionmaker(bind=engine)
