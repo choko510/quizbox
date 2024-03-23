@@ -15,7 +15,7 @@
 .modal__container {
     background-color: #fff;
     width: 80vw;
-    height: 80vh;
+    height: 90h;
     border-radius: 4px;
     overflow-y: auto;
     box-sizing: border-box;
@@ -121,4 +121,19 @@ from { transform: translateY(15%); }
 .micromodal-slide .modal__container,
 .micromodal-slide .modal__overlay {
     will-change: transform;
+}
+
+/* smartphone */
+@media screen and (max-width: 600px) {
+    .modal__container {
+        width: 100vw;
+        height: 92vh;
+        border-radius: 12px;
+    }
+    
+    .modal__overlay {
+        bottom: -55px;
+    }
+
+
 }
