@@ -28,6 +28,11 @@ body{
     height: 40px;
 }
 
+.chart {
+    width: 40%;
+    margin: 0 auto;
+}
+
 @media screen and (min-width:1200px) {
 
 .box1 {
