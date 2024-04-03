@@ -34,12 +34,14 @@ body{
 }
 
 @media screen and (min-width:1200px) {
+    .box1 {
+        width: 65%;
+    }   
 
-.box1 {
-    width: 65%;
-}   
-
-
+    .chart {
+        width: 80%;
+        margin: 0 auto;
+    }
 
 }
 @media screen and (max-width:600px) {
@@ -49,6 +51,10 @@ body{
     }   
     body {
         background-color: #fbfbfb;
+    }
+    .chart {
+        width: 100%;
+        margin: 0 auto;
     }
 }
 .box1 a {
