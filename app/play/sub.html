@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4択クイズ</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <style>
+        /* CSSスタイル */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Noto Sans Japanese', sans-serif;
+            background-color: #ebedf1;
+        }
+
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        .slide1 {
+            overflow: hidden;
+        }
+
+        .slide2 {
+            overflow: auto;
+            position: relative;
+        }
+
+        #question {
+            margin-top: 10%;
+            font-size: 27px;
+            text-align: center;
+        }
+
+        ul {
+            margin-top: 3.7%;
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-family: 'Noto Sans Japanese', sans-serif;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 400px;
+            margin: 0 auto;
+            padding: .9em 2em;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 7px 10px rgb(0 0 0 / 10%);
+            background-color: #fff;
+            color: #333;
+            font-size: 1.1em;
+            transform: translateX(-5.7%);
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 10px rgb(0 0 0 / 15%);
+        }
+
+        .main {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            height: 75vh;
+            text-align: center;
+            border-radius: 6px;
+            background-color: #fbfbfb;
+            box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            margin: 0 auto;
+            width: 65%;
+        }
+
+        #score {
+            font-size: 140%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .popup {
+            font-size: 95%;
+        }
+
+        .hardlink {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .back {
+            color: #000;
+            box-sizing: border-box;
+            position: relative;
+            display: block;
+            transform: scale(var(--ggs, 1));
+            width: 0px;
+            height: 0px;
+            border: 2px solid transparent;
+            border-radius: 100px;
+            z-index: 10000;
+        }
+
+        .back::after {
+            content: "";
+            display: block;
+            box-sizing: border-box;
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-bottom: 2px solid;
+            border-left: 2px solid;
+            transform: rotate(45deg);
+            left: 6px;
+            top: 4px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .tangolist {
+            position: absolute;
+            top: 40px;
+        }
+
+        ul.custom-list {
+            list-style-type: none; /* デフォルトのリストスタイルを無効にする */
+            padding: 0;
+        }
+
+        ul.custom-list li {
+            display: flex; /* フレックスボックスを使用して横並びにする */
+            margin-bottom: 20px; /* 項目間のスペースを設定 */
+            border-radius: 10px; /* 角を丸くする */
+            padding: 20px; /* 内側の余白を追加 */
+            background-color: #fbfbfb; /* 背景色を設定 */
+            color: #000; /* 文字色を設定 */
+            box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
+        }
+
+        ul.custom-list li .title {
+            font-weight: bold; /* タイトル部分を太字にする */
+            margin-right: 20px; /* タイトルと内容の間にスペースを追加 */
+        }
+
+        ul.custom-list li .content {
+            flex: 1; /* 内容部分が残りのスペースを占有する */
+        }
+    
+        @media screen and (max-width: 600px) {
+            body {
+                background-color: #fbfbfb;
+            }
+
+            .main {
+                box-shadow: none;
+            }
+            
+            button {
+                width: 300px;
+                font-size: 0.9em;
+            }
+
+            .title {
+                width: 100%;
+            }
+
+            .popup {
+                font-size: 105%;
+            }
+
+            #score {
+                font-size: 110%;
+            }
+
+            li {
+                margin-bottom: 11px;
+            }
+
+            #question {
+                font-size: 24px;
+            }
+
+            .sp {
+                margin-top: 7%;
+                margin-left: 8%;
+            }
+        }
+
+        #handwriting-canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <a href="../" class="back"></a>
+    <div class="swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide slide1">
+                <div class="main">
+                    <div class="title">
+                        <div id="question"></div>
+                    </div>
+                    <ul class="sp">
+                        <li><button id="answer1"></button></li>
+                        <li><button id="answer2"></button></li>
+                        <li><button id="answer3"></button></li>
+                        <li><button id="answer4"></button></li>
+                    </ul>
+                    <canvas id="handwriting-canvas" width="400" height="200"></canvas>
+                    <button id="recognize-button">認識する</button>
+                </div>
+                <div id="score">
+                    <a href="../beta" class="hardlink">ハードモード</a>
+                    回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+                </div>
+            </div>
+            <div class="swiper-slide slide2">
+                <button class="back-button" onclick="swiper.slideTo(0, 1000);">戻る</button>
+                <div class="tangolist">
+                   <h1>単語リスト</h1>
+                   <ul id="wordList" class="custom-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://unpkg.com/notie"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie@4.3.1/dist/notie.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <script>
+        var swiper = new Swiper('.swiper', {
+        direction: 'vertical',
+        mousewheel: {
+            releaseOnEdges: true,
+        },
+        on: {
+            reachEnd: function () {
+                swiper.mousewheel.disable();
+                swiper.allowTouchMove = false;
+                
+            },
+            slidePrevTransitionStart: function () {
+                swiper.mousewheel.enable();
+                swiper.allowTouchMove = true;
+            }
+        },
+        });
+
+        function getParam(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        let mondai = getParam("id");
+        if (mondai == null) {
+            mondai = "mondai";
+        } else {
+            document.getElementById('score').textContent = `
+                回答数: 0
+                正解数: 0
+                不正解数: 0
+                連続正解数: 0
+                正答率: 0%
+            `;
+        }
+
+        const questions = [];
+        fetch("../deta/" + mondai + '.txt')
+            .then(response => response.text())
+            .then(text => {
+                const lines = text.split('\n');
+                
+                const wordList = document.getElementById('wordList');
+                lines.forEach(line => {
+                    const [word, description] = line.split('|');
+                    questions.push({
+                        word: word,
+                        description: description
+                    });
+                    const li = document.createElement('li');
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'title';
+                    titleDiv.textContent = word;
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'content';
+                    contentDiv.textContent = description;
+
+                    li.appendChild(titleDiv);
+                    li.appendChild(contentDiv);
+
+                    wordList.appendChild(li);
+                });
+                // 最初の問題をランダムに選択
+                currentIndex = Math.floor(Math.random() * questions.length);
+                showNextQuestion();
+            });
+
+        function converter(cookie) {
+            cookie = cookie.split(";");
+            const obj = {};
+            cookie.map((item) => {
+                const elem = item.split("=");
+                const key = elem[0].trim();
+                const val = decodeURIComponent(elem[1]);
+                obj[key] = val;
+            });
+            return obj;
+        }
+
+        // 状態を管理する変数
+       
+
+        let currentIndex;
+        let totalCount = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let renzokuseikai = 0;
+        let accid = Cookies.get('id');
+        let password = Cookies.get('password');
+
+        // 次の問題を表示
+        function showNextQuestion() {
+            const question = questions[currentIndex];
+            document.getElementById('question').textContent = question.description;
+            // 4つの選択肢をランダムに生成
+            const answers = [question.word];
+            while (answers.length < 4) {
+                const randomIndex = Math.floor(Math.random() * questions.length);
+                if (!answers.includes(questions[randomIndex].word)) {
+                    answers.push(questions[randomIndex].word);
+                }
+            }
+            // シャッフル
+            answers.sort(() => Math.random() - 0.5);
+            // ボタンにセット
+            answers.forEach((answer, index) => {
+                document.getElementById('answer' + (index + 1)).textContent = answer;
+            });
+        }
+
+        // 正答率の計算
+        function calculateAccuracy() {
+            return (correctCount / totalCount) * 100;
+        }
+
+        // 回答ボタンがクリックされた時
+        function onAnswerClick(e) {
+            totalCount++;
+            if (e.target.textContent === questions[currentIndex].word) {
+                correctCount++;
+                renzokuseikai++;
+                notie.alert({ type: 1, text: '正解', time: 1 });
+                displayScore();
+                nextIndex();
+                showNextQuestion();
+                sendScore("add_correct", accid, password);
+            } else {
+                wrongCount++;
+                renzokuseikai = 0;
+                notie.force({
+                    type: 'error',
+                    text: '<div class="popup">' + questions[currentIndex].description + '<br><br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                    buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
+                    callback: function () {
+                        displayScore();
+                        showNextQuestion();
+                        sendScore("add_bad", accid, password);
+                    }
+                });
+            }
+        }
+
+        function nextIndex() {
+            let last_currentIndex = currentIndex;
+            currentIndex = Math.floor(Math.random() * questions.length);
+            if (currentIndex == last_currentIndex) {
+                currentIndex = Math.floor(Math.random() * questions.length);
+            }
+        }
+
+        function displayScore() {
+            document.getElementById('score').textContent = `
+                回答数: ${totalCount}
+                正解数: ${correctCount}
+                不正解数: ${wrongCount}
+                連続正解数: ${renzokuseikai}
+                正答率: ${calculateAccuracy().toFixed(1)}%
+            `;
+        }
+
+        function sendScore(url, id, password) {
+            fetch("https://notlet.choko.cc/" + url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": id,
+                    "password": password,
+                })
+            });
+        }
+
+        // 回答ボタンにクリックイベントを登録
+        document.getElementById('answer1').addEventListener('click', onAnswerClick);
+        document.getElementById('answer2').addEventListener('click', onAnswerClick);
+        document.getElementById('answer3').addEventListener('click', onAnswerClick);
+        document.getElementById('answer4').addEventListener('click', onAnswerClick);
+
+        // fabric.jsを使用したキャンバスの初期化
+        const canvas = new fabric.Canvas('handwriting-canvas');
+        let isDrawing = false;
+
+        canvas.on('mouse:down', function () {
+            isDrawing = true;
+            canvas.isDrawingMode = true;
+        });
+
+        canvas.on('mouse:up', function () {
+            isDrawing = false;
+            canvas.isDrawingMode = false;
+        });
+
+        document.getElementById('recognize-button').addEventListener('click', function () {
+            if (isDrawing) return;
+            canvas.isDrawingMode = false;
+
+            // キャンバスの画像データを取得
+            const dataURL = canvas.toDataURL();
+
+            // tesseract.jsを使用してテキストを認識
+            Tesseract.recognize(
+                dataURL,
+                'jpn',
+                {
+                    logger: function (m) {
+                        console.log(m);
+                    }
+                }
+            ).then(function ({ data: { text } }) {
+                alert('認識結果: ' + text);
+                // 認識結果を処理するコードをここに追加
+            });
+        });
+    </script>
+</body>
+</html>

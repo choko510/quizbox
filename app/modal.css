@@ -15,7 +15,7 @@
 .modal__container {
     background-color: #fff;
     width: 80vw;
-    height: 90h;
+    height: 90vh;
     border-radius: 4px;
     overflow-y: auto;
     box-sizing: border-box;

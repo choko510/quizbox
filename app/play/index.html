@@ -1,17 +1,42 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4択クイズ</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <style>
-        /* CSSスタイル */
-        body {
-            font-family: 'Noto Sans Japanese',   sans-serif;
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Noto Sans Japanese', sans-serif;
             background-color: #ebedf1;
-
         }
+
+        .swiper-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        .slide2 {
+            overflow: hidden;
+        }
+
+        .slide3 {
+            overflow: auto;
+            position: relative;
+        }
+
         #question {
             margin-top: 10%;
             font-size: 27px;
@@ -22,12 +47,13 @@
             margin-top: 3.7%;
             list-style: none;
         }
-        li{
+
+        li {
             margin-bottom: 20px;
         }
 
         button {
-            font-family: 'Noto Sans Japanese',   sans-serif;
+            font-family: 'Noto Sans Japanese', sans-serif;
             border: 1px solid #ccc;
             border-radius: 5px;
             cursor: pointer;
@@ -52,6 +78,7 @@
             transform: translateY(-2px);
             box-shadow: 0 7px 10px rgb(0 0 0 / 15%);
         }
+
         .main {
             position: absolute;
             left: 50%;
@@ -59,168 +86,360 @@
             width: 90vw;
             height: 75vh;
             text-align: center;
-            margin-top: 5.3%;
             border-radius: 6px;
             background-color: #fbfbfb;
             box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
         }
+
         .title {
             margin: 0 auto;
             width: 65%;
         }
+
+        .tangotitle{
+            font-size: 120%;
+            font-weight: bold;
+
+        }
+        .content{
+            margin-left: 2px; 
+            color: #333;
+        }
+
         #score {
             font-size: 140%;
             position: absolute;
             bottom: 0;
             left: 0;
         }
+
         .popup {
             font-size: 95%;
         }
-        .hardlink{
+
+        .hardlink {
             color: #000;
-            text-decoration:none;
+            text-decoration: none;
         }
+
         .back {
-            color:#000;
+            color: #000;
             box-sizing: border-box;
             position: relative;
             display: block;
-            transform: scale(var(--ggs,1));
+            transform: scale(var(--ggs, 1));
             width: 0px;
             height: 0px;
             border: 2px solid transparent;
-            border-radius: 100px
+            border-radius: 100px;
+            z-index: 10000;
         }
+
         .back::after {
             content: "";
             display: block;
             box-sizing: border-box;
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
             border-bottom: 2px solid;
             border-left: 2px solid;
             transform: rotate(45deg);
             left: 6px;
-            top: 4px
+            top: 4px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .tangolist {
+            position: absolute;
+            top: 20px;
+        }
+
+
+        .searchbox {
+            width: 90%;
+            padding: 8px 10px;
+            border: 1px solid #969da3;
+            border-radius: 3px;
+            color: #333;
+            font-size: 1em;
+            line-height: 1.5;
+            
+        }
+
+        .searchbox::placeholder {
+            color: #999;
+        }
+        ul.custom-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul.custom-list li {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #fbfbfb;
+            color: #000;
+            box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
+        }
+
+        ul.custom-list li .title {
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        ul.custom-list li .content {
+            flex: 1;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: #007bff;
+        }
+
+        .swiper-pagination-bullet {
+            background: #007bff;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: #0056b3;
         }
         
-        @media screen and (max-width:600px) {
+        @media screen and (max-height: 600px) {
             body {
                 background-color: #fbfbfb;
             }
-            .main{
+
+            #question {
+                margin-top: 1%;
+                font-size: 1em;
+            }
+
+            .main {
                 box-shadow: none;
             }
-            button{
-                width: 300px;
+            
+            button {
+                padding: .3em 1em;
             }
+        }
+
+        @media screen and (max-width: 540px) {
+            body {
+                background-color: #fbfbfb;
+            }
+
+            .main {
+                box-shadow: none;
+            }
+            
+            button {
+                width: 300px;
+                font-size: 0.9em;
+            }
+
             .title {
                 width: 100%;
             }
+
             .popup {
                 font-size: 105%;
             }
-            #score{
+
+            #score {
                 font-size: 110%;
             }
+
             li {
-                margin-bottom:11px;
+                margin-bottom: 11px;
             }
+
             #question {
                 font-size: 24px;
             }
+
+            .sp {
+                margin-top: 7%;
+            }
         }
     </style>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie@4.3.1/dist/notie.min.css">
-    </head>
-    
-    <body>
-        <a href="../" class="back"></a>
-        <div class="main">
-            <div class="title">
-                <div id="question"></div>
+</head>
+<body>
+    <a href="../" class="back"></a>
+    <div class="swiper-container">
+        <div class="swiper-wrapper">
+            
+            <div class="swiper-slide slide1">
+                <p>none page</p>
             </div>
-
-            <ul>
-                <li><button id="answer1"></button></li>
-                <li><button id="answer2"></button></li>
-                <li><button id="answer3"></button></li>
-                <li><button id="answer4"></button></li>
-            </ul>
+            <div class="swiper-slide slide2">
+                <div class="main">
+                    <div class="title">
+                        <div id="question"></div>
+                    </div>
+                    <ul class="sp">
+                        <li><button id="answer1"></button></li>
+                        <li><button id="answer2"></button></li>
+                        <li><button id="answer3"></button></li>
+                        <li><button id="answer4"></button></li>
+                    </ul>
+                </div>
+                <div id="score">
+                    <a href="../play" class="hardlink">イージーモード</a>
+                    回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+                </div>
+            </div>
+            <div class="swiper-slide slide3">
+                <div class="tangolist">
+                    <h1>単語リスト</h1>
+                    <input type="text" class="searchbox" placeholder="検索">
+                    <ul id="wordList" class="custom-list"></ul>
+                 </div>
+            </div>
         </div>
-        <div id="score"> <a href="../beta" class="hardlink">ハードモード</a> 回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%</div>
-        <script src="https://unpkg.com/notie"></script>
-        <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
-        <script>
-            function getParam(name, url) {
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://unpkg.com/notie"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie@4.3.1/dist/notie.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script>
+       var swiper = new Swiper('.swiper-container', {
+            direction: 'horizontal',
+            loop: false,
+            initialSlide: 1,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            mousewheel: false,
+        });
+
+        function getParam(name, url) {
             if (!url) url = window.location.href;
             name = name.replace(/[\[\]]/g, "\\$&");
             var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
+                results = regex.exec(url);
             if (!results) return null;
             if (!results[2]) return '';
-                return decodeURIComponent(results[2].replace(/\+/g, " "));
-            }
-            mondai = getParam("id")
-            if (mondai == null) {
-                mondai = "mondai"
-            }else{
-                document.getElementById('score').textContent = `
-                    回答数: 0
-                    正解数: 0
-                    不正解数: 0
-                    連続正解数: 0
-                    正答率: 0%
-                `;
-            }
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
 
-            const questions = [];
-            fetch("../deta/"+mondai+'.txt')
+        let mondai = getParam("id");
+        if (mondai == null) {
+            mondai = "hard";
+        } else {
+            document.getElementById('score').textContent = `
+                回答数: 0
+                正解数: 0
+                不正解数: 0
+                連続正解数: 0
+                正答率: 0%
+            `;
+        }
+
+        const questions = [];
+        fetch("../deta/" + mondai + '.txt')
             .then(response => response.text())
             .then(text => {
                 const lines = text.split('\n');
+                
+                const wordList = document.getElementById('wordList');
                 lines.forEach(line => {
-                const [word, description] = line.split('|');
-                questions.push({
-                    word: word,
-                    description: description
-                });
-                });
+                    const [word, description,mondai] = line.split('|');
+                    if (mondai == undefined){
+                        questions.push({
+                            word: word,
+                            description: description
+                        });
+                    }else{
+                        hard = true
+                        questions.push({
+                            word: word,
+                            description: description,
+                            mondai:mondai
+                        });
+                    }
+                    
+                    const li = document.createElement('li');
 
-                // 最初の問題をランダムに選択
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'tangotitle';
+                    titleDiv.textContent = word;
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'content';
+                    contentDiv.textContent = description;
+
+                    li.appendChild(titleDiv);
+                    li.appendChild(contentDiv);
+
+                    wordList.appendChild(li);
+                });
                 currentIndex = Math.floor(Math.random() * questions.length);
                 showNextQuestion();
             });
 
-            function converter(cookie) {
-                cookie = cookie.split(";");
-                const obj = {};
+        function converter(cookie) {
+            cookie = cookie.split(";");
+            const obj = {};
+            cookie.map((item) => {
+                const elem = item.split("=");
+                const key = elem[0].trim();
+                const val = decodeURIComponent(elem[1]);
+                obj[key] = val;
+            });
+            return obj;
+        }
 
-                cookie.map((item) => {
-                    const elem = item.split("=");
-                    const key = elem[0].trim();
-                    const val = decodeURIComponent(elem[1]);
-                    obj[key] = val;
+        let currentIndex;
+        let totalCount = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let renzokuseikai = 0;
+        let accid = Cookies.get('id');
+        let password = Cookies.get('password');
+        let starttime = 0;
+        let endtime = 0;
+        let hard = false;
+
+        function showNextQuestion() {
+            const question = questions[currentIndex];
+            document.getElementById('question').textContent = question.description;
+            const answers = [question.word];
+
+            if(hard){
+                const mondai = JSON.parse(question.mondai)
+                while (answers.length < 4) {
+                    const randomIndex = Math.floor(Math.random() * mondai.length);
+                    if (!answers.includes(mondai[randomIndex])) {
+                        answers.push(mondai[randomIndex])
+                    }
+                }
+                answers.sort(() => Math.random() - 0.5);
+                answers.forEach((answer, index) => {
+                    document.getElementById('answer' + (index + 1)).textContent = answer;
                 });
-
-                return obj;
-            }
-            // 状態を管理する変数
-            let currentIndex;
-            let totalCount = 0;
-            let correctCount = 0;
-            let wrongCount = 0;
-            let renzokuseikai = 0;
-
-            let accid = Cookies.get('id')
-            let password = Cookies.get('password')
-            // 次の問題を表示
-            function showNextQuestion() {
-                const question = questions[currentIndex];
-                document.getElementById('question').textContent = question.description;
-                // 4つの選択肢をランダムに生成
+            }else{
                 const answers = [question.word];
                 while (answers.length < 4) {
                     const randomIndex = Math.floor(Math.random() * questions.length);
@@ -228,85 +447,85 @@
                         answers.push(questions[randomIndex].word);
                     }
                 }
-                // シャッフル
                 answers.sort(() => Math.random() - 0.5);
-                // ボタンにセット
                 answers.forEach((answer, index) => {
-                    document.getElementById('answer' + (index+1)).textContent = answer;
+                    document.getElementById('answer' + (index + 1)).textContent = answer;
                 });
             }
+            
+            start = performance.now();
+        }
 
-            // 正答率の計算
-            function calculateAccuracy() {
-                return correctCount / totalCount * 100;
+        function calculateAccuracy() {
+            return (correctCount / totalCount) * 100;
+        }
+
+        function onAnswerClick(e) {
+            document.querySelector('.swiper-button-next').style.display = 'none';
+            document.querySelector('.swiper-button-prev').style.display = 'none';
+
+            totalCount++;
+            if (e.target.textContent === questions[currentIndex].word) {
+                correctCount++;
+                renzokuseikai++;
+                notie.alert({ type: 1, text: '正解', time: 1 });
+                displayScore();
+                nextIndex();
+                showNextQuestion();
+                sendScore("add_correct", accid, password);
+            } else {
+                wrongCount++;
+                renzokuseikai = 0;
+                notie.force({
+                    type: 'error',
+                    text: '<div class="popup">' + questions[currentIndex].description + '<br><br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                    buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
+                    callback: function () {
+                        displayScore();
+                        showNextQuestion();
+                        sendScore("add_bad", accid, password);
+                    }
+                });
             }
+        }
 
-            // 回答ボタンがクリックされた時
-            function onAnswerClick(e) {
-
-                totalCount++;
-                if (e.target.textContent === questions[currentIndex].word) {
-                    correctCount++;
-                    renzokuseikai++;
-                    notie.alert({ type: 1, text: '正解', time: 1 })
-                    displayScore();
-                    nextIndex();
-                    showNextQuestion();
-                    sendScore("add_correct",accid,password)
-                } else {
-                    wrongCount++;
-                    renzokuseikai = 0;
-                    notie.force({
-                        type: 'error',
-                        text: '<div class="popup">'+questions[currentIndex].description+'<br><br>正しい回答:'+questions[currentIndex].word+"<br>あなたの回答:"+e.target.textContent+'</div>',
-                        buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
-                        callback: function () {
-                            displayScore();
-                            showNextQuestion(); 
-                            sendScore("add_bad",accid,password)
-                        }
-                    })
-                }
-            }
-
-            function nextIndex(){
-                last_currentIndex = currentIndex
+        function nextIndex() {
+            let last_currentIndex = currentIndex;
+            
+            currentIndex = Math.floor(Math.random() * questions.length);
+            if (currentIndex == last_currentIndex) {
                 currentIndex = Math.floor(Math.random() * questions.length);
-                if (currentIndex == last_currentIndex){
-                        currentIndex = Math.floor(Math.random() * questions.length);
-                }
             }
+        }
 
-            function displayScore() {
-                document.getElementById('score').textContent = `
-                    回答数: ${totalCount}
-                    正解数: ${correctCount}  
-                    不正解数: ${wrongCount}
-                    連続正解数: ${renzokuseikai}
-                    正答率: ${calculateAccuracy().toFixed(1)}%
-                `;
-            }
+        function displayScore() {
+            document.getElementById('score').textContent = `
+                回答数: ${totalCount}
+                正解数: ${correctCount}
+                不正解数: ${wrongCount}
+                連続正解数: ${renzokuseikai}
+                正答率: ${calculateAccuracy().toFixed(1)}%
+            `;
+        }
 
+        function sendScore(url, id, password) {
+            fetch("https://notlet.choko.cc/" + url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": id,
+                    "password": password,
+                })
+            });
+        }
 
-            function sendScore(url,id,password){
-                fetch("http://localhost:8000/" + url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        "id":id,
-                        "password":password,
-                    })
-                });
-            }
-            // 回答ボタンにクリックイベントを登録
-            document.getElementById('answer1').addEventListener('click', onAnswerClick);
-            document.getElementById('answer2').addEventListener('click', onAnswerClick);
-            document.getElementById('answer3').addEventListener('click', onAnswerClick);
-            document.getElementById('answer4').addEventListener('click', onAnswerClick);
+        document.getElementById('answer1').addEventListener('click', onAnswerClick);
+        document.getElementById('answer2').addEventListener('click', onAnswerClick);
+        document.getElementById('answer3').addEventListener('click', onAnswerClick);
+        document.getElementById('answer4').addEventListener('click', onAnswerClick);
 
-        </script>
-
-    </body>
+    </script>
+</body>
 </html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset="utf-8">
+    <title>4択クイズ</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <style>
+        /* CSSスタイル */
+        body {
+            font-family: 'Noto Sans Japanese',   sans-serif;
+            background-color: #ebedf1;
+
+        }
+    </style>
+    </head>
+    <body>
+        <div id="main"></div>
+        <script>
+            function getParam(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, " "));
+            }
+            mondai = getParam("id")
+            if (mondai == null) {
+                mondai = "mondai"
+            }
+
+
+            fetch("../deta/"+mondai+'.txt')
+            .then(response => response.text())
+            .then(text => {
+                const lines = text.split('\n');
+                lines.forEach(line => {
+                const [word, description] = line.split('|');
+                document.getElementById("main").innerHTML="<p>"+description+"</p>"
+                
+                });
+               
+            });
+
+        </script>
+
+    </body>
+</html>
