@@ -486,7 +486,7 @@
                 displayScore();
                 showNextQuestion();
                 sendScore("add_bad", accid, password);
-                notie.alert({ type: 3, text: '間違い', time: 1.5 });
+                notie.alert({ type: 3, text: '間違い', time: 1 });
                 document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>';
                 document.getElementById("kaisetu").innerHTML = questions[currentIndex].kaisetu;
                 MicroModal.show('modal-1');

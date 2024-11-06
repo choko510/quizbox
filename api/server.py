@@ -1,7 +1,7 @@
 from sqlalchemy.schema import Column
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 import datetime
@@ -51,7 +51,7 @@ class DB:
         session = Session()
         user = session.query(Ticket).filter_by(userid=id).first()
         user.correct += 1
-        nowtime = str(datetime.datetime.now().year) + str(datetime.datetime.now().month) + str(datetime.datetime.now().day)
+        nowtime = str(datetime.datetime.now().year) +"/"+ str(datetime.datetime.now().month) +"/"+ str(datetime.datetime.now().day)
         correctdata = json.loads(user.correctdata)
         baddata = json.loads(user.baddata)
 
@@ -77,7 +77,7 @@ class DB:
         session = Session()
         user = session.query(Ticket).filter_by(userid=id).first()
         user.bad += 1
-        nowtime = str(datetime.datetime.now().year) + str(datetime.datetime.now().month) + str(datetime.datetime.now().day)
+        nowtime = str(datetime.datetime.now().year) +"/"+ str(datetime.datetime.now().month) +"/"+ str(datetime.datetime.now().day)
         correctdata = json.loads(user.correctdata)
         baddata = json.loads(user.baddata)
 
@@ -213,4 +213,4 @@ async def change_password(data: Data, newpassword: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(fastapi, host="localhost", port=8000)
+    uvicorn.run(fastapi, host="0.0.0.0", port=8080)
