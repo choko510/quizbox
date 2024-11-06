@@ -213,12 +213,6 @@
         #kaisetsu ul {list-style-type: katakana;}
         
         @media screen and (max-height: 770px) {
-
-            #question {
-                margin-top: 1%;
-                font-size: 1em;
-            }
-
             .main {
                 box-shadow: none;
             }
@@ -226,15 +220,6 @@
             button {
                 padding: .3em 1em;
             }
-        }
-
-        @media screen and (max-height: 600px) {
-
-            #question {
-                margin-top: 6%;
-                font-size: 1.5em;
-            }
-
         }
 
         @media screen and (max-width: 540px) {
@@ -448,7 +433,23 @@
 
         function showNextQuestion() {
             const question = questions[currentIndex];
-            document.getElementById('question').innerHTML = question.description;
+            title = document.getElementById('question');
+            textlength = question.description.length;
+            title.innerHTML = question.description;
+
+            if (textlength >= 100) {
+                title.style.fontSize = "1.1em";
+            } else if (textlength < 100) {
+                title.style.fontSize = "1.5em";
+            }
+
+            if (question.description.includes('mondai-image')){
+                title.style.marginTop = "2%";
+            }else{
+                title.style.marginTop = "6%";
+            }
+
+            
             const answers = [question.word];
             const mondai = question.mondai
             
@@ -486,7 +487,7 @@
                 showNextQuestion();
                 sendScore("add_bad", accid, password);
                 notie.alert({ type: 3, text: '間違い', time: 1.5 });
-                document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br><br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>';
+                document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>';
                 document.getElementById("kaisetu").innerHTML = questions[currentIndex].kaisetu;
                 MicroModal.show('modal-1');
             }
