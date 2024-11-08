@@ -114,6 +114,11 @@
             left: 0;
         }
 
+        .correct{
+            font-size: 110%;
+            font-weight: bold;
+        }
+
         .popup {
             font-size: 110%;
             font-weight: bold;
@@ -210,8 +215,6 @@
             background: #0056b3;
         }
         
-        #kaisetsu ul {list-style-type: katakana;}
-        
         @media screen and (max-height: 770px) {
             .main {
                 box-shadow: none;
@@ -301,7 +304,6 @@
                  </div>
             </div>
         </div>
-        <div class="swiper-pagination"></div>
         <div class="swiper-button-next"></div>
         <div class="swiper-button-prev"></div>
     </div>
@@ -459,10 +461,12 @@
                     answers.push(mondai[randomIndex])
                 }
             }
+
             answers.sort(() => Math.random() - 0.5);
             answers.forEach((answer, index) => {
                 document.getElementById('answer' + (index + 1)).textContent = answer;
             });
+            
             start = performance.now();
         }
 
@@ -472,6 +476,8 @@
 
         function onAnswerClick(e) {
             totalCount++;
+            nextButton = document.querySelector('.swiper-button-next').style.opacity = '0.2';
+            prevButton = document.querySelector('.swiper-button-prev').style.opacity = '0.2';
             if (e.target.textContent === questions[currentIndex].word) {
                 correctCount++;
                 renzokuseikai++;
