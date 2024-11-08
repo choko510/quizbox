@@ -6,6 +6,7 @@
     <title>4択クイズ</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -289,7 +290,6 @@
                     </ul>
                 </div>
                 <div id="score">
-                    <a href="../play" class="hardlink">イージーモード</a>
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
                 </div>
             </div>
@@ -323,7 +323,6 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script src="https://unpkg.com/notie@4.3.1/dist/notie.min.js"></script>
     <link rel="stylesheet" href="modal.css">
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
@@ -438,17 +437,33 @@
             title = document.getElementById('question');
             textlength = question.description.length;
             title.innerHTML = question.description;
+            screenWidth = window.innerWidth;
+            screenHeight = window.innerHeight; 
 
-            if (textlength >= 100) {
-                title.style.fontSize = "1.1em";
-            } else if (textlength < 100) {
-                title.style.fontSize = "1.5em";
-            }
-
-            if (question.description.includes('mondai-image')){
-                title.style.marginTop = "2%";
-            }else{
-                title.style.marginTop = "6%";
+            if (screenWidth < 600 || screenHeight < 600) { // 小さい画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "0.8em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1em";
+                }else {
+                    title.style.fontSize = "1.3em";
+                }
+            } else if (screenWidth < 1200 || screenHeight < 800) { // 中程度の画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "1em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1.2em";
+                } else {
+                    title.style.fontSize = "1.4em";
+                }
+            } else { // 大きい画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "1.2em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1.3em";
+                } else {
+                    title.style.fontSize = "1.4em";
+                }
             }
 
             
@@ -475,6 +490,7 @@
         }
 
         function onAnswerClick(e) {
+            temp = e.target.textContent;
             totalCount++;
             nextButton = document.querySelector('.swiper-button-next').style.opacity = '0.2';
             prevButton = document.querySelector('.swiper-button-prev').style.opacity = '0.2';
@@ -493,7 +509,7 @@
                 showNextQuestion();
                 sendScore("add_bad", accid, password);
                 notie.alert({ type: 3, text: '間違い', time: 1 });
-                document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>';
+                document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + temp + '</div>';
                 document.getElementById("kaisetu").innerHTML = questions[currentIndex].kaisetu;
                 MicroModal.show('modal-1');
             }
