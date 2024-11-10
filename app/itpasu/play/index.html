@@ -120,6 +120,39 @@
             font-weight: bold;
         }
 
+        .ansbg ul {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .lia, .lii, .liu, .lie {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: .7em 1.5em;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            transition: .2s ease;
+        }
+
+        .lia:hover, .lii:hover, .liu:hover, .lie:hover {
+            background: #f1f5f9;
+            box-shadow: 0 4px 8px rgba(0,0,0,.15);
+            transform: translateY(-1px);
+        }
+
+        .cite {
+            color: #2563eb;
+            font-weight: 600;
+            display: block;
+            margin-bottom: .5em;
+        }
+
+        .m, strong {
+            color: #2563eb;
+        }
+        
         .popup {
             font-size: 110%;
             font-weight: bold;
@@ -301,7 +334,7 @@
                     <input type="text" id="search">
                     
                     <ul id="wordList" class="custom-list"></ul>
-                 </div>
+                </div>
             </div>
         </div>
         <div class="swiper-button-next"></div>
@@ -492,9 +525,9 @@
         function onAnswerClick(e) {
             temp = e.target.textContent;
             totalCount++;
-            nextButton = document.querySelector('.swiper-button-next').style.opacity = '0.2';
-            prevButton = document.querySelector('.swiper-button-prev').style.opacity = '0.2';
             if (e.target.textContent === questions[currentIndex].word) {
+                document.querySelector('.swiper-button-next').style.opacity = '0.2';
+                document.querySelector('.swiper-button-prev').style.opacity = '0.2';
                 correctCount++;
                 renzokuseikai++;
                 notie.alert({ type: 1, text: '正解', time: 1 });
@@ -512,6 +545,8 @@
                 document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + temp + '</div>';
                 document.getElementById("kaisetu").innerHTML = questions[currentIndex].kaisetu;
                 MicroModal.show('modal-1');
+                document.querySelector('.swiper-button-next').style.opacity = '0';
+                document.querySelector('.swiper-button-prev').style.opacity = '0';
             }
         }
 

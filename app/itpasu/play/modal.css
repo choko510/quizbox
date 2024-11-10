@@ -9,20 +9,20 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1; /* 追加 */
+    z-index: 1;
 }
 
 .modal__container {
     background-color: #fff;
     width: 90vw;
-    height: 90vh; /* "h" は "vh" に修正 */
+    height: 90vh;
     border-radius: 4px;
     overflow-y: auto;
-    padding: 1rem 1.5rem; 
+    padding: 1rem 1.5rem;
     box-sizing: border-box;
-    z-index: 2; /* 追加 */
-    
+    z-index: 2;
 }
+
 .modal__footer{
     position: absolute;
     left: 50%;
@@ -34,6 +34,7 @@
     justify-content: space-between;
     align-items: center;
 }
+
 .modal__title {
     margin-top: 0;
     margin-bottom: 0;
@@ -43,10 +44,12 @@
     color: #00449e;
     box-sizing: border-box;
 }
+
 .modal__close {
     background: transparent;
     border: 0;
 }
+
 .modal__header .modal__close:before { content: "\2715"; }
 .modal__content {
     margin-top: 2rem;
@@ -54,6 +57,7 @@
     line-height: 1.5;
     color: rgba(0,0,0,.8);
 }
+
 .modal__btn {
     font-size: 1rem;
     padding-left: 1rem;
@@ -82,14 +86,17 @@
     transition: transform .25s ease-out;
     transition: transform .25s ease-out,-webkit-transform .25s ease-out;
 }
+
 .modal__btn:focus, .modal__btn:hover {
     -webkit-transform: scale(1.05);
     transform: scale(1.05);
 }
+
 .modal__btn-primary {
     background-color: #00449e;
     color: #fff;
 }
+
 /**************************\
 Demo Animation Style
 \**************************/
@@ -97,52 +104,69 @@ Demo Animation Style
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
 @keyframes mmfadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
 }
+
 @keyframes mmslideIn {
 from { transform: translateY(15%); }
     to { transform: translateY(0); }
 }
+
 @keyframes mmslideOut {
     from { transform: translateY(0); }
     to { transform: translateY(-10%); }
 }
+
 .micromodal-slide {
     display: none;
 }
+
 .micromodal-slide.is-open {
     display: block;
 }
+
 .micromodal-slide[aria-hidden="false"] .modal__overlay {
     animation: mmfadeIn .3s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
+
 .micromodal-slide[aria-hidden="false"] .modal__container {
     animation: mmslideIn .3s cubic-bezier(0, 0, .2, 1);
 }
+
 .micromodal-slide[aria-hidden="true"] .modal__overlay {
     animation: mmfadeOut .3s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
+
 .micromodal-slide[aria-hidden="true"] .modal__container {
     animation: mmslideOut .3s cubic-bezier(0, 0, .2, 1);
 }
+
 .micromodal-slide .modal__container,
 .micromodal-slide .modal__overlay {
     will-change: transform;
 }
 
-/* smartphone */
-@media screen and (max-width: 600px) {
+/* tablet */
+@media screen and (max-width: 1024px) {
     .modal__container {
+        margin-top: -2.5vh;
         width: 100vw;
-        height: 95vh;
-        border-radius: 12px;
+        height: 95.5vh;
+        border-radius: 12px 12px 0 0;
     }
-    
+
     .modal__overlay {
         bottom: -50px;
     }
+}
 
-
+/* smartphone */
+@media screen and (max-width: 600px) {
+    .modal__container {
+        margin-top: -1vh;
+        height: 95vh;
+    }
 }
