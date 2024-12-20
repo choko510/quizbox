@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="../style.css">
+    <title>notlet</title>
+    <link rel="manifest" href="../manifest.json">
+    <link rel="prerender" href="/play"/>
+</head>
+
+<body>
+    
+    <div class="top">
+        <a href="javascript:iconmodal();"><img class="icon" src="../usericon.png"></a>
+    </div>
+
+    <div class="main">
+        <div class="box1">
+            <div class="category">
+                <p>ITパスポート</p>
+                <a href="play/">ITパスポート</a>
+                <a href="play/?id=management">ITパスポート マネジメント系</a>
+                <a href="play/?id=strategy">ITパスポート ストラテジ系</a>
+                <a href="play/?id=technology">ITパスポート テクノロジ系</a>
+            </div>
+            <div class="category">
+                <p>ITパス 年代別</p>
+                <a href="play/?id=r06">令和6年</a>
+                <a href="play/?id=r05">令和5年</a>
+                <a href="play/?id=r04">令和4年</a>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="../modal.css">
+    <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        if (!Cookies.get('id')) {
+            const cookieId = Math.random().toString(36).substring(2);
+            Cookies.set('id', cookieId, { expires: 30 });
+            const password = Math.random().toString(36).substring(2);
+            Cookies.set('password', password, { expires: 30 });
+            (async () => {
+                const response = await fetch('https://notlet.choko.cc/registration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: cookieId,
+                        password: password
+                    })
+                });
+            })();
+        }
+
+
+
+        async function fetchScores(id, password) {
+            const response = await fetch(`https://notlet.choko.cc/get`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: id,
+                    password: password
+                })
+            });
+            const data = await response.json();
+            if (data.message === "password is wrong") {
+                alert("Invalid password");
+                return;
+            }
+            return data;
+        }
+
+        async function fetchRanking() {
+            const response = await fetch(`https://notlet.choko.cc/ranking`);
+            //{"userid": userid, "correct": correct, "bad": bad}
+            const data = await response.json();
+            const ranking = data.map((d, i) => {
+                return `${i + 1}位: ${d.userid} 正解数:${d.correct} 不正解数:${d.bad}`;
+            });
+            document.getElementById("ranking").textContent = ranking;
+        }
+
+        function displayScores(correct, bad, total, ritu) {
+            document.getElementById("correct").textContent = "正解数:" + correct;
+            document.getElementById("bad").textContent = "不正解数:" + bad;
+            document.getElementById("total").textContent = "トータル:" + total;
+            document.getElementById("ritu").textContent = "正答率:" + ritu;
+        }
+
+        async function iconmodal() {
+            MicroModal.show('modal-1');
+            id = Cookies.get('id')
+            password = Cookies.get('password')
+            const scores = await fetchScores(id, password);
+            if (!scores) return;
+            const total = scores.correct + scores.bad;
+            const ritu = Math.round(scores.correct / total * 100) + "%";
+            displayScores(scores.correct, scores.bad, total, ritu);
+            drawChart();
+            document.getElementById("nowname").textContent = "現在の名前:" + id;
+            //await fetchRanking();
+        }
+
+        async function fetchData(id, password) {
+            const response = await fetch(`https://notlet.choko.cc/get/${id}/${password}`);
+            const data = await response.json();
+            return data;
+        }
+
+
+        function namechange() {
+            const button2 = document.getElementById('namebtn');
+
+            id = Cookies.get('id')
+            password = Cookies.get('password')
+            const response = fetch(`https://notlet.choko.cc/change/name/` + id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: id,
+                    password: password
+                })
+            });
+            const data = response.json();
+            if (data.status_code === "password is wrong") {
+                alert("Invalid password");
+                return;
+            }
+            return data;
+        }
+
+
+        // グラフを描画する関数
+        async function drawChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            id = Cookies.get('id')
+            password = Cookies.get('password')
+            const data = await fetchData(id, password);
+
+            // ラベル(日付)とデータ(値)を抽出
+            const labels = Object.keys(data.correct);
+
+            const correctData = Object.values(data.correct);
+            const badData = Object.values(data.bad);
+
+            // 正答率とトータルを計算する
+            const totalData = correctData.map((correct, index) => correct + badData[index]);
+            const accuracyData = correctData.map((correct, index) => correct / totalData[index] * 100);
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'トータル',
+                            data: totalData,
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: '正解数',
+                            data: correctData,
+                            borderColor: 'green',
+                            fill: false
+                        },
+                        {
+                            label: '不正解数',
+                            data: badData,
+                            borderColor: 'red',
+                            fill: false
+                        },
+                    ]
+                },
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        }],
+                        yAxes: [
+                            {
+                                id: 'count', // 左側の縦軸
+                                type: 'linear',
+                                position: 'left',
+                            },
+                        ]
+                    }
+                }
+            });
+        }
+    </script>
+    <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+        <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title"
+                style="text-align: center;">
+                <main class="modal__content" id="modal-1-content">
+                    <div>
+                        <div>
+                            <h1>マイスコア</h1>
+                            <p id="total">
+                                トータル:0
+                            </p>
+                            <p id="correct">
+                                正解数:0
+                            </p>
+                            <p id="bad">
+                                不正解数:0
+                            </p>
+                            <p id="ritu">
+                                正答率:0%
+                            </p>
+                            <div class="chart">
+                                <canvas id="myChart"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
+                <footer class="modal__footer">
+                    <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">閉じる</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
