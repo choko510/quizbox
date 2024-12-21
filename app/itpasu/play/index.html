@@ -115,6 +115,13 @@
             left: 0;
         }
 
+        .kaisetubtn {
+            position: absolute;
+            bottom: 4px;
+            right: 2px;
+            font-size: 110%;
+        }
+
         .correct{
             font-size: 110%;
             font-weight: bold;
@@ -324,6 +331,9 @@
                 </div>
                 <div id="score">
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+                </div>
+                <div class="kaisetubtn">
+                    <a href="javascript:onDontKnowClick();" class="hardlink">解説を見る</a>
                 </div>
             </div>
             <div class="swiper-slide slide3">
@@ -548,6 +558,22 @@
                 document.querySelector('.swiper-button-next').style.opacity = '0';
                 document.querySelector('.swiper-button-prev').style.opacity = '0';
             }
+        }
+
+        function onDontKnowClick() {
+            totalCount++;
+            wrongCount++;
+            renzokuseikai = 0;
+            displayScore();
+            sendScore("add_bad", accid, password);
+            notie.alert({ type: 3, text: '解説を表示します', time: 1 });
+            document.getElementById("hansei").innerHTML = '<div class="popup">' + questions[currentIndex].description + '<br>正しい回答:' + questions[currentIndex].word + '</div>';
+            document.getElementById("kaisetu").innerHTML = questions[currentIndex].kaisetu;
+            MicroModal.show('modal-1');
+            document.querySelector('.swiper-button-next').style.opacity = '0';
+            document.querySelector('.swiper-button-prev').style.opacity = '0';
+            nextIndex();
+            showNextQuestion();
         }
 
         function nextIndex() {
