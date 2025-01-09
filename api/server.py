@@ -7,6 +7,7 @@ from typing import List
 import datetime
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import random
 
 Base = declarative_base()
 db_file = 'count.db'
@@ -210,6 +211,30 @@ async def change_password(data: Data, newpassword: str):
     session.commit()
     session.close()
     return {"message": "change password"}
+
+@fastapi.get("/mosi/get")
+async def mosiget():
+    with open('../app/itpasu/play/mondai/management.json', 'r') as file:#20
+        management_deta = json.load(file)
+    with open('../app/itpasu/play/mondai/strategy.json', 'r') as file:#35
+        strategy_deta = json.load(file)
+    with open('../app/itpasu/play/mondai/technology.json', 'r') as file:#45
+        technology_deta = json.load(file)
+
+    mondai = []
+
+    management_mondai = random.sample(management_deta, min(20, len(management_deta)))
+
+    strategy_mondai = random.sample(strategy_deta, min(35, len(strategy_deta)))
+
+    technology_mondai = random.sample(technology_deta, min(45, len(technology_deta)))
+
+    mondai.append(management_mondai)
+    mondai.append(strategy_mondai)
+    mondai.append(technology_mondai)
+
+    return mondai
+
 
 if __name__ == "__main__":
     import uvicorn
