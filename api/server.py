@@ -212,7 +212,7 @@ async def change_password(data: Data, newpassword: str):
     session.close()
     return {"message": "change password"}
 
-@fastapi.get("/mosi/get")
+@fastapi.get("/quizbox/mosi/get")
 async def mosiget():
     with open('../app/itpasu/play/mondai/management.json', 'r') as file:#20
         management_deta = json.load(file)
@@ -229,11 +229,9 @@ async def mosiget():
 
     technology_mondai = random.sample(technology_deta, min(45, len(technology_deta)))
 
-    mondai.append(management_mondai)
-    mondai.append(strategy_mondai)
-    mondai.append(technology_mondai)
+    combined_mondai = management_mondai + strategy_mondai + technology_mondai
 
-    return mondai
+    return combined_mondai
 
 
 if __name__ == "__main__":
