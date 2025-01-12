@@ -8,9 +8,10 @@ import datetime
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import random
+from fastapi.staticfiles import StaticFiles
 
 Base = declarative_base()
-db_file = 'count.db'
+db_file = 'data.db'
 engine = create_engine(f'sqlite:///{db_file}')
 
 class Ticket(Base):
@@ -122,7 +123,6 @@ class DB:
         return {"correct": user.correct, "bad": user.bad}
     
 
-
 fastapi = FastAPI()
 
 fastapi.add_middleware(
@@ -137,50 +137,50 @@ class Data(BaseModel):
     id: str
     password: str
 
-@fastapi.post("/registration")
+@fastapi.post("api/registration")
 async def registration(data: Data):
     await DB.registration(data.id, data.password)
     return {"message": "registration"}
 
-@fastapi.post("/get_correct")
+@fastapi.post("api/get_correct")
 async def get_correct(data: Data):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
     return {"correct": await DB.get_correct(data.id)}
 
-@fastapi.post("/add_correct")
+@fastapi.post("api/add_correct")
 async def add_correct(data: Data):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
     await DB.add_correct(data.id)
     return {"message": "add_correct"}
 
-@fastapi.post("/add_bad")
+@fastapi.post("api/add_bad")
 async def add_bad(data: Data):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
     await DB.add_bad(data.id)
     return {"message": "add_bad"}
 
-@fastapi.post("/get_bad")
+@fastapi.post("api/get_bad")
 async def get_bad(data: Data):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
     return {"bad": await DB.get_bad(data.id)}
 
-@fastapi.post("/get")
+@fastapi.post("api/get")
 async def get_bad(data: Data):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
     return await DB.get(data.id)
 
-@fastapi.get("/get/{id}/{password}")
+@fastapi.get("api/get/{id}/{password}")
 async def get_all(id: str, password: str):
     if not await DB.password(id) == password:
         return {"message": "password is wrong"}
     return await DB.get_all(id)
 
-@fastapi.get("/ranking")
+@fastapi.get("api/ranking")
 async def ranking():
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -188,7 +188,7 @@ async def ranking():
     session.close()
     return [{"userid": user.userid, "correct": user.correct, "bad": user.bad} for user in users if user.correct != 0]
 
-@fastapi.post("/change/name/{newname}")
+@fastapi.post("api/change/name/{newname}")
 async def change_name(data: Data, newname: str):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
@@ -200,7 +200,7 @@ async def change_name(data: Data, newname: str):
     session.close()
     return {"message": "change name"}
 
-@fastapi.post("/change/password/{newpassword}")
+@fastapi.post("api/change/password/{newpassword}")
 async def change_password(data: Data, newpassword: str):
     if not await DB.password(data.id) == data.password:
         return {"message": "password is wrong"}
@@ -212,13 +212,13 @@ async def change_password(data: Data, newpassword: str):
     session.close()
     return {"message": "change password"}
 
-@fastapi.get("/quizbox/mosi/get")
+@fastapi.get("api/mosi/get")
 async def mosiget():
-    with open('../app/itpasu/play/mondai/management.json', 'r') as file:#20
+    with open('./app/itpasu/play/mondai/management.json', 'r') as file:#20
         management_deta = json.load(file)
-    with open('../app/itpasu/play/mondai/strategy.json', 'r') as file:#35
+    with open('./app/itpasu/play/mondai/strategy.json', 'r') as file:#35
         strategy_deta = json.load(file)
-    with open('../app/itpasu/play/mondai/technology.json', 'r') as file:#45
+    with open('./app/itpasu/play/mondai/technology.json', 'r') as file:#45
         technology_deta = json.load(file)
 
     mondai = []
@@ -233,7 +233,8 @@ async def mosiget():
 
     return combined_mondai
 
+fastapi.mount("/", StaticFiles(directory="app", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(fastapi, host="0.0.0.0", port=8080)
+    uvicorn.run(fastapi, host="localhost", port=8080)

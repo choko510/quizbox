@@ -69,7 +69,7 @@
         const password = Math.random().toString(36).substring(2);
         Cookies.set('password', password, { expires: 30 });
         (async () => {
-            const response = await fetch('https://notlet.choko.cc/registration', {
+            const response = await fetch('api/registration', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -85,7 +85,7 @@
 
 
         async function fetchScores(id, password) {
-            const response = await fetch(`https://notlet.choko.cc/get`, {
+            const response = await fetch(`api/get`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +104,7 @@
         }
 
         async function fetchRanking() {
-            const response = await fetch(`https://notlet.choko.cc/ranking`);
+            const response = await fetch(`api/ranking`);
             //{"userid": userid, "correct": correct, "bad": bad}
             const data = await response.json();
             const ranking = data.map((d, i) => {
@@ -135,7 +135,7 @@
         }
 
         async function fetchData(id, password) {
-            const response = await fetch(`https://notlet.choko.cc/get/${id}/${password}`);
+            const response = await fetch(`api/get/${id}/${password}`);
             const data = await response.json();
             return data;
         }
@@ -146,7 +146,7 @@
 
             id = Cookies.get('id')
             password = Cookies.get('password')
-            const response =  fetch(`https://notlet.choko.cc/change/name/`+id, {
+            const response =  fetch(`api/change/name/`+id, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
