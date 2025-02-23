@@ -8,8 +8,6 @@
     <title>notlet</title>
     <link rel="manifest" href="manifest.json">
     <link rel="prerender" href="/play" />
-    <link rel="prerender" href="/beta" />
-
 </head>
 <body>
     <div class="top">
@@ -19,16 +17,16 @@
         <div class="box1">
             <div class="category">
                 <p>ITパスポート</p>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/">ITパスポート</a>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=management">ITパスポート マネジメント系</a>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=strategy">ITパスポート ストラテジ系</a>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=technology">ITパスポート テクノロジ系</a>
+                <a href="itpasu/play/">ITパスポート</a>
+                <a href="itpasu/play/?id=management">ITパスポート マネジメント系</a>
+                <a href="itpasu/play/?id=strategy">ITパスポート ストラテジ系</a>
+                <a href="itpasu/play/?id=technology">ITパスポート テクノロジ系</a>
             </div>
             <div class="category">
                 <p>ITパス 年代別</p>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=r06">令和6年</a>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=r05">令和5年</a>
-                <a href="https://choko510.github.io/quizbox/app/itpasu/play/?id=r04">令和4年</a>
+                <a href="itpasu/play/?id=r06">令和6年</a>
+                <a href="itpasu/play/?id=r05">令和5年</a>
+                <a href="itpasu/play/?id=r04">令和4年</a>
             </div>
             <div class="category">
                 <p>1級全般</p>
@@ -81,8 +79,6 @@
             });
         })();
         }
-
-
 
         async function fetchScores(id, password) {
             const response = await fetch(`api/get`, {
@@ -164,7 +160,6 @@
             return data;
         }
         
-
         // グラフを描画する関数
         async function drawChart() {
         const ctx = document.getElementById('myChart').getContext('2d');
