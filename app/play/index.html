@@ -312,7 +312,7 @@
                     <h1>単語リスト</h1>
                     <input type="text" class="searchbox" placeholder="検索">
                     <ul id="wordList" class="custom-list"></ul>
-                 </div>
+                </div>
             </div>
         </div>
         <div class="swiper-button-next"></div>
@@ -323,7 +323,7 @@
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie@4.3.1/dist/notie.min.css">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script>
-       var swiper = new Swiper('.swiper-container', {
+        var swiper = new Swiper('.swiper-container', {
             direction: 'horizontal',
             loop: false,
             initialSlide: 1,
@@ -389,9 +389,14 @@
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'content';
                     contentDiv.textContent = description;
-
-                    li.appendChild(titleDiv);
-                    li.appendChild(contentDiv);
+                    
+                    if (titleDiv.textContent.endsWith("か。")||titleDiv.textContent.endsWith("答えよ。")||titleDiv.textContent.endsWith("答えなさい。")) {
+                        li.appendChild(contentDiv);
+                        li.appendChild(titleDiv);
+                    }else {
+                        li.appendChild(titleDiv);
+                        li.appendChild(contentDiv);
+                    }
 
                     wordList.appendChild(li);
                 });
@@ -424,7 +429,39 @@
 
         function showNextQuestion() {
             const question = questions[currentIndex];
-            document.getElementById('question').textContent = question.description;
+            title = document.getElementById('question');
+            textlength = question.description.length;
+            title.innerHTML = question.description;
+            screenWidth = window.innerWidth;
+            screenHeight = window.innerHeight; 
+
+            if (screenWidth < 600 || screenHeight < 600) { // 小さい画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "0.8em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1em";
+                }else {
+                    title.style.fontSize = "1.3em";
+                }
+            } else if (screenWidth < 1200 || screenHeight < 800) { // 中程度の画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "1em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1.2em";
+                } else {
+                    title.style.fontSize = "1.4em";
+                }
+            } else { // 大きい画面の場合
+                if (textlength >= 150) {
+                    title.style.fontSize = "1.2em";
+                } else if (textlength >= 100) {
+                    title.style.fontSize = "1.3em";
+                } else {
+                    title.style.fontSize = "1.4em";
+                }
+            }
+
+            
             const answers = [question.word];
 
             if(hard){
