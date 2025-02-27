@@ -1,20 +1,46 @@
-from sqlalchemy.schema import Column
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
 import datetime
-from fastapi.middleware.cors import CORSMiddleware
+import io
 import json
+import os
 import random
+from contextlib import asynccontextmanager
+from typing import List
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from PIL import Image
+import aiofiles
+import xxhash
+import numpy as np
+import google.generativeai as genai
+
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.future import select
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+load_dotenv()
+
+if not os.getenv("GEMINI_APIKEY") or os.getenv("GEMINI_APIKEY") == "":
+    if not os.path.exists(".env"):
+        raise ValueError("Please create .env file")
+    else:
+        raise ValueError("Please set GEMINI_APIKEY in .env file")
+
+genai.configure(api_key=os.getenv("GEMINI_APIKEY"))
+
+DATABASE_URL = "sqlite+aiosqlite:///data.db"
+engine = create_async_engine(DATABASE_URL, echo=True)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
-db_file = 'data.db'
-engine = create_engine(f'sqlite:///{db_file}')
 
-class Ticket(Base):
+class Account(Base):
     __tablename__ = 'user'
     userid = Column(String, primary_key=True)
     password = Column(String)
@@ -23,218 +49,414 @@ class Ticket(Base):
     correctdata = Column(String)
     baddata = Column(String)
 
-Base.metadata.create_all(engine)
+class Mondai(Base):
+    __tablename__ = 'mondai'
+    name = Column(String, primary_key=True)
+    userid = Column(String)
+    mondai = Column(String)
 
-class DB:
-    async def password(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        session.close()
-        return user.password
+app = FastAPI()
+templates = Jinja2Templates(directory="app")
 
-    async def registration(id, password):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = Ticket(userid=id, correct=0, bad=0, password=password, correctdata="{}", baddata="{}")
-        session.add(user)
-        session.commit()
-        session.close()
-
-    async def get_correct(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        session.close()
-        return user.correct
-
-    async def add_correct(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        user.correct += 1
-        nowtime = str(datetime.datetime.now().year) +"/"+ str(datetime.datetime.now().month) +"/"+ str(datetime.datetime.now().day)
-        correctdata = json.loads(user.correctdata)
-        baddata = json.loads(user.baddata)
-
-        if correctdata is None:
-            correctdata = {}
-        if nowtime not in correctdata:
-            correctdata[nowtime] = 1
-        else:
-            correctdata[nowtime] += 1
-        if baddata is None:
-            baddata = {}
-        if nowtime not in baddata:
-            baddata[nowtime] = 0
-        
-        user.correctdata = json.dumps(correctdata)
-        user.baddata = json.dumps(baddata)
-
-        session.commit()
-        session.close()
-
-    async def add_bad(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        user.bad += 1
-        nowtime = str(datetime.datetime.now().year) +"/"+ str(datetime.datetime.now().month) +"/"+ str(datetime.datetime.now().day)
-        correctdata = json.loads(user.correctdata)
-        baddata = json.loads(user.baddata)
-
-        if correctdata is None:
-            correctdata = {}
-        if nowtime not in correctdata:
-            correctdata[nowtime] = 0
-        if baddata is None:
-            baddata = {}
-        if nowtime not in baddata:
-            baddata[nowtime] = 1
-        else:
-            baddata[nowtime] += 1
-
-        user.correctdata = json.dumps(correctdata)
-        user.baddata = json.dumps(baddata)
-
-        session.commit()
-        session.close()
-
-
-    async def get_bad(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        session.close()
-        return user.bad
-
-    async def get_all(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        session.close()
-        return {"correct":json.loads(user.correctdata),"bad":json.loads(user.baddata)}
-    
-    async def get(id):
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Ticket).filter_by(userid=id).first()
-        session.close()
-        return {"correct": user.correct, "bad": user.bad}
-    
-
-fastapi = FastAPI()
-
-fastapi.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # アプリ起動時の処理（startup）
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+# 非同期 DB 操作用クラス
+class DB:
+    @staticmethod
+    async def password(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            return user.password if user else None
+
+    @staticmethod
+    async def registration(id: str, password: str):
+        async with async_session() as session:
+            user = Account(
+                userid=id,
+                correct=0,
+                bad=0,
+                password=password,
+                correctdata="{}",
+                baddata="{}"
+            )
+            session.add(user)
+            await session.commit()
+
+    @staticmethod
+    async def get_correct(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            return user.correct if user else None
+
+    @staticmethod
+    async def add_correct(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                user.correct += 1
+                nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
+                correctdata = json.loads(user.correctdata) if user.correctdata else {}
+                baddata = json.loads(user.baddata) if user.baddata else {}
+                correctdata[nowtime] = correctdata.get(nowtime, 0) + 1
+                if nowtime not in baddata:
+                    baddata[nowtime] = 0
+                user.correctdata = json.dumps(correctdata)
+                user.baddata = json.dumps(baddata)
+                await session.commit()
+
+    @staticmethod
+    async def add_bad(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                user.bad += 1
+                nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
+                correctdata = json.loads(user.correctdata) if user.correctdata else {}
+                baddata = json.loads(user.baddata) if user.baddata else {}
+                if nowtime not in correctdata:
+                    correctdata[nowtime] = 0
+                baddata[nowtime] = baddata.get(nowtime, 0) + 1
+                user.correctdata = json.dumps(correctdata)
+                user.baddata = json.dumps(baddata)
+                await session.commit()
+
+    @staticmethod
+    async def get_bad(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            return user.bad if user else None
+
+    @staticmethod
+    async def get_all(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                return {
+                    "correct": json.loads(user.correctdata) if user.correctdata else {},
+                    "bad": json.loads(user.baddata) if user.baddata else {}
+                }
+            return None
+
+    @staticmethod
+    async def get(id: str):
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                return {"correct": user.correct, "bad": user.bad}
+            return None
+
+    @staticmethod
+    async def get_mondai(name: str):
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(name=name))
+            mondai = result.scalar_one_or_none()
+            if mondai:
+                return json.loads(mondai.mondai)
+            return None
+
+    @staticmethod
+    async def get_mondai_userids(name: str):
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(name=name))
+            mondai_list = result.scalars().all()
+            if not mondai_list:
+                return None
+            return [m.userid for m in mondai_list]
+
+    @staticmethod
+    async def save_mondai(name: str, userid: str, mondai_data):
+        async with async_session() as session:
+            new_mondai = Mondai(
+                name=name,
+                userid=userid,
+                mondai=json.dumps(mondai_data)
+            )
+            session.add(new_mondai)
+            await session.commit()
+
+    @staticmethod
+    async def edit_mondai(name: str, userid: str, mondai_data):
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            mondai = result.scalar_one_or_none()
+            if mondai:
+                mondai.mondai = json.dumps(mondai_data)
+                await session.commit()
+                return True
+            else:
+                return False
 
 class Data(BaseModel):
     id: str
     password: str
 
-@fastapi.post("api/registration")
+# サイト
+@app.get("/")
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# APIエンドポイント
+@app.post("/api/registration")
 async def registration(data: Data):
     await DB.registration(data.id, data.password)
-    return {"message": "registration"}
+    return {"message": "registration successful"}
 
-@fastapi.post("api/get_correct")
+@app.post("/api/get_correct")
 async def get_correct(data: Data):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    return {"correct": await DB.get_correct(data.id)}
+    correct = await DB.get_correct(data.id)
+    return {"correct": correct}
 
-@fastapi.post("api/add_correct")
+@app.post("/api/add_correct")
 async def add_correct(data: Data):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     await DB.add_correct(data.id)
-    return {"message": "add_correct"}
+    return {"message": "add_correct successful"}
 
-@fastapi.post("api/add_bad")
+@app.post("/api/add_bad")
 async def add_bad(data: Data):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     await DB.add_bad(data.id)
-    return {"message": "add_bad"}
+    return {"message": "add_bad successful"}
 
-@fastapi.post("api/get_bad")
+@app.post("/api/get_bad")
 async def get_bad(data: Data):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    return {"bad": await DB.get_bad(data.id)}
+    bad = await DB.get_bad(data.id)
+    return {"bad": bad}
 
-@fastapi.post("api/get")
-async def get_bad(data: Data):
-    if not await DB.password(data.id) == data.password:
+@app.post("/api/get")
+async def get_user(data: Data):
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     return await DB.get(data.id)
 
-@fastapi.get("api/get/{id}/{password}")
+@app.get("/api/get/{id}/{password}")
 async def get_all(id: str, password: str):
-    if not await DB.password(id) == password:
+    if await DB.password(id) != password:
         return {"message": "password is wrong"}
     return await DB.get_all(id)
 
-@fastapi.get("api/ranking")
+@app.get("/api/ranking")
 async def ranking():
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    users = session.query(Ticket).order_by(Ticket.correct.desc()).limit(5).all()
-    session.close()
-    return [{"userid": user.userid, "correct": user.correct, "bad": user.bad} for user in users if user.correct != 0]
+    async with async_session() as session:
+        result = await session.execute(select(Account).order_by(Account.correct.desc()).limit(5))
+        users = result.scalars().all()
+    ranking_list = [
+        {"userid": user.userid, "correct": user.correct, "bad": user.bad}
+        for user in users if user.correct != 0
+    ]
+    return ranking_list
 
-@fastapi.post("api/change/name/{newname}")
+@app.post("/api/change/name/{newname}")
 async def change_name(data: Data, newname: str):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    user = session.query(Ticket).filter_by(userid=data.id).first()
-    user.userid = newname
-    session.commit()
-    session.close()
-    return {"message": "change name"}
+    async with async_session() as session:
+        result = await session.execute(select(Account).filter_by(userid=data.id))
+        user = result.scalar_one_or_none()
+        if user:
+            user.userid = newname
+            await session.commit()
+            return {"message": "change name successful"}
+    return {"message": "user not found"}
 
-@fastapi.post("api/change/password/{newpassword}")
+@app.post("/api/change/password/{newpassword}")
 async def change_password(data: Data, newpassword: str):
-    if not await DB.password(data.id) == data.password:
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    user = session.query(Ticket).filter_by(userid=data.id).first()
-    user.password = newpassword
-    session.commit()
-    session.close()
-    return {"message": "change password"}
+    async with async_session() as session:
+        result = await session.execute(select(Account).filter_by(userid=data.id))
+        user = result.scalar_one_or_none()
+        if user:
+            user.password = newpassword
+            await session.commit()
+            return {"message": "change password successful"}
+    return {"message": "user not found"}
 
-@fastapi.get("api/mosi/get")
+class MondaiData(BaseModel):
+    name: str
+    userid: str
+    password: str
+    mondai: List[str]
+
+@app.post("/api/make/mondai")
+async def make_mondai(data: MondaiData):
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    await DB.save_mondai(data.name, data.userid, data.mondai)
+    return {"status": "success"}
+
+@app.post("/api/upload/image")
+async def upload_image(file: UploadFile = File(...)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400, detail="File is not an image."
+        )
+
+    try:
+        # Read the file contents
+        contents = await file.read()
+
+        # Validate as a picture
+        try:
+            img = Image.open(io.BytesIO(contents))
+            img.verify()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Invalid image format or corrupted image.")
+        
+        return JSONResponse(
+            content={"filename": file.filename, "message": "Image uploaded successfully."},
+            status_code=200
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"There was an error uploading the file: {str(e)}"
+        )
+    finally:
+        await file.close()
+
+@app.post("/api/upload/image")
+async def upload_image(file: UploadFile = File(...)):
+
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File is not an image.")
+    
+    try:
+        contents = await file.read()
+
+        try:
+            img = Image.open(io.BytesIO(contents))
+            img.verify()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid image format or corrupted image.")
+        
+        hash_value = xxhash.xxh64(contents).hexdigest()
+        
+        extension = file.filename.split(".")[-1] if "." in file.filename else "img"
+        new_filename = f"{hash_value}.{extension}"
+
+        with open(f"./upload/img/{new_filename}", "wb") as f:
+            f.write(contents)
+        
+        return JSONResponse(
+            content={
+                "status": "success",
+                "id": hash_value,
+            },
+            status_code=200
+        )
+    except Exception as e:
+        raise HTTPException(
+            content={
+                "status": "failed",
+                "message": f"There was an error uploading the file: {str(e)}"
+            },
+            status_code=500
+        )
+    finally:
+        await file.close()
+
+class ImageData(BaseModel):
+    id: str
+
+@app.post("/api/process/image")
+async def process_image(data: ImageData):
+    image_path = f"./upload/img/{data.id}"
+    if not os.path.exists(image_path):
+        raise HTTPException(
+            content={"status": "failed", "message": "Image not found"},
+            status_code=404
+        )
+
+    image = Image.open(image_path)
+
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+
+        prompt = "この画像について2,3文で簡単に説明して。"
+
+        response = model.generate_content([prompt, image])
+
+        return JSONResponse(
+            content={"status": "success", "data":response.text },
+            status_code=200
+        )
+    except Exception as e:
+        raise HTTPException(
+            content={"status": "failed", "message": f"Error processing image: {str(e)}"},
+            status_code=500
+        )
+
+@app.post("/api/edit/mondai")
+async def edit_mondai(data: MondaiData):
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    
+    status = await DB.edit_mondai(data.name, data.userid, data.mondai)
+
+    if status:
+        return {"status": "success"}
+    else:
+        return {"status": "failed"}
+
+@app.get("/api/get/mondai/{name}")
+async def get_mondai(name: str):
+    mondai = await DB.get_mondai(name)
+    if not mondai:
+        return {"message": "not found"}
+    return mondai
+
+@app.get("/api/get/mondai/userids/{name}")
+async def get_mondai_userids(name: str):
+    mondai = await DB.get_mondai_userids(name)
+    if not mondai:
+        return {"message": "not found"}
+    return mondai
+
+@app.get("/api/mosi/get")
 async def mosiget():
-    with open('./app/itpasu/play/mondai/management.json', 'r') as file:#20
-        management_deta = json.load(file)
-    with open('./app/itpasu/play/mondai/strategy.json', 'r') as file:#35
-        strategy_deta = json.load(file)
-    with open('./app/itpasu/play/mondai/technology.json', 'r') as file:#45
-        technology_deta = json.load(file)
+    async with aiofiles.open('./app/itpasu/play/mondai/management.json', mode='r') as f:
+        management_data = json.loads(await f.read())
+    async with aiofiles.open('./app/itpasu/play/mondai/strategy.json', mode='r') as f:
+        strategy_data = json.loads(await f.read())
+    async with aiofiles.open('./app/itpasu/play/mondai/technology.json', mode='r') as f:
+        technology_data = json.loads(await f.read())
 
-    mondai = []
-
-    management_mondai = random.sample(management_deta, min(20, len(management_deta)))
-
-    strategy_mondai = random.sample(strategy_deta, min(35, len(strategy_deta)))
-
-    technology_mondai = random.sample(technology_deta, min(45, len(technology_deta)))
+    management_mondai = random.sample(management_data, min(20, len(management_data)))
+    strategy_mondai = random.sample(strategy_data, min(35, len(strategy_data)))
+    technology_mondai = random.sample(technology_data, min(45, len(technology_data)))
 
     combined_mondai = management_mondai + strategy_mondai + technology_mondai
 
     return combined_mondai
 
-fastapi.mount("/", StaticFiles(directory="app", html=True), name="static")
+app.mount("/", StaticFiles(directory="app", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(fastapi, host="localhost", port=8080)
+    uvicorn.run(app, host="localhost", port=8080)

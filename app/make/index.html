@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問題を作成</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="toast.css">
+    <style>
+        /* 簡易的な削除ボタンのスタイル例 */
+        .delete-btn {
+            margin-left: 10px;
+            background-color: #ff6666;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 0.9em;
+        }
+
+        /* 一括削除ボタンのスタイル例 */
+        #bulkDelete {
+            background-color: #ff3333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        /* li要素のスタイル調整 */
+        #fileContent li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        #fileContent li p {
+            margin: 0;
+            min-width: 80px;
+        }
+        
+        p[contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+        }
+
+        .disable-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: -10vh;
+            background-color: #ccc;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .disable-btn:hover {
+            background-color: #aaa;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="box container1">
+        <p>.画像から作成</p>
+        <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png" />
+        <p>.txtファイルから読み込み</p>
+        <input type="file" id="txtload" name="txt" accept=".txt" />
+        <p>csvから読み込み</p>
+        <input type="file" id="csvload" name="csv" accept=".csv" />
+        <p>xlsxファイル(Excel)から読み込み</p>
+        <input type="file" id="xlsxload" name="xlsx" accept=".xlsx" />
+        <a href="javascript:copy();" class="btn">クリップボードから読み込み</a>
+        <div style="margin-top: 40px;">
+            <a href="javascript:save();" class="disable-btn">保存</a>
+            <a href="javascript:release();" class="disable-btn">公開</a>
+        </div>
+        
+    </div>
+
+    <div class="box container3">
+        <p style="font-size: 105%;">読み込んだ問題</p>
+        <p id="total-accs">問題数: 0</p>
+        <!-- 一括削除ボタン -->
+        <button id="bulkDelete">一括削除</button>
+        <ul id="fileContent" class="file-content"></ul>
+    </div>
+
+    <div id="toast-container"></div>
+    <script>
+        /* ----- 問題数の更新関数 ----- */
+        function updateTotalCount() {
+            const ul = document.getElementById('fileContent');
+            const lis = ul.querySelectorAll('li');
+            let count = lis.length - 1; // 入力用の空行を除外
+            if (lis.length > 0) {
+                // 最後の行が入力用の空行の場合はカウントしない
+                const lastLi = lis[lis.length - 1];
+                const ps = lastLi.querySelectorAll('p');
+                if (ps.length >= 2 && ps[0].innerText.trim() === 'answer' && ps[1].innerText.trim() === 'question') {
+                    count--;
+                }
+            }
+            document.getElementById('total-accs').innerText = '問題数: ' + count;
+
+            // 保存ボタンの有効・無効化
+            const saveBtn = document.querySelector('.disable-btn');
+            const releaseBtn = document.querySelectorAll('.disable-btn')[1]; // Find the release button
+            if (count > 0) {
+                saveBtn.classList.remove('disable-btn');
+                saveBtn.classList.add('btn');
+                releaseBtn.classList.remove('disable-btn');
+                releaseBtn.classList.add('btn'); 
+            } else {
+                saveBtn.classList.add('disable-btn');
+                saveBtn.classList.remove('btn');
+                releaseBtn.classList.add('disable-btn');
+                releaseBtn.classList.remove('btn');
+            }
+        }
+
+        /* ----- 編集可能なペア行を生成する関数 ----- */
+        function createEditablePair(answerValue = '', questionValue = '') {
+            // 既存のplaceholderがあれば削除
+            const ph = document.getElementById('placeholder');
+            if (ph) {
+                ph.remove();
+            }
+            const li = document.createElement('li');
+
+            const pAnswer = document.createElement('p');
+            pAnswer.contentEditable = true;
+
+            const pQuestion = document.createElement('p');
+            pQuestion.contentEditable = true;
+
+            if (answerValue === '' && questionValue === '') {
+                // data属性でplaceholder風のテキストを指定
+                pAnswer.setAttribute('data-placeholder', 'answer');
+                pQuestion.setAttribute('data-placeholder', 'question');
+            } else {
+                pAnswer.innerText = answerValue;
+                pQuestion.innerText = questionValue;
+            }
+
+            // 削除ボタンの生成
+            const delBtn = document.createElement('button');
+            delBtn.innerText = '削除';
+            delBtn.classList.add('delete-btn');
+            delBtn.addEventListener('click', function (e) {
+                li.remove();
+                updateTotalCount();
+                // 全て削除された場合は空行を追加
+                if (document.getElementById('fileContent').querySelectorAll('li').length === 0) {
+                    document.getElementById('fileContent').appendChild(createEditablePair());
+                }
+            });
+
+            li.appendChild(pAnswer);
+            li.appendChild(pQuestion);
+            li.appendChild(delBtn);
+
+            // 編集時の入力イベントを設定（自動追加用）
+            pAnswer.addEventListener('input', onEditableInput);
+            pQuestion.addEventListener('input', onEditableInput);
+
+            return li;
+        }
+
+
+        /* ----- 入力イベント：最下段の行に入力があれば新しい行を追加 ----- */
+        function onEditableInput(e) {
+            const li = e.target.parentElement;
+            const ul = li.parentElement;
+            // 最後の行の場合のみ処理
+            if (ul.lastElementChild === li) {
+                const pElements = li.querySelectorAll('p');
+                if (pElements.length === 2) {
+                    const text1 = pElements[0].innerText.trim();
+                    const text2 = pElements[1].innerText.trim();
+                    // 両方が空でなければ新規行を追加
+                    if (text1 !== '' && text2 !== '') {
+                        ul.appendChild(createEditablePair());
+                        updateTotalCount();
+                    }
+                }
+            }
+        }
+
+        /* ----- クリップボードからの読み込み ----- */
+        function copy() {
+            navigator.clipboard.readText().then(text => {
+                const lines = text.split('\n');
+                const content = document.getElementById('fileContent');
+                content.innerHTML = ''; // 既存内容・placeholderを削除
+                let total = 0;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].split(',');
+                    if (line.length == 2) {
+                        content.appendChild(createEditablePair(line[0], line[1]));
+                        total++;
+                    }
+                }
+                // 入力用の空行を追加
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            });
+        }
+
+
+        /* ----- 画像ファイルアップロード ----- */
+        document.getElementById('imageLoad').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Uploaded Image';
+                img.style.maxWidth = '100%'; 
+                img.style.height = 'auto'; 
+                document.body.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+
+            const formData = new FormData();
+            formData.append('image', file);
+            fetch('/api/img/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to upload image');
+                }
+            }).then(data => {
+                console.log(data);
+            }).catch(error => {
+                console.error(error);
+            });
+        });
+
+        /* ----- .txtファイル読み込み ----- */
+        document.getElementById('txtload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = e.target.result.split('\n');
+                const content = document.getElementById('fileContent');
+                content.innerHTML = '';
+                let total = 0;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].split(',');
+                    if (line.length == 2) {
+                        content.appendChild(createEditablePair(line[0], line[1]));
+                        total++;
+                    }
+                }
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            };
+            reader.readAsText(file);
+        });
+
+        /* ----- csvファイル読み込み ----- */
+        document.getElementById('csvload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = e.target.result.split('\n');
+                const content = document.getElementById('fileContent');
+                content.innerHTML = '';
+                let total = 0;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].split(',');
+                    if (line.length == 2) {
+                        content.appendChild(createEditablePair(line[0], line[1]));
+                        total++;
+                    }
+                }
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            };
+            reader.readAsText(file);
+        });
+
+        /* ----- xlsxファイル読み込み（XLSXライブラリが必要） ----- */
+        document.getElementById('xlsxload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const content = document.getElementById('fileContent');
+                content.innerHTML = '';
+                let total = 0;
+                for (let i = 1; i < 1000; i++) {
+                    const answer = sheet['A' + i];
+                    const question = sheet['B' + i];
+                    if (answer && question) {
+                        content.appendChild(createEditablePair(answer.v, question.v));
+                        total++;
+                    }
+                }
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        /* ----- クリップボードのペースト処理 ----- */
+        document.addEventListener('paste', function (e) {
+            const text = e.clipboardData.getData('text');
+            const lines = text.split('\n');
+            const content = document.getElementById('fileContent');
+            content.innerHTML = '';
+            let total = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].split(',');
+                if (line.length == 2) {
+                    content.appendChild(createEditablePair(line[0], line[1]));
+                    total++;
+                }
+            }
+            content.appendChild(createEditablePair());
+            updateTotalCount();
+        });
+
+        /* ----- ドラッグ＆ドロップでの読み込み ----- */
+        document.addEventListener('dragover', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('drop', function (e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = e.target.result.split('\n');
+                const content = document.getElementById('fileContent');
+                content.innerHTML = '';
+                let total = 0;
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].split(',');
+                    if (line.length == 2) {
+                        content.appendChild(createEditablePair(line[0], line[1]));
+                        total++;
+                    }
+                }
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            };
+            reader.readAsText(file);
+        });
+
+        /* ----- 一括削除ボタンの処理 ----- */
+        document.getElementById('bulkDelete').addEventListener('click', function () {
+            const content = document.getElementById('fileContent');
+            content.innerHTML = '';
+            // 入力用の空行を追加
+            content.appendChild(createEditablePair());
+            updateTotalCount();
+        });
+
+        /* ----- コピー用のトースト表示 ----- */
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.classList.add('toast');
+            toast.innerText = message;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(function () {
+                toast.remove();
+            }, 3000);
+        }
+
+        /* ----- クリック・右クリックでのコピー（※編集中の場合は無効） ----- */
+        document.getElementById('fileContent').addEventListener('click', function (e) {
+            const target = e.target;
+            if (!target.isContentEditable && target.tagName === 'P') {
+                const text = target.innerText;
+                navigator.clipboard.writeText(text).then(function () {
+                    showToast('コピーしました');
+                });
+            }
+        });
+
+        document.getElementById('fileContent').addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            const target = e.target;
+            if (!target.isContentEditable && target.tagName === 'P') {
+                const text = target.innerText;
+                navigator.clipboard.writeText(text).then(function () {
+                    showToast('コピーしました');
+                });
+            }
+        });
+
+        /* ----- 保存処理 ----- */
+        
+        function saveToLocalStorage() {
+            const content = document.getElementById('fileContent');
+            const data = [...content.children].map(pair => {
+                const inputs = pair.querySelectorAll('input');
+                return Array.from(inputs).map(input => input.value).join(',');
+            });
+            localStorage.setItem('fileContent', data.join('\n'));
+            showToast('保存しました');
+        }
+
+        /* ----- 公開ボタンの処理 ----- */
+
+        /* ----- 読み込み時の処理 ----- */
+                document.addEventListener('DOMContentLoaded', function () {
+                    const content = document.getElementById('fileContent');
+                                content.innerHTML = '';
+                                const storedData = localStorage.getItem('fileContent');
+                                // 保存されたデータがある場合、読み込みの確認を行う
+                                if (storedData) {
+                        if (confirm("保存されたデータがあります、読み込みますか？")) {
+                            const lines = storedData.split('\n');
+                            lines.forEach(line => {
+                                const pair = line.split(',');
+                                if (pair.length === 2) {
+                                    content.appendChild(createEditablePair(pair[0], pair[1]));
+                                }
+                            });
+                        }
+                    }
+                    content.appendChild(createEditablePair());
+                    updateTotalCount();
+                });
+
+
+    </script>
+    <!-- XLSXライブラリの読み込み（xlsx読み込み処理が必要な場合） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+
+</html>
