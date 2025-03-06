@@ -317,6 +317,7 @@
             <div class="swiper-slide slide1">
                 <p>none page</p>
             </div>
+            
             <div class="swiper-slide slide2">
                 <div class="main">
                     <div class="title">
@@ -336,12 +337,13 @@
                     <a href="javascript:onDontKnowClick();" class="hardlink">解説を見る</a>
                 </div>
             </div>
+
             <div class="swiper-slide slide3">
                 <div class="tangolist">
                     <h1>単語リスト</h1>
 
                     <label for="search">検索</label>
-                    <input type="text" id="search">
+                    <input type="text" id="search" oninput="filterWords()">
                     
                     <ul id="wordList" class="custom-list"></ul>
                 </div>
@@ -612,6 +614,23 @@
         document.getElementById('answer2').addEventListener('click', onAnswerClick);
         document.getElementById('answer3').addEventListener('click', onAnswerClick);
         document.getElementById('answer4').addEventListener('click', onAnswerClick);
+
+        function filterWords() {
+            const searchbox = document.querySelector('.searchbox');
+            const searchword = searchbox.value;
+            const wordList = document.getElementById('wordList');
+            const lis = wordList.getElementsByTagName('li');
+            for (let i = 0; i < lis.length; i++) {
+                const li = lis[i];
+                const title = li.querySelector('.tangotitle').textContent;
+                const content = li.querySelector('.content').textContent;
+                if (title.includes(searchword) || content.includes(searchword)) {
+                    li.style.display = 'block';
+                } else {
+                    li.style.display = 'none';
+                }
+            }
+        }
 
     </script>
 </body>

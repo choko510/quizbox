@@ -6,3 +6,4 @@ pillow==11.1.0
 google-generativeai==0.8.4
 xxhash==3.5.0
 numpy==2.2.3
+python-multipart==0.0.20
