@@ -14,39 +14,40 @@
         <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>     
     </div>
     <div class="main">
+
         <div class="box1">
-            <div class="category">
+            <div class="category" data-catgory="itpass">
                 <p>ITパスポート</p>
                 <a href="itpasu/play/">ITパスポート</a>
                 <a href="itpasu/play/?id=management">ITパスポート マネジメント系</a>
                 <a href="itpasu/play/?id=strategy">ITパスポート ストラテジ系</a>
                 <a href="itpasu/play/?id=technology">ITパスポート テクノロジ系</a>
             </div>
-            <div class="category">
+            <div class="category" data-catgory="itpass">
                 <p>ITパス 年代別</p>
                 <a href="itpasu/play/?id=r06">令和6年</a>
                 <a href="itpasu/play/?id=r05">令和5年</a>
                 <a href="itpasu/play/?id=r04">令和4年</a>
             </div>
-            <div class="category">
+            <div class="category" data-catgory="kentei">
                 <p>1級全般</p>
                     <a href="play/">プログラミング・ビジネス 1級</a>
                     <a href="beta/">プログラミング・ビジネス 1級 ハードモード</a>
                     <a href="play/?id=for">プログラミング・ビジネス フォール系 特訓 </a>
             </div>
-            <div class="category">
+            <div class="category" data-catgory="kentei">
                 <p>1級プログラミング</p>
                 <a href="play/?id=prog">プログラミング 1級</a>
                 <a href="beta/?id=proghard">プログラミング 1級 ハードモード</a>
                 <a href="play/?id=re">プログラミング リ系 特訓 </a>
             </div>
-            <div class="category">
+            <div class="category" data-catgory="kentei">
                 <p>1級ビジネス</p>
                 <a href="play/?id=bizinesu">ビジネス 1級</a>
                 <a href="beta/?id=hardbizinesu">ビジネス 1級 ハードモード</a>
                 <a href="play/?id=excelmondai">ビジネス エクセル 1級</a>
             </div>
-            <div class="category">
+            <div class="category" data-catgory="kentei">
                 <p>2級全般</p>
                 <a href="play/?id=detabase">データベース全般</a>
                 <a href="play/?id=excel2">エクセル関数全般</a>
@@ -77,6 +78,54 @@
                 })
             });
         })();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // フィルターデータの定義
+            const filters = [
+                { label: '全て', value: 'all' },
+                { label: 'ITパスポート', value: 'itpass' },
+                { label: '情報処理検定 全般', value: 'kentei' },
+            ];
+
+            // filter-buttonsコンテナの作成
+            const filterContainer = document.createElement('div');
+            filterContainer.className = 'filter-buttons';
+
+            // 各フィルターのボタンを作成してコンテナに追加
+            filters.forEach((filter, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                if (index === 0) {
+                    btn.classList.add('active');
+                }
+                btn.setAttribute('data-filter', filter.value);
+                btn.textContent = filter.label;
+                // クリックイベントでフィルター処理を実行
+                btn.addEventListener('click', () => {
+                    // すべてのボタンからactiveクラスを削除し、クリックされたボタンに追加
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterCategories(filter.value);
+                });
+                filterContainer.appendChild(btn);
+            });
+
+            // .box1要素の前にフィルターボタンを挿入（配置は必要に応じて変更してください）
+            const mainElement = document.querySelector('.main');
+            mainElement.insertBefore(filterContainer, mainElement.firstChild);
+        });
+
+        // フィルター処理の関数
+        function filterCategories(filterValue) {
+            const categories = document.querySelectorAll('.category');
+            categories.forEach(category => {
+                if (filterValue === 'all' || category.getAttribute('data-catgory') === filterValue) {
+                    category.style.display = 'block';
+                } else {
+                    category.style.display = 'none';
+                }
+            });
         }
 
         async function fetchScores(id, password) {

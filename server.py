@@ -35,7 +35,7 @@ if not os.getenv("GEMINI_APIKEY") or os.getenv("GEMINI_APIKEY") == "":
 genai.configure(api_key=os.getenv("GEMINI_APIKEY"))
 
 DATABASE_URL = "sqlite+aiosqlite:///data.db"
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
@@ -56,7 +56,7 @@ class Mondai(Base):
     mondai = Column(String)
 
 app = FastAPI()
-templates = Jinja2Templates(directory="app")
+templates = Jinja2Templates(directory="templates")
 
 app.add_middleware(
     CORSMiddleware,

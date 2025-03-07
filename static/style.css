@@ -10,7 +10,7 @@ body{
     width: 90vw;
     height: 81vh;
     text-align: center;
-    margin-top: 2.3%;
+    margin-top: 2.1%;
     border-radius: 6px;
     background-color: #fbfbfb;
     box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
@@ -31,6 +31,30 @@ body{
 .chart {
     width: 40%;
     margin: 0 auto;
+}
+
+.filter-buttons {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.filter-btn {
+    background-color: #eee;
+    border: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.filter-btn:hover {
+    background-color: #ddd;
+}
+
+.filter-btn.active {
+    background-color: #ccc;
+    font-weight: bold;
 }
 
 @media screen and (min-width:1200px) {
