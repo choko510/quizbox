@@ -213,7 +213,7 @@ class Data(BaseModel):
 # サイト
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("main.html", {"request": request})
 
 # APIエンドポイント
 @app.post("/api/registration")
@@ -455,7 +455,7 @@ async def mosiget():
 
     return combined_mondai
 
-app.mount("/", StaticFiles(directory="app", html=True), name="static")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
