@@ -213,7 +213,30 @@ class Data(BaseModel):
 # サイト
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("main.html", {"request": request})
+    userid = request.cookies.get("id")
+    
+    if userid:
+        try:
+            usermondai = await DB.get_mondai_userids(userid)
+        except:
+            usermondai = []
+
+        if usermondai:
+            html = """
+            <div class="category" data-category="other">
+                <p>作成した問題</p>
+            """
+            for mondai in usermondai:
+                html += f"<a href='/mondai/{mondai}'>{mondai}</a>"
+
+            html += "</div>"
+        else:
+            html = ""
+
+        return templates.TemplateResponse("main.html", {"request": request, "html": html})
+
+    return templates.TemplateResponse("index.html", {"request": request})
+
 
 # APIエンドポイント
 @app.post("/api/registration")
