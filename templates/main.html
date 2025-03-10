@@ -11,10 +11,13 @@
 </head>
 <body>
     <div class="top">
-        <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>     
+        <div class="top-left">
+            <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
+            <a href="/create-question" class="create-btn">問題を作る</a>
+        </div>
     </div>
     <div class="main">
-
+        {{ html }}
         <div class="box1">
             <div class="category" data-catgory="itpass">
                 <p>ITパスポート</p>
@@ -81,18 +84,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // フィルターデータの定義
             const filters = [
                 { label: '全て', value: 'all' },
                 { label: 'ITパスポート', value: 'itpass' },
                 { label: '情報処理検定 全般', value: 'kentei' },
             ];
-
-            // filter-buttonsコンテナの作成
+            
             const filterContainer = document.createElement('div');
             filterContainer.className = 'filter-buttons';
 
-            // 各フィルターのボタンを作成してコンテナに追加
             filters.forEach((filter, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn';
@@ -101,9 +101,7 @@
                 }
                 btn.setAttribute('data-filter', filter.value);
                 btn.textContent = filter.label;
-                // クリックイベントでフィルター処理を実行
                 btn.addEventListener('click', () => {
-                    // すべてのボタンからactiveクラスを削除し、クリックされたボタンに追加
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     filterCategories(filter.value);
@@ -111,12 +109,10 @@
                 filterContainer.appendChild(btn);
             });
 
-            // .box1要素の前にフィルターボタンを挿入（配置は必要に応じて変更してください）
             const mainElement = document.querySelector('.main');
             mainElement.insertBefore(filterContainer, mainElement.firstChild);
         });
 
-        // フィルター処理の関数
         function filterCategories(filterValue) {
             const categories = document.querySelectorAll('.category');
             categories.forEach(category => {

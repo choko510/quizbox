@@ -223,6 +223,31 @@
         .swiper-pagination-bullet-active {
             background: #0056b3;
         }
+
+        .resultbox {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr) 0.1fr repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr) 0.2fr repeat(2, 1fr);
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+            width: 90%;
+            height: 90%;
+        }
+
+        .resultbox > div {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            box-shadow: 0 7px 10px rgb(0 0 0 / 10%);
+        }
+
+        .resultbox1 { grid-area: 1 / 1 / 3 / 3; }
+        .resultbox2 { grid-area: 1 / 4 / 3 / 6; }
+        .resultbox3 { grid-area: 4 / 1 / 6 / 6; }
         
         @media screen and (max-height: 600px) {
             body {
@@ -289,7 +314,13 @@
         <div class="swiper-wrapper">
             
             <div class="swiper-slide slide1">
-                <p>none page</p>
+                
+                <div class="resultbox">
+                    <div class="resultbox1">Result 1</div>
+                    <div class="resultbox2">Result 2</div>
+                    <div class="resultbox3">Result 3</div>
+                </div>
+
             </div>
 
             <div class="swiper-slide slide2">
