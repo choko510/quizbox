@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.css" rel="stylesheet">
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
             padding: 0;
@@ -44,6 +46,11 @@
             text-align: center;
         }
 
+        .mondai-image {
+            max-width: 90%;
+            margin-top: 10px;
+        }
+
         ul {
             margin-top: 3.7%;
             list-style: none;
@@ -75,8 +82,7 @@
             transition: transform .3s, box-shadow .3s;
         }
 
-        .button:hover {
-            transform: translateY(-2px);
+        button:hover {
             box-shadow: 0 7px 10px rgb(0 0 0 / 15%);
         }
 
@@ -89,7 +95,7 @@
             text-align: center;
             border-radius: 6px;
             background-color: #fbfbfb;
-            box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
+            box-shadow: 7px 7px 21px -16px rgba(0, 0, 0, 0.1);
         }
 
         .title {
@@ -97,13 +103,13 @@
             width: 65%;
         }
 
-        .tangotitle{
+        .tangotitle {
             font-size: 120%;
             font-weight: bold;
-
         }
-        .content{
-            margin-left: 2px; 
+
+        .content {
+            margin-left: 2px;
             color: #333;
         }
 
@@ -114,8 +120,20 @@
             left: 0;
         }
 
+        .kaisetubtn {
+            position: absolute;
+            bottom: 4px;
+            right: 2px;
+            font-size: 110%;
+        }
+
         .popup {
-            font-size: 95%;
+            font-size: 110%;
+        }
+
+        .correct {
+            font-size: 110%;
+            font-weight: bold;
         }
 
         .hardlink {
@@ -173,7 +191,6 @@
             top: 20px;
         }
 
-
         .searchbox {
             width: 90%;
             padding: 8px 10px;
@@ -182,12 +199,12 @@
             color: #333;
             font-size: 1em;
             line-height: 1.5;
-            
         }
 
         .searchbox::placeholder {
             color: #999;
         }
+
         ul.custom-list {
             list-style-type: none;
             padding: 0;
@@ -199,7 +216,7 @@
             padding: 20px;
             background-color: #fbfbfb;
             color: #000;
-            box-shadow: 7px 7px 21px -16px rgba(0,0,0,0.1);
+            box-shadow: 7px 7px 21px -16px rgba(0, 0, 0, 0.1);
         }
 
         ul.custom-list li .title {
@@ -226,29 +243,134 @@
 
         .resultbox {
             display: grid;
-            grid-template-columns: repeat(2, 1fr) 0.1fr repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr) 0.2fr repeat(2, 1fr);
-            grid-column-gap: 0px;
-            grid-row-gap: 0px;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
             width: 90%;
             height: 90%;
+            margin: auto;
         }
 
-        .resultbox > div {
+        .resultbox>div {
             background-color: #fff;
             border: 1px solid #ccc;
             border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5em;
+            padding: 20px;
+            font-size: 1.2em;
             box-shadow: 0 7px 10px rgb(0 0 0 / 10%);
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
         }
 
-        .resultbox1 { grid-area: 1 / 1 / 3 / 3; }
-        .resultbox2 { grid-area: 1 / 4 / 3 / 6; }
-        .resultbox3 { grid-area: 4 / 1 / 6 / 6; }
-        
+        .resultbox1 {
+            grid-area: 1 / 1 / 2 / 2;
+        }
+
+        .resultbox2 {
+            grid-area: 1 / 2 / 2 / 3;
+        }
+
+        .resultbox3 {
+            grid-area: 2 / 1 / 3 / 2;
+        }
+
+        .resultbox4 {
+            grid-area: 2 / 2 / 3 / 3;
+        }
+
+        .progress-title,
+        .stats-title,
+        .study-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-align: center;
+        }
+
+        #progress-stats,
+        #performance-stats,
+        #study-list {
+            width: 100%;
+            text-align: left;
+        }
+
+        #progress-stats div,
+        #performance-stats div {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        #study-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .study-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #ffc107;
+            font-size: 0.9em;
+        }
+
+        .study-item.long-time {
+            border-left-color: #dc3545;
+        }
+
+        .study-item.wrong-answer {
+            border-left-color: #dc3545;
+        }
+
+        #performance-chart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .ansbg ul {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .lia,
+        .lii,
+        .liu,
+        .lie {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: .7em 1.5em;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            transition: .2s ease;
+        }
+
+        .lia:hover,
+        .lii:hover,
+        .liu:hover,
+        .lie:hover {
+            background: #f1f5f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
+            transform: translateY(-1px);
+        }
+
+        .cite {
+            color: #2563eb;
+            font-weight: 600;
+            display: block;
+            margin-bottom: .5em;
+        }
+
+        .m,
+        strong {
+            color: #2563eb;
+        }
+
         @media screen and (max-height: 600px) {
             body {
                 background-color: #fbfbfb;
@@ -263,7 +385,7 @@
                 box-shadow: none;
                 height: 68vh;
             }
-            
+
             button {
                 padding: .3em 1em;
             }
@@ -277,7 +399,7 @@
             .main {
                 box-shadow: none;
             }
-            
+
             button {
                 width: 300px;
                 font-size: 0.9em;
@@ -306,22 +428,84 @@
             .sp {
                 margin-top: 7%;
             }
+
+            .resultbox {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+
+            .resultbox1 {
+                grid-area: 1 / 1 / 2 / 2;
+            }
+
+            .resultbox2 {
+                grid-area: 2 / 1 / 3 / 2;
+            }
+
+            .resultbox3 {
+                grid-area: 3 / 1 / 4 / 2;
+            }
+
+            .resultbox4 {
+                grid-area: 4 / 1 / 5 / 2;
+            }
+
+            .resultbox>div {
+                font-size: 0.9em;
+                padding: 10px;
+            }
+
+            .progress-title,
+            .stats-title,
+            .study-title {
+                font-size: 1.2em;
+            }
+
+            .tangotitle {
+                font-size: 90%;
+            }
+
+            .content {
+                font-size: 80%;
+            }
         }
     </style>
 </head>
+
 <body>
     <a href="../" class="back"></a>
     <div class="swiper-container">
         <div class="swiper-wrapper">
-            
-            <div class="swiper-slide slide1">
-                
-                <div class="resultbox">
-                    <div class="resultbox1">Result 1</div>
-                    <div class="resultbox2">Result 2</div>
-                    <div class="resultbox3">Result 3</div>
-                </div>
 
+            <div class="swiper-slide slide1">
+                <div class="resultbox">
+                    <div class="resultbox1">
+                        <div class="progress-title">学習進捗</div>
+                        <div id="progress-stats">
+                            <div>総問題数: <span id="total-questions">0</span></div>
+                            <div>学習済み: <span id="answered-questions">0</span></div>
+                            <div>正解: <span id="correct-answers">0</span></div>
+                            <div>不正解: <span id="wrong-answers">0</span></div>
+                            <div>進捗率: <span id="progress-percentage">0</span>%</div>
+                        </div>
+                    </div>
+                    <div class="resultbox2">
+                        <div class="stats-title">統計情報</div>
+                        <div id="performance-stats">
+                            <div>平均正解率: <span id="avg-accuracy">0</span>%</div>
+                            <div>最高連続正解: <span id="max-streak">0</span></div>
+                            <div>現在の連続正解: <span id="current-streak">0</span></div>
+                            <div>平均解答時間: <span id="avg-time">0</span>秒</div>
+                        </div>
+                    </div>
+                    <div class="resultbox3">
+                        <div class="study-title">学習中の問題</div>
+                        <ul id="study-list"></ul>
+                    </div>
+                    <div class="resultbox4">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <div class="swiper-slide slide2">
@@ -340,8 +524,11 @@
                     <a href="../play" class="hardlink">イージーモード</a>
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
                 </div>
+                <div class="kaisetubtn">
+                    <a href="javascript:void(0);" class="hardlink" onclick="onDontKnowClick();">解説を見る</a>
+                </div>
             </div>
-            
+
             <div class="swiper-slide slide3">
                 <div class="tangolist">
                     <h1>単語リスト</h1>
@@ -353,6 +540,26 @@
         <div class="swiper-button-next"></div>
         <div class="swiper-button-prev"></div>
     </div>
+
+    <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+        <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
+                <main class="modal__content" id="modal-1-content">
+                    <div id="hansei" style="text-align: center;"></div>
+                    <hr>
+                    <div id="kaisetu"></div>
+                </main>
+                <footer class="modal__footer" style="text-align: center;justify-content: center;align-items: center;">
+                    <button class="modal__btn" data-micromodal-close
+                        aria-label="Close this dialog window">私は間違えたことを深くお詫び、反省することを誓います。</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="modal.css">
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
@@ -379,8 +586,10 @@
         }
 
         let mondai = getParam("id");
+        const isItpass = window.location.pathname.includes('/itpasu/');
+
         if (mondai == null) {
-            mondai = "hard";
+            mondai = isItpass ? "it" : "hard";
         } else {
             document.getElementById('score').textContent = `
                 回答数: 0
@@ -392,62 +601,104 @@
         }
 
         const questions = [];
-        fetch("../deta/" + mondai + '.txt')
-            .then(response => response.text())
-            .then(text => {
-                const lines = text.split('\n');
-                
-                const wordList = document.getElementById('wordList');
-                lines.forEach(line => {
-                    const [word, description,mondai] = line.split('|');
-                    if (mondai == undefined){
-                        questions.push({
-                            word: word,
-                            description: description
+        let answeredQuestions = new Set();
+        let maxStreak = 0;
+        let performanceHistory = [];
+        let performanceChart = null;
+        let questionStats = new Map();
+        let answerTimes = [];
+        let studyingQuestions = new Set();
+
+        // 解説表示用の関数 (ITパスポート試験用)
+        function onDontKnowClick() {
+            if (isItpass) {
+                const currentQuestion = questions[currentIndex];
+                document.getElementById('hansei').innerHTML = `<div class="popup">${currentQuestion.description}<br><br>正解: ${currentQuestion.word}</div>`;
+                document.getElementById('kaisetu').innerHTML = currentQuestion.kaisetu;
+                MicroModal.show('modal-1'); // モーダルを表示
+            }
+        }
+
+
+        function loadQuestions() {
+            if (isItpass) {
+                return fetch("./mondai/" + mondai + '.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(item => {
+                            const realkotae = item.kotae.replace("ア", 0).replace("イ", 1).replace("ウ", 2).replace("エ", 3);
+                            let imageHTML = '';
+                            if (item.mondaiimg && item.mondaiimg.length > 0) {
+                                imageHTML = item.mondaiimg.map(imgPath => `<img src="${imgPath}" alt="問題画像" class="mondai-image">`).join('');
+                            }
+                            const mondaiCopy = [...item.mondai];
+                            mondaiCopy.splice(realkotae, 1);
+                            questions.push({
+                                word: item.mondai[realkotae],  // 正解の選択肢
+                                description: item.mondaibun + "<br>" + imageHTML,
+                                kouho: item.kouho,
+                                mondai: mondaiCopy, //不正解の選択肢
+                                kaisetu: item.kaisetu
+                            });
                         });
-                    }else{
-                        hard = true
-                        questions.push({
-                            word: word,
-                            description: description,
-                            mondai:mondai
+                    });
+            } else {
+                return fetch("../deta/" + mondai + '.txt')
+                    .then(response => response.text())
+                    .then(text => {
+                        const lines = text.split('\n');
+                        lines.forEach(line => {
+                            const [word, description, mondai] = line.split('|');
+                            if (mondai == undefined) {
+                                questions.push({
+                                    word: word,
+                                    description: description
+                                });
+                            } else {
+                                questions.push({
+                                    word: word,
+                                    description: description,
+                                    mondai: JSON.parse(mondai)
+                                });
+                            }
                         });
-                    }
-                    
-                    const li = document.createElement('li');
+                    });
+            }
+        }
 
-                    const titleDiv = document.createElement('div');
-                    titleDiv.className = 'tangotitle';
-                    titleDiv.textContent = word;
+        loadQuestions().then(() => {
+            document.getElementById('total-questions').textContent = questions.length;
+            currentIndex = Math.floor(Math.random() * questions.length);
+            showNextQuestion();
+            initializeChart();
+            populateWordList();
+        });
 
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'content';
-                    contentDiv.textContent = description;
-                    
-                    if (titleDiv.textContent.endsWith("か。")||titleDiv.textContent.endsWith("答えよ。")||titleDiv.textContent.endsWith("答えなさい。")) {
-                        li.appendChild(contentDiv);
-                        li.appendChild(titleDiv);
-                    }else {
-                        li.appendChild(titleDiv);
-                        li.appendChild(contentDiv);
-                    }
+        function populateWordList() {
+            const wordList = document.getElementById('wordList');
+            wordList.innerHTML = ''; // リストをクリア
+            questions.forEach(question => {
+                const li = document.createElement('li');
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'tangotitle';
+                titleDiv.innerHTML = isItpass ? question.description : question.word;
 
-                    wordList.appendChild(li);
-                });
-                currentIndex = Math.floor(Math.random() * questions.length);
-                showNextQuestion();
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content';
+                contentDiv.innerHTML = isItpass ? question.kaisetu : question.description;
+
+                if (isItpass || titleDiv.textContent.endsWith("か。") ||
+                    titleDiv.textContent.endsWith("答えよ。") ||
+                    titleDiv.textContent.endsWith("答えなさい。")) {
+                    li.appendChild(contentDiv);
+                    li.appendChild(titleDiv);
+                } else {
+                    li.appendChild(titleDiv);
+                    li.appendChild(contentDiv);
+                }
+
+                wordList.appendChild(li);
             });
-
-        function converter(cookie) {
-            cookie = cookie.split(";");
-            const obj = {};
-            cookie.map((item) => {
-                const elem = item.split("=");
-                const key = elem[0].trim();
-                const val = decodeURIComponent(elem[1]);
-                obj[key] = val;
-            });
-            return obj;
         }
 
         let currentIndex;
@@ -457,9 +708,7 @@
         let renzokuseikai = 0;
         let accid = Cookies.get('id');
         let password = Cookies.get('password');
-        let starttime = 0;
-        let endtime = 0;
-        let hard = false;
+        let start = performance.now();
 
         function showNextQuestion() {
             const question = questions[currentIndex];
@@ -467,17 +716,17 @@
             textlength = question.description.length;
             title.innerHTML = question.description;
             screenWidth = window.innerWidth;
-            screenHeight = window.innerHeight; 
+            screenHeight = window.innerHeight;
 
-            if (screenWidth < 600 || screenHeight < 600) { // 小さい画面の場合
+            if (screenWidth < 600 || screenHeight < 600) {
                 if (textlength >= 150) {
                     title.style.fontSize = "0.8em";
                 } else if (textlength >= 100) {
                     title.style.fontSize = "1em";
-                }else {
+                } else {
                     title.style.fontSize = "1.3em";
                 }
-            } else if (screenWidth < 1200 || screenHeight < 800) { // 中程度の画面の場合
+            } else if (screenWidth < 1200 || screenHeight < 800) {
                 if (textlength >= 150) {
                     title.style.fontSize = "1em";
                 } else if (textlength >= 100) {
@@ -485,7 +734,7 @@
                 } else {
                     title.style.fontSize = "1.4em";
                 }
-            } else { // 大きい画面の場合
+            } else {
                 if (textlength >= 150) {
                     title.style.fontSize = "1.2em";
                 } else if (textlength >= 100) {
@@ -495,88 +744,205 @@
                 }
             }
 
-            
             const answers = [question.word];
 
-            if(hard){
-                const mondai = JSON.parse(question.mondai)
+            if (isItpass || question.mondai) {
+                const mondaiOptions = isItpass ? question.mondai : question.mondai;
+                // 重複しないように選択肢をanswersに追加
                 while (answers.length < 4) {
-                    const randomIndex = Math.floor(Math.random() * mondai.length);
-                    if (!answers.includes(mondai[randomIndex])) {
-                        answers.push(mondai[randomIndex])
+                    const randomIndex = Math.floor(Math.random() * mondaiOptions.length);
+                    const selectedOption = mondaiOptions[randomIndex];
+                    if (!answers.includes(selectedOption)) {
+                        answers.push(selectedOption);
                     }
                 }
-                answers.sort(() => Math.random() - 0.5);
-                answers.forEach((answer, index) => {
-                    document.getElementById('answer' + (index + 1)).textContent = answer;
-                });
-            }else{
-                const answers = [question.word];
+            } else {
                 while (answers.length < 4) {
                     const randomIndex = Math.floor(Math.random() * questions.length);
                     if (!answers.includes(questions[randomIndex].word)) {
                         answers.push(questions[randomIndex].word);
                     }
                 }
-                answers.sort(() => Math.random() - 0.5);
-                answers.forEach((answer, index) => {
-                    document.getElementById('answer' + (index + 1)).textContent = answer;
-                });
             }
-            
+
+            answers.sort(() => Math.random() - 0.5);
+            answers.forEach((answer, index) => {
+                document.getElementById('answer' + (index + 1)).textContent = answer;
+            });
+
             start = performance.now();
         }
 
         function calculateAccuracy() {
-            return (correctCount / totalCount) * 100;
+            return totalCount === 0 ? 0 : (correctCount / totalCount) * 100;
+        }
+
+        function calculateAverageTime() {
+            if (answerTimes.length === 0) return 0;
+            const sum = answerTimes.reduce((a, b) => a + b, 0);
+            return (sum / answerTimes.length / 1000).toFixed(1);
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '正解率推移',
+                        data: [],
+                        borderColor: '#007bff',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (performanceChart && totalCount > 0) {
+                const accuracy = calculateAccuracy();
+                performanceHistory.push(accuracy);
+
+                performanceChart.data.labels = Array.from({ length: performanceHistory.length }, (_, i) => i + 1);
+                performanceChart.data.datasets[0].data = performanceHistory;
+                performanceChart.update();
+            }
+        }
+
+        function updateStudyList() {
+            const studyList = document.getElementById('study-list');
+            studyList.innerHTML = '';
+
+            for (let [index, stats] of questionStats) {
+                if (studyingQuestions.has(index)) {
+                    const li = document.createElement('li');
+                    li.className = `study-item ${stats.isLongTime ? 'long-time' : ''} ${stats.isWrong ? 'wrong-answer' : ''}`;
+
+                    let statusText = [];
+                    if (stats.isLongTime) statusText.push('時間がかかっています');
+                    if (stats.isWrong) statusText.push('間違えています');
+
+                    li.innerHTML = `
+                        <strong>${questions[index].word}</strong><br>
+                        ${statusText.join(' / ')}
+                    `;
+                    studyList.appendChild(li);
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('answered-questions').textContent = answeredQuestions.size;
+            document.getElementById('correct-answers').textContent = correctCount;
+            document.getElementById('wrong-answers').textContent = wrongCount;
+            document.getElementById('progress-percentage').textContent =
+                ((answeredQuestions.size / questions.length) * 100).toFixed(1);
+
+            document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(1);
+            document.getElementById('max-streak').textContent = maxStreak;
+            document.getElementById('current-streak').textContent = renzokuseikai;
+            document.getElementById('avg-time').textContent = calculateAverageTime();
+
+            updateChart();
+            updateStudyList();
         }
 
         function onAnswerClick(e) {
-            document.querySelector('.swiper-button-next').style.display = 'none';
-            document.querySelector('.swiper-button-prev').style.display = 'none';
+            // スワイパーのボタンを非表示にする処理は、イベントハンドラが正常に登録されていれば不要
+            // document.querySelector('.swiper-button-next').style.display = 'none';
+            // document.querySelector('.swiper-button-prev').style.display = 'none';
 
+            const endTime = performance.now();
+            const timeTaken = endTime - start;
+            answerTimes.push(timeTaken);
+
+            const avgTime = calculateAverageTime();
+            const isLongTime = timeTaken / 1000 > avgTime * 1.5;
+
+            if (!questionStats.has(currentIndex)) {
+                questionStats.set(currentIndex, {
+                    attempts: 0,
+                    correctAnswers: 0,
+                    averageTime: 0,
+                    isLongTime: false,
+                    isWrong: false
+                });
+            }
+
+            const stats = questionStats.get(currentIndex);
+            stats.attempts++;
+            stats.averageTime = (stats.averageTime * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            stats.isLongTime = isLongTime;
+
+            answeredQuestions.add(currentIndex);
             totalCount++;
+
             if (e.target.textContent === questions[currentIndex].word) {
                 correctCount++;
                 renzokuseikai++;
+                if (renzokuseikai > maxStreak) {
+                    maxStreak = renzokuseikai;
+                }
+                stats.correctAnswers++;
+                if (stats.correctAnswers >= 2) {
+                    studyingQuestions.delete(currentIndex);
+                }
                 notie.alert({ type: 1, text: '正解', time: 1 });
                 displayScore();
+                updateStats();
                 nextIndex();
                 showNextQuestion();
                 sendScore("add_correct", accid, password);
             } else {
                 wrongCount++;
                 renzokuseikai = 0;
+                stats.isWrong = true;
+                studyingQuestions.add(currentIndex);
                 notie.force({
                     type: 'error',
                     text: '<div class="popup">' + questions[currentIndex].description + '<br><br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>',
                     buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                     callback: function () {
                         displayScore();
+                        updateStats();
                         showNextQuestion();
                         sendScore("add_bad", accid, password);
                     }
                 });
+
+            }
+
+            if (isLongTime) {
+                studyingQuestions.add(currentIndex);
             }
         }
 
         function nextIndex() {
-            let last_currentIndex = currentIndex;
-            
-            currentIndex = Math.floor(Math.random() * questions.length);
-            if (currentIndex == last_currentIndex) {
+            let lastIndex = currentIndex;
+            do {
                 currentIndex = Math.floor(Math.random() * questions.length);
-            }
+            } while (currentIndex === lastIndex);
         }
 
         function displayScore() {
             document.getElementById('score').textContent = `
-                回答数: ${totalCount}
-                正解数: ${correctCount}
-                不正解数: ${wrongCount}
-                連続正解数: ${renzokuseikai}
-                正答率: ${calculateAccuracy().toFixed(1)}%
-            `;
+                    回答数: ${totalCount}
+                    正解数: ${correctCount}
+                    不正解数: ${wrongCount}
+                    連続正解数: ${renzokuseikai}
+                    正答率: ${calculateAccuracy().toFixed(1)}%
+                `;
         }
 
         function sendScore(endpoint, id, password) {
@@ -608,23 +974,27 @@
         document.getElementById('answer3').addEventListener('click', onAnswerClick);
         document.getElementById('answer4').addEventListener('click', onAnswerClick);
 
-        function filterWords(){
+        function filterWords() {
             const searchbox = document.querySelector('.searchbox');
-            const searchword = searchbox.value;
+            const searchword = searchbox.value.toLowerCase(); // 小文字に変換して比較
             const wordList = document.getElementById('wordList');
             const lis = wordList.getElementsByTagName('li');
             for (let i = 0; i < lis.length; i++) {
                 const li = lis[i];
-                const title = li.querySelector('.tangotitle').textContent;
-                const content = li.querySelector('.content').textContent;
-                if (title.includes(searchword) || content.includes(searchword)) {
-                    li.style.display = 'block';
-                } else {
-                    li.style.display = 'none';
-                }
-            }
-        }
+                const title = li.querySelector('.tangotitle').textContent.toLowerCase(); // 小文字に変換
+                const content = li.querySelector('.content').textContent.toLowerCase(); // 小文字に変換
+                            if (title.includes(searchword) || content.includes(searchword)) {
+                                li.style.display = 'block';
+                            } else {
+                                li.style.display = 'none';
+                            }
+                        }
+                    }
 
-    </script>
+                    // 初期化時にモーダルをセットアップ (ITパスポート試験の場合のみ)
+                    if (isItpass) {
+                        MicroModal.init();
+                    }
+                </script>
 </body>
 </html>

@@ -55,8 +55,17 @@ class Mondai(Base):
     userid = Column(String)
     mondai = Column(String)
 
-app = FastAPI()
+
 templates = Jinja2Templates(directory="templates")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # アプリ起動時の処理（startup）
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,13 +74,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # アプリ起動時の処理（startup）
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
 
 # 非同期 DB 操作用クラス
 class DB:
@@ -235,7 +237,7 @@ async def root(request: Request):
 
         return templates.TemplateResponse("main.html", {"request": request, "html": html})
 
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("main.html", {"request": request})
 
 
 # APIエンドポイント
