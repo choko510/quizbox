@@ -239,6 +239,13 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
+@app.get("/play/")
+async def play(request: Request):
+    return templates.TemplateResponse("play.html", {"request": request})
+
+@app.get("/itpasu/play/")
+async def itpasplay(request: Request):
+    return templates.TemplateResponse("play.html", {"request": request})
 
 # APIエンドポイント
 @app.post("/api/registration")
