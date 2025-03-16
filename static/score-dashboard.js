@@ -1,3 +1,4 @@
+
 // スコアダッシュボードの機能を管理するJavaScriptファイル
 document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
@@ -24,6 +25,49 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // ユーザーデータ保存用のキー
 const USER_GOALS_KEY = 'user_goals';
+
+// APIからスコアデータを取得
+async function fetchScores(id, password) {
+    const response = await fetch(`api/get`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            id: id,
+            password: password
+        })
+    });
+    const data = await response.json();
+    if (data.message === "password is wrong") {
+        alert("Invalid password");
+        return;
+    }
+    return data;
+}
+
+async function fetchRanking() {
+    const response = await fetch(`api/ranking`);
+    //{"userid": userid, "correct": correct, "bad": bad}
+    const data = await response.json();
+    const ranking = data.map((d, i) => {
+        return `${i + 1}位: ${d.userid} 正解数:${d.correct} 不正解数:${d.bad}`;
+    });
+    document.getElementById("ranking").textContent = ranking;
+}
+
+function displayScores(correct, bad, total, ritu) {
+    document.getElementById("correct").textContent = "正解数:" + correct;
+    document.getElementById("bad").textContent = "不正解数:" + bad;
+    document.getElementById("total").textContent = "トータル:" + total;
+    document.getElementById("ritu").textContent = "正答率:" + ritu;
+}
+
+async function fetchData(id, password) {
+    const response = await fetch(`api/get/${id}/${password}`);
+    const data = await response.json();
+    return data;
+}
 
 // タブ切り替え機能の設定
 function setupTabs() {
@@ -78,9 +122,6 @@ async function iconmodal() {
 
     // メインチャート描画
     drawMainChart();
-
-    // 現在の名前を表示
-    document.getElementById("nowname").textContent = "現在の名前: " + id;
 
     // モーダル表示の初期化完了
     console.log('モーダルの表示が完了しました');
@@ -759,8 +800,6 @@ async function generateAdvice() {
     }
 }
 
-// 既存の関数をオーバーライド（元のコードを残しつつ拡張）
-const originalIconModal = window.iconmodal || function(){};
+// グローバルに必要な関数を公開
 window.iconmodal = iconmodal;
-
 window.saveGoal = saveGoal;

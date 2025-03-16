@@ -142,6 +142,7 @@
 <body>
     <div class="parent">
         <div class="box container1">
+            <a href="javascript:templatedl();" class="btn">テンプレートをダウンロード</a>
             <p>.画像から作成</p>
             <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png" />
             <p>.txtファイルから読み込み</p>
@@ -172,11 +173,40 @@
         </div>
     </div>
 
+    <div class="modal micromodal-slide" id="downloadlist" aria-hidden="true">
+        <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title" >
+                <header class="modal__header">
+                    <h2 class="modal__title" id="modal-1-title">テンプレートリスト</h2>
+                    <button class="modal__close" aria-label="Close modal" data-micromodal-close>&times;</button>
+                </header>
+                <main class="modal__content" id="modal-1-content" style="text-align: center;">
+                    <a href="/static/make/template.txt" download="template.txt" class="btn">テキストファイル</a>
+                    <a href="/static/make/template.csv" download="template.csv" class="btn">CSVファイル</a>
+                    <a href="/static/make/template.xlsx" download="template.xlsx" class="btn">Excelファイル</a>
+                </main>
+                <footer class="modal__footer">
+                    <button class="modal__btn" data-micromodal-close aria-label="閉じる">閉じる</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <link rel="stylesheet" href="../modal.css">
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
     <script>
+
+        MicroModal.init();
+
+        /* ----- テンプレートダウンロード関数 ----- */
+        function templatedl() {
+            MicroModal.show('downloadlist');
+        }
+
         /* ----- 問題数の更新関数 ----- */
         function updateTotalCount() {
             const ul = document.getElementById('fileContent');
