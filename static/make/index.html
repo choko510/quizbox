@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>問題を作成</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
     <link rel="stylesheet" href="style.css">
@@ -31,6 +31,8 @@
             padding: 5px 10px;
             font-size: 1em;
             margin-bottom: 10px;
+            width: 100%;
+            max-width: 200px;
         }
 
         /* li要素のスタイル調整 */
@@ -44,6 +46,7 @@
         #fileContent li p {
             margin: 0;
             min-width: 80px;
+            word-break: break-all;
         }
         
         p[contenteditable]:empty:before {
@@ -54,7 +57,7 @@
         .disable-btn {
             display: inline-block;
             padding: 10px 20px;
-            margin: -10vh;
+            margin: 10px 5px;
             background-color: #ccc;
             color: white;
             text-decoration: none;
@@ -70,7 +73,7 @@
         .btn {
             display: inline-block;
             padding: 10px 20px;
-            margin: -10vh;
+            margin: 10px 5px;
             background-color: #4CAF50;
             color: white;
             text-decoration: none;
@@ -94,6 +97,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            touch-action: none;
         }
 
         .preview-content {
@@ -109,11 +113,28 @@
             color: white;
             font-size: 24px;
             cursor: pointer;
+            padding: 10px;  /* タッチ操作用に領域拡大 */
         }
 
         .preview-image {
             max-width: 100%;
             max-height: 90vh;
+        }
+        
+        @media (max-width: 768px) {
+            .buttons-container {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            
+            .action-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+            }
         }
     </style>
 </head>
@@ -130,7 +151,7 @@
             <p>xlsxファイル(Excel)から読み込み</p>
             <input type="file" id="xlsxload" name="xlsx" accept=".xlsx" />
             <a href="javascript:copy();" class="btn">クリップボードから読み込み</a>
-            <div style="margin-top: 40px;">
+            <div class="action-buttons" style="margin-top: 40px;">
                 <a href="javascript:save();" class="disable-btn" id="saveBtn">保存</a>
                 <a href="javascript:release();" class="disable-btn" id="releaseBtn">公開</a>
             </div>

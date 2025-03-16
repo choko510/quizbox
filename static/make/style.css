@@ -119,19 +119,108 @@ input[type="file"] {
 }
 
 @media (max-width: 768px) {
-
     body {
         height: auto;
         padding: 20px 0;
         display: block;
     }
+
+    .parent {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        padding: 15px;
+    }
+
+    .container1, .container2 {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 20px;
+        grid-area: unset;
+    }
+
+    .box {
+        padding: 15px;
+        width: calc(100% - 30px);
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .btn, .disable-btn {
+        display: block;
+        width: 100%;
+        margin: 15px auto;
+        padding: 12px 10px;
+        box-sizing: border-box;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
+        margin-bottom: 15px;
+    }
+
+    .file-content li {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #fileContent li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #fileContent li p {
+        margin-bottom: 8px;
+        width: 100%;
+    }
+
+    .delete-btn {
+        margin-left: 0;
+        align-self: flex-end;
+    }
 }
 
 /* 横幅が600px以下のときの処理 */
 @media (max-width: 600px) {
+    body {
+        padding: 10px 0;
+    }
 
-    .btn {
-        display: block;
-        margin: 10px auto;
+    .box {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .btn, .disable-btn {
+        padding: 10px;
+        font-size: 0.95em;
+    }
+
+    #bulkDelete {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .preview-content {
+        max-width: 95%;
+    }
+}
+
+/* 非常に小さい画面向け */
+@media (max-width: 375px) {
+    .box {
+        padding: 10px;
+    }
+
+    #fileContent li {
+        gap: 5px;
+    }
+
+    input[type="file"] {
+        font-size: 0.9em;
     }
 }
