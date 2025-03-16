@@ -48,6 +48,7 @@ class Account(Base):
     bad = Column(Integer)
     correctdata = Column(String)
     baddata = Column(String)
+    progress_data = Column(String, default="{}")  # 学習進捗データを保存するカラム
 
 class Mondai(Base):
     __tablename__ = 'mondai'
@@ -294,6 +295,60 @@ class DB:
                 return True
             else:
                 return False
+                
+    @staticmethod
+    async def save_progress_data(id: str, progress_data: dict, problem_set: str):
+        """
+        ユーザーの学習進捗データを保存する（問題セットごと）
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                try:
+                    # 既存のデータを取得
+                    all_progress_data = json.loads(user.progress_data) if user.progress_data else {}
+                except json.JSONDecodeError:
+                    all_progress_data = {}
+                
+                # 問題セットごとのデータを更新
+                if not isinstance(all_progress_data, dict):
+                    all_progress_data = {}
+                
+                # 問題セットのデータを更新
+                all_progress_data[problem_set] = progress_data
+                
+                # 更新したデータを保存
+                user.progress_data = json.dumps(all_progress_data)
+                await session.commit()
+                return True
+            return False
+            
+    @staticmethod
+    async def get_progress_data(id: str, problem_set: str = None):
+        """
+        ユーザーの学習進捗データを取得する
+        問題セットが指定された場合はその問題セットのデータのみを返す
+        指定されない場合は全データを返す
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if user:
+                try:
+                    all_progress_data = json.loads(user.progress_data) if user.progress_data else {}
+                    if not isinstance(all_progress_data, dict):
+                        all_progress_data = {}
+                        
+                    if problem_set:
+                        # 特定の問題セットのデータを返す
+                        return all_progress_data.get(problem_set, {})
+                    else:
+                        # 全データを返す
+                        return all_progress_data
+                except json.JSONDecodeError:
+                    return {} if problem_set else {}
+            return {}
 
 class Data(BaseModel):
     id: str
@@ -351,6 +406,12 @@ class AnswerData(BaseModel):
     id: str
     password: str
     subject: str = None
+
+class ProgressData(BaseModel):
+    id: str
+    password: str
+    progress_data: dict
+    problem_set: str  # 問題セット名（mondai）を追加
 
 @app.post("/api/add_correct")
 async def add_correct(data: AnswerData):
@@ -578,6 +639,47 @@ async def mosiget():
     combined_mondai = management_mondai + strategy_mondai + technology_mondai
 
     return combined_mondai
+
+@app.post("/api/save_progress")
+async def save_progress(data: ProgressData):
+    """
+    ユーザーの学習進捗データを保存するエンドポイント
+    """
+    if await DB.password(data.id) != data.password:
+        return {"message": "password is wrong"}
+    
+    success = await DB.save_progress_data(data.id, data.progress_data, data.problem_set)
+    if success:
+        return {"message": "progress data saved successfully"}
+    else:
+        return {"message": "user not found"}
+
+class GetProgressData(BaseModel):
+    id: str
+    password: str
+    problem_set: str
+
+@app.post("/api/get_progress")
+async def get_progress(data: GetProgressData):
+    """
+    ユーザーの学習進捗データを取得するエンドポイント
+    """
+    if await DB.password(data.id) != data.password:
+        return {"message": "password is wrong"}
+    
+    progress_data = await DB.get_progress_data(data.id, data.problem_set)
+    return {"progress_data": progress_data}
+
+@app.post("/api/get_all_progress")
+async def get_all_progress(data: Data):
+    """
+    ユーザーの全ての問題セットの学習進捗データを取得するエンドポイント
+    """
+    if await DB.password(data.id) != data.password:
+        return {"message": "password is wrong"}
+    
+    all_progress_data = await DB.get_progress_data(data.id)
+    return {"all_progress_data": all_progress_data}
 
 @app.get("/api/get/category_stats/{id}/{password}")
 async def get_category_stats(id: str, password: str):

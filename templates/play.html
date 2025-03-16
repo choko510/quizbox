@@ -666,13 +666,19 @@
             }
         }
 
-        loadQuestions().then(() => {
-            document.getElementById('total-questions').textContent = questions.length;
-            currentIndex = Math.floor(Math.random() * questions.length);
-            showNextQuestion();
-            initializeChart();
-            populateWordList();
-        });
+loadQuestions().then(() => {
+    document.getElementById('total-questions').textContent = questions.length;
+    currentIndex = Math.floor(Math.random() * questions.length);
+    
+    // もしログインしていれば、サーバーから学習進捗データを読み込む
+    if (accid && password) {
+        loadProgressFromServer();
+    }
+    
+    showNextQuestion();
+    initializeChart();
+    populateWordList();
+});
 
         function populateWordList() {
             const wordList = document.getElementById('wordList');
@@ -859,9 +865,8 @@
         }
 
         function onAnswerClick(e) {
-            // スワイパーのボタンを非表示にする処理は、イベントハンドラが正常に登録されていれば不要
-            // document.querySelector('.swiper-button-next').style.display = 'none';
-            // document.querySelector('.swiper-button-prev').style.display = 'none';
+            document.querySelector('.swiper-button-next').style.display = 'none';
+            document.querySelector('.swiper-button-prev').style.display = 'none';
 
             const endTime = performance.now();
             const timeTaken = endTime - start;
@@ -1068,7 +1073,132 @@
             // 更新したデータをローカルストレージに保存
             localStorage.setItem('category_data', JSON.stringify(categoryData));
             
+            // サーバーにも保存（ログインしている場合のみ）
+            if (accid && password) {
+                saveProgressToServer(categoryData);
+            }
+            
             console.log(`カテゴリー「${category}」のデータを更新しました。正解: ${isCorrect ? 'はい' : 'いいえ'}`);
+        }
+        
+        // サーバーに学習進捗データを保存する関数
+        function saveProgressToServer(categoryData) {
+            const currentURL = location;
+            const url = currentURL.protocol + "//" + currentURL.host + "/api/save_progress";
+            
+            // 学習進捗データを作成
+            const progressData = {
+                categoryData: categoryData,
+                answeredQuestions: Array.from(answeredQuestions),
+                maxStreak: maxStreak,
+                performanceHistory: performanceHistory,
+                questionStats: Array.from(questionStats.entries()),
+                answerTimes: answerTimes,
+                studyingQuestions: Array.from(studyingQuestions),
+                totalQuestions: questions.length  // 問題の総数を追加
+            };
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": accid,
+                    "password": password,
+                    "progress_data": progressData,
+                    "problem_set": mondai  // 問題セット名を追加
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Progress data saved to server:', data);
+            }).catch((error) => {
+                console.error('Error saving progress data:', error);
+            });
+        }
+        
+        // サーバーから学習進捗データを取得する関数
+        function loadProgressFromServer() {
+            if (!accid || !password) return;
+            
+            const currentURL = location;
+            const url = currentURL.protocol + "//" + currentURL.host + "/api/get_progress";
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": accid,
+                    "password": password,
+                    "problem_set": mondai  // 問題セット名を追加
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Progress data loaded from server:', data);
+                if (data.progress_data && Object.keys(data.progress_data).length > 0) {
+                    applyProgressData(data.progress_data);
+                }
+            }).catch((error) => {
+                console.error('Error loading progress data:', error);
+            });
+        }
+        
+        // サーバーから取得した学習進捗データを適用する関数
+        function applyProgressData(progressData) {
+            if (progressData.categoryData) {
+                // ローカルストレージに保存されているデータとマージ
+                const localData = localStorage.getItem('category_data');
+                let mergedData = progressData.categoryData;
+                
+                if (localData) {
+                    try {
+                        const parsedLocalData = JSON.parse(localData);
+                        // 両方のデータをマージ（サーバーデータを優先）
+                        mergedData = { ...parsedLocalData, ...progressData.categoryData };
+                    } catch (e) {
+                        console.error('ローカルデータの解析エラー:', e);
+                    }
+                }
+                
+                localStorage.setItem('category_data', JSON.stringify(mergedData));
+            }
+            
+            if (progressData.answeredQuestions) {
+                answeredQuestions = new Set(progressData.answeredQuestions);
+            }
+            
+            if (progressData.maxStreak) {
+                maxStreak = progressData.maxStreak;
+            }
+            
+            if (progressData.performanceHistory) {
+                performanceHistory = progressData.performanceHistory;
+            }
+            
+            if (progressData.questionStats) {
+                questionStats = new Map(progressData.questionStats);
+            }
+            
+            if (progressData.answerTimes) {
+                answerTimes = progressData.answerTimes;
+            }
+            
+            if (progressData.studyingQuestions) {
+                studyingQuestions = new Set(progressData.studyingQuestions);
+            }
+            
+            // 統計情報を更新
+            updateStats();
         }
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);

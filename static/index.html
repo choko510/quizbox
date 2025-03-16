@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,19 +9,12 @@
     <link rel="manifest" href="manifest.json">
     <link rel="prerender" href="/play" />
 </head>
-
 <body>
     <div class="top">
-        <div class="top-left">
-            <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
-            <a href="/make" class="create-btn">問題を作る</a>
-        </div>
+        <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>     
     </div>
     <div class="main">
         <div class="box1">
-
-            {{ html | safe}}
-
             <div class="category">
                 <p>ITパスポート</p>
                 <a href="itpasu/play/">ITパスポート</a>
@@ -38,9 +30,9 @@
             </div>
             <div class="category">
                 <p>1級全般</p>
-                <a href="play/">プログラミング・ビジネス 1級</a>
-                <a href="beta/">プログラミング・ビジネス 1級 ハードモード</a>
-                <a href="play/?id=for">プログラミング・ビジネス フォール系 特訓 </a>
+                    <a href="play/">プログラミング・ビジネス 1級</a>
+                    <a href="beta/">プログラミング・ビジネス 1級 ハードモード</a>
+                    <a href="play/?id=for">プログラミング・ビジネス フォール系 特訓 </a>
             </div>
             <div class="category">
                 <p>1級プログラミング</p>
@@ -68,25 +60,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/js/all.min.js"></script>
 
     <script>
         if (!Cookies.get('id')) {
-            const cookieId = Math.random().toString(36).substring(2);
-            Cookies.set('id', cookieId, { expires: 30 });
-            const password = Math.random().toString(36).substring(2);
-            Cookies.set('password', password, { expires: 30 });
-            (async () => {
-                const response = await fetch('api/registration', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: cookieId,
-                        password: password
-                    })
-                });
-            })();
+        const cookieId = Math.random().toString(36).substring(2);
+        Cookies.set('id', cookieId, { expires: 30 });
+        const password = Math.random().toString(36).substring(2);
+        Cookies.set('password', password, { expires: 30 });
+        (async () => {
+            const response = await fetch('api/registration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: cookieId,
+                    password: password
+                })
+            });
+        })();
         }
 
         async function fetchScores(id, password) {
@@ -118,13 +111,13 @@
             document.getElementById("ranking").textContent = ranking;
         }
 
-        function displayScores(correct, bad, total, ritu) {
-            document.getElementById("correct").textContent = "正解数:" + correct;
-            document.getElementById("bad").textContent = "不正解数:" + bad;
-            document.getElementById("total").textContent = "トータル:" + total;
-            document.getElementById("ritu").textContent = "正答率:" + ritu;
+        function displayScores(correct, bad, total,ritu) {
+            document.getElementById("correct").textContent = "正解数:"+correct;
+            document.getElementById("bad").textContent = "不正解数:"+bad;
+            document.getElementById("total").textContent = "トータル:"+total;
+            document.getElementById("ritu").textContent = "正答率:"+ritu;
         }
-
+        
         async function iconmodal() {
             MicroModal.show('modal-1');
             id = Cookies.get('id')
@@ -133,9 +126,9 @@
             if (!scores) return;
             const total = scores.correct + scores.bad;
             const ritu = Math.round(scores.correct / total * 100) + "%";
-            displayScores(scores.correct, scores.bad, total, ritu);
+            displayScores(scores.correct, scores.bad,total,ritu);
             drawChart();
-            document.getElementById("nowname").textContent = "現在の名前:" + id;
+            document.getElementById("nowname").textContent = "現在の名前:"+id;
             //await fetchRanking();
         }
 
@@ -146,12 +139,12 @@
         }
 
 
-        function namechange() {
+        function namechange(){
             const button2 = document.getElementById('namebtn');
 
             id = Cookies.get('id')
             password = Cookies.get('password')
-            const response = fetch(`api/change/name/` + id, {
+            const response =  fetch(`api/change/name/`+id, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -168,67 +161,67 @@
             }
             return data;
         }
-
+        
         // グラフを描画する関数
         async function drawChart() {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            id = Cookies.get('id')
-            password = Cookies.get('password')
-            const data = await fetchData(id, password);
+        const ctx = document.getElementById('myChart').getContext('2d');
+        id = Cookies.get('id')
+        password = Cookies.get('password')
+        const data = await fetchData(id, password);
 
-            // ラベル(日付)とデータ(値)を抽出
-            const labels = Object.keys(data.correct);
+        // ラベル(日付)とデータ(値)を抽出
+        const labels = Object.keys(data.correct);
 
-            const correctData = Object.values(data.correct);
-            const badData = Object.values(data.bad);
+        const correctData = Object.values(data.correct);
+        const badData = Object.values(data.bad);
 
-            // 正答率とトータルを計算する
-            const totalData = correctData.map((correct, index) => correct + badData[index]);
-            const accuracyData = correctData.map((correct, index) => correct / totalData[index] * 100);
+        // 正答率とトータルを計算する
+        const totalData = correctData.map((correct, index) => correct + badData[index]);
+        const accuracyData = correctData.map((correct, index) => correct / totalData[index] * 100);
 
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'トータル',
-                            data: totalData,
-                            borderColor: 'blue',
-                            fill: false
-                        },
-                        {
-                            label: '正解数',
-                            data: correctData,
-                            borderColor: 'green',
-                            fill: false
-                        },
-                        {
-                            label: '不正解数',
-                            data: badData,
-                            borderColor: 'red',
-                            fill: false
-                        },
-                    ]
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+            labels: labels,
+            datasets: [
+                {
+                label: 'トータル',
+                data: totalData,
+                borderColor: 'blue',
+                fill: false
                 },
-                options: {
-                    scales: {
-                        xAxes: [{
-                            type: 'time',
-                            time: {
-                                unit: 'day'
-                            }
-                        }],
-                        yAxes: [
-                            {
-                                id: 'count', // 左側の縦軸
-                                type: 'linear',
-                                position: 'left',
-                            },
-                        ]
-                    }
+                {
+                label: '正解数',
+                data: correctData,
+                borderColor: 'green',
+                fill: false
+                },
+                {
+                label: '不正解数',
+                data: badData,
+                borderColor: 'red',
+                fill: false
+                },
+            ]
+            },
+            options: {
+            scales: {
+                xAxes: [{
+                type: 'time',
+                time: {
+                    unit: 'day'
                 }
-            });
+                }],
+                yAxes: [
+                {
+                    id: 'count', // 左側の縦軸
+                    type: 'linear',
+                    position: 'left',
+                },
+                ]
+            }
+            }
+        });
         }
     </script>
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
@@ -247,7 +240,7 @@
                         <div class="tab" data-tab="goals">目標設定</div>
                         <div class="tab" data-tab="advice">学習アドバイス</div>
                     </div>
-
+                    
                     <!-- ダッシュボードタブ -->
                     <div id="dashboard" class="tab-content active">
                         <div class="score-dashboard">
@@ -268,12 +261,21 @@
                                 <p id="ritu" class="score-card__value">0%</p>
                             </div>
                         </div>
-
+                        
                         <div class="chart-container">
                             <canvas id="myChart"></canvas>
                         </div>
+                        
+                        <div class="share-area">
+                            <p>あなたの成績をシェアしましょう</p>
+                            <div class="share-buttons">
+                                <div class="share-button share-twitter" onclick="shareScore('twitter')"><i class="fab fa-twitter"></i></div>
+                                <div class="share-button share-facebook" onclick="shareScore('facebook')"><i class="fab fa-facebook-f"></i></div>
+                                <div class="share-button share-line" onclick="shareScore('line')"><i class="fab fa-line"></i></div>
+                            </div>
+                        </div>
                     </div>
-
+                    
                     <!-- 学習トレンドタブ -->
                     <div id="trends" class="tab-content">
                         <div class="chart-container">
@@ -288,18 +290,18 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- カテゴリー別タブ -->
                     <div id="categories" class="tab-content">
                         <div class="chart-container">
                             <canvas id="categoryChart"></canvas>
                         </div>
-
+                        
                         <h3>カテゴリー別成績</h3>
                         <div class="category-performance" id="category-performance">
                             <!-- カテゴリー別成績はJavaScriptで動的に生成 -->
                         </div>
-
+                        
                         <div class="weak-areas">
                             <h3>苦手分野</h3>
                             <div class="heatmap" id="weak-areas-heatmap">
@@ -307,7 +309,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- 目標設定タブ -->
                     <div id="goals" class="tab-content">
                         <div class="goal-setting">
@@ -327,7 +329,7 @@
                                 <input type="number" id="accuracy-goal" min="1" max="100" value="80">
                                 <button class="modal__btn modal__btn-primary" onclick="saveGoal('accuracy')">保存</button>
                             </div>
-
+                            
                             <div class="goal-progress">
                                 <h3>目標達成状況</h3>
                                 <p>日次目標の進捗:</p>
@@ -345,7 +347,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- 学習アドバイスタブ -->
                     <div id="advice" class="tab-content">
                         <div class="learning-advice">
@@ -355,7 +357,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <p id="nowname" style="margin-top: 20px; font-size: 0.9rem; color: #666;">現在の名前: ロード中...</p>
                 </main>
                 <footer class="modal__footer">
@@ -365,6 +367,12 @@
         </div>
     </div>
     <script src="score-dashboard.js"></script>
+    
+    <!-- SNSアイコン用のスタイルを追加 -->
+    <style>
+        .share-twitter::before { content: "\f099"; font-family: 'Font Awesome 5 Brands'; }
+        .share-facebook::before { content: "\f39e"; font-family: 'Font Awesome 5 Brands'; }
+        .share-line::before { content: "\f3c0"; font-family: 'Font Awesome 5 Brands'; }
+    </style>
 </body>
-
 </html>
