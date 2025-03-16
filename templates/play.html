@@ -904,6 +904,9 @@
                 nextIndex();
                 showNextQuestion();
                 sendScore("add_correct", accid, password);
+                
+                // カテゴリー情報を保存（カテゴリーによって異なる情報を記録）
+                saveCategoryProgress(true);
             } else {
                 wrongCount++;
                 renzokuseikai = 0;
@@ -918,9 +921,11 @@
                         updateStats();
                         showNextQuestion();
                         sendScore("add_bad", accid, password);
+                        
+                        // カテゴリー情報を保存（間違えた場合）
+                        saveCategoryProgress(false);
                     }
                 });
-
             }
 
             if (isLongTime) {
@@ -967,6 +972,103 @@
             }).catch((error) => {
                 console.error('Error:', error);
             });
+        }
+
+        // カテゴリー別の進捗情報を保存する関数
+        function saveCategoryProgress(isCorrect) {
+            // 現在の問題種別に基づいてカテゴリを決定
+            let category;
+            
+            // URLから現在のカテゴリを特定
+            if (isItpass) {
+                if (mondai === 'management') {
+                    category = "ITパスポート";
+                } else if (mondai === 'strategy') {
+                    category = "ITパスポート";
+                } else if (mondai === 'technology') {
+                    category = "ITパスポート";
+                } else if (mondai === 'r04' || mondai === 'r05' || mondai === 'r06') {
+                    category = "ITパスポート";
+                } else {
+                    category = "ITパスポート";
+                }
+            } else {
+                if (mondai === 'prog' || mondai === 'proghard' || mondai === 're') {
+                    category = "プログラミング";
+                } else if (mondai === 'bizinesu' || mondai === 'hardbizinesu' || mondai === 'excelmondai') {
+                    category = "ビジネス";
+                } else if (mondai === 'detabase') {
+                    category = "データベース";
+                } else if (mondai === 'excel2') {
+                    category = "エクセル関数";
+                } else {
+                    category = "その他";
+                }
+            }
+            
+            // ローカルストレージからカテゴリーデータを取得
+            let categoryData = {};
+            const storedData = localStorage.getItem('category_data');
+            if (storedData) {
+                try {
+                    categoryData = JSON.parse(storedData);
+                } catch (e) {
+                    console.error('カテゴリーデータの解析エラー:', e);
+                }
+            }
+            
+            // カテゴリーがまだ存在しない場合は初期化
+            if (!categoryData[category]) {
+                categoryData[category] = {
+                    correct: 0,
+                    total: 0,
+                    weakAreas: []
+                };
+            }
+            
+            // データを更新
+            if (isCorrect) {
+                categoryData[category].correct += 1;
+            }
+            categoryData[category].total += 1;
+            
+            // 不正解の場合、弱点分野に追加（この例では現在の問題の内容を使用）
+            if (!isCorrect) {
+                const currentQuestion = questions[currentIndex];
+                let weakArea = '';
+                
+                // カテゴリーによって弱点分野の特定方法を変える
+                if (isItpass) {
+                    // ITパスポートの場合は特定の単語からカテゴリを推測
+                    const description = currentQuestion.description.toLowerCase();
+                    if (description.includes('ネットワーク') || description.includes('tcp') || description.includes('プロトコル')) {
+                        weakArea = 'ネットワーク';
+                    } else if (description.includes('データベース') || description.includes('sql')) {
+                        weakArea = 'データベース';
+                    } else if (description.includes('プロジェクト') || description.includes('管理')) {
+                        weakArea = 'プロジェクト管理';
+                    } else {
+                        weakArea = 'その他';
+                    }
+                } else {
+                    // 他のカテゴリーはとりあえず問題の単語を使用
+                    weakArea = currentQuestion.word.substring(0, 10); // 先頭10文字を使用
+                }
+                
+                // まだ弱点分野リストにない場合のみ追加
+                if (!categoryData[category].weakAreas.includes(weakArea)) {
+                    categoryData[category].weakAreas.push(weakArea);
+                    // 弱点分野は最大5つまでにする
+                    if (categoryData[category].weakAreas.length > 5) {
+                        categoryData[category].weakAreas.shift(); // 古いものから削除
+                    }
+                }
+            }
+            
+            // 更新したデータをローカルストレージに保存
+            localStorage.setItem('category_data', JSON.stringify(categoryData));
+            
+            console.log(`カテゴリー「${category}」のデータを更新しました。正解: ${isCorrect ? 'はい' : 'いいえ'}`);
         }
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);

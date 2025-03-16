@@ -106,35 +106,77 @@ class DB:
             return user.correct if user else None
 
     @staticmethod
-    async def add_correct(id: str):
+    async def add_correct(id: str, subject: str = None):
         async with async_session() as session:
             result = await session.execute(select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 user.correct += 1
                 nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
-                correctdata = json.loads(user.correctdata) if user.correctdata else {}
-                baddata = json.loads(user.baddata) if user.baddata else {}
-                correctdata[nowtime] = correctdata.get(nowtime, 0) + 1
-                if nowtime not in baddata:
-                    baddata[nowtime] = 0
+                try:
+                    correctdata = json.loads(user.correctdata) if user.correctdata else {}
+                    if not isinstance(correctdata, dict):
+                        correctdata = {}
+                except json.JSONDecodeError:
+                    correctdata = {}
+
+                try:
+                    baddata = json.loads(user.baddata) if user.baddata else {}
+                    if not isinstance(baddata, dict):
+                        baddata = {}
+                except json.JSONDecodeError:
+                    baddata = {}
+
+                # 日付がなければ初期化
+                if nowtime not in correctdata or not isinstance(correctdata[nowtime], dict):
+                    correctdata[nowtime] = {}
+                if nowtime not in baddata or not isinstance(baddata[nowtime], dict):
+                    baddata[nowtime] = {}
+
+                # 科目別のカウントを更新
+                subject_key = subject if subject else 'other'
+                if subject_key not in correctdata[nowtime]:
+                    correctdata[nowtime][subject_key] = 0
+                correctdata[nowtime][subject_key] += 1
+
                 user.correctdata = json.dumps(correctdata)
                 user.baddata = json.dumps(baddata)
                 await session.commit()
 
     @staticmethod
-    async def add_bad(id: str):
+    async def add_bad(id: str, subject: str = None):
         async with async_session() as session:
             result = await session.execute(select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 user.bad += 1
                 nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
-                correctdata = json.loads(user.correctdata) if user.correctdata else {}
-                baddata = json.loads(user.baddata) if user.baddata else {}
-                if nowtime not in correctdata:
-                    correctdata[nowtime] = 0
-                baddata[nowtime] = baddata.get(nowtime, 0) + 1
+                try:
+                    correctdata = json.loads(user.correctdata) if user.correctdata else {}
+                    if not isinstance(correctdata, dict):
+                        correctdata = {}
+                except json.JSONDecodeError:
+                    correctdata = {}
+
+                try:
+                    baddata = json.loads(user.baddata) if user.baddata else {}
+                    if not isinstance(baddata, dict):
+                        baddata = {}
+                except json.JSONDecodeError:
+                    baddata = {}
+
+                # 日付がなければ初期化
+                if nowtime not in correctdata or not isinstance(correctdata[nowtime], dict):
+                    correctdata[nowtime] = {}
+                if nowtime not in baddata or not isinstance(baddata[nowtime], dict):
+                    baddata[nowtime] = {}
+
+                # 科目別のカウントを更新
+                subject_key = subject if subject else 'other'
+                if subject_key not in baddata[nowtime]:
+                    baddata[nowtime][subject_key] = 0
+                baddata[nowtime][subject_key] += 1
+
                 user.correctdata = json.dumps(correctdata)
                 user.baddata = json.dumps(baddata)
                 await session.commit()
@@ -157,6 +199,51 @@ class DB:
                     "bad": json.loads(user.baddata) if user.baddata else {}
                 }
             return None
+
+    @staticmethod
+    async def get_all_answers(id: str):
+        """
+        ユーザーの全解答履歴を取得する
+        戻り値: List[Dict] 形式で、各要素は {"subject": "科目名", "result": bool} の形式
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            if not user:
+                return []
+
+            try:
+                # 正解と不正解のデータを取得と検証
+                correct_data = json.loads(user.correctdata) if user.correctdata else {}
+                if not isinstance(correct_data, dict):
+                    correct_data = {}
+
+                bad_data = json.loads(user.baddata) if user.baddata else {}
+                if not isinstance(bad_data, dict):
+                    bad_data = {}
+
+                # 全ての日付のデータを集計
+                all_answers = []
+                
+                # 正解データの処理
+                for date, subjects in correct_data.items():
+                    if isinstance(subjects, dict):
+                        for subject, count in subjects.items():
+                            if isinstance(count, int) and count > 0:
+                                all_answers.extend([{"subject": subject, "result": True}] * count)
+                
+                # 不正解データの処理
+                for date, subjects in bad_data.items():
+                    if isinstance(subjects, dict):
+                        for subject, count in subjects.items():
+                            if isinstance(count, int) and count > 0:
+                                all_answers.extend([{"subject": subject, "result": False}] * count)
+
+            except (json.JSONDecodeError, AttributeError, TypeError) as e:
+                print(f"Error processing user data: {e}")
+                return []
+
+            return all_answers
 
     @staticmethod
     async def get(id: str):
@@ -260,18 +347,23 @@ async def get_correct(data: Data):
     correct = await DB.get_correct(data.id)
     return {"correct": correct}
 
+class AnswerData(BaseModel):
+    id: str
+    password: str
+    subject: str = None
+
 @app.post("/api/add_correct")
-async def add_correct(data: Data):
+async def add_correct(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    await DB.add_correct(data.id)
+    await DB.add_correct(data.id, data.subject)
     return {"message": "add_correct successful"}
 
 @app.post("/api/add_bad")
-async def add_bad(data: Data):
+async def add_bad(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    await DB.add_bad(data.id)
+    await DB.add_bad(data.id, data.subject)
     return {"message": "add_bad successful"}
 
 @app.post("/api/get_bad")
@@ -486,6 +578,69 @@ async def mosiget():
     combined_mondai = management_mondai + strategy_mondai + technology_mondai
 
     return combined_mondai
+
+@app.get("/api/get/category_stats/{id}/{password}")
+async def get_category_stats(id: str, password: str):
+    """
+    ユーザーのカテゴリー別統計情報を取得するエンドポイント
+    """
+    if await DB.password(id) != password:
+        return {"message": "password is wrong"}
+    
+    # カテゴリーごとのマッピング
+    category_mapping = {
+        "ITパスポート": ["it", "management", "strategy", "technology", "r04", "r05", "r06"],
+        "プログラミング": ["prog", "proghard", "re"],
+        "ビジネス": ["bizinesu", "hardbizinesu", "excelmondai"],
+        "データベース": ["detabase"],
+        "エクセル関数": ["excel2"],
+        "その他": ["for", "mail"]
+    }
+    
+    # カテゴリー別統計データを初期化
+    category_stats = {}
+    
+    try:
+        # ユーザーの全解答履歴を取得
+        all_answers = await DB.get_all_answers(id)
+        
+        # カテゴリーごとに統計を集計
+        for category_name, subject_list in category_mapping.items():
+            correct_count = 0
+            total_count = 0
+            weak_areas = []
+            
+            # 各科目の正答数と総数を集計
+            for subject in subject_list:
+                subject_answers = [ans for ans in all_answers if ans["subject"] == subject]
+                if not subject_answers:
+                    continue
+                
+                # 科目ごとの正答率を計算
+                subject_correct = sum(1 for ans in subject_answers if ans["result"])
+                subject_total = len(subject_answers)
+                subject_rate = (subject_correct / subject_total * 100) if subject_total > 0 else 0
+                
+                # 正答率が60%未満の科目を苦手分野として記録
+                if subject_rate < 60 and subject_total >= 5:  # 最低5問以上解いている場合のみ
+                    weak_areas.append(subject)
+                
+                correct_count += subject_correct
+                total_count += subject_total
+            
+            # カテゴリーの統計情報を記録
+            if total_count > 0:
+                category_stats[category_name] = {
+                    "correct": correct_count,
+                    "total": total_count,
+                    "weakAreas": weak_areas
+                }
+        
+        return {"categories": category_stats}
+        
+    except Exception as e:
+        print(f"Error in get_category_stats: {e}")
+        return {"message": "internal server error"}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
