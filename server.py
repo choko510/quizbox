@@ -9,7 +9,7 @@ from typing import List
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -413,6 +413,10 @@ async def play(request: Request):
 @app.get("/itpasu/play/")
 async def itpasplay(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
+
+@app.get("/itpasu/play/{path:path}")
+async def redirect_to_itpasu(path: str):
+    return RedirectResponse(url=f"/play/{path}", status_code=302)
 
 # APIエンドポイント
 @app.post("/api/registration")
