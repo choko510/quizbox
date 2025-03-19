@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 
 <head>
     <meta charset="utf-8">
@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
     <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         html,
         body {
@@ -189,34 +190,83 @@
         .tangolist {
             position: absolute;
             top: 20px;
+            width: 90%;
+            margin: 0 auto;
+            left: 5%;
+            right: 5%;
+        }
+        
+        .tangolist h1 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        
+        .tangolist h1:before {
+            content: '\f02d';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            margin-right: 10px;
+            color: #007bff;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
         }
 
         .searchbox {
-            width: 90%;
-            padding: 8px 10px;
-            border: 1px solid #969da3;
-            border-radius: 3px;
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             color: #333;
             font-size: 1em;
             line-height: 1.5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .searchbox:focus {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+            outline: none;
         }
 
         .searchbox::placeholder {
+            color: #999;
+        }
+        
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
             color: #999;
         }
 
         ul.custom-list {
             list-style-type: none;
             padding: 0;
+            margin: 0;
+            max-height: 77vh;
+            overflow-y: auto;
         }
 
         ul.custom-list li {
             margin-bottom: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 20px;
-            background-color: #fbfbfb;
+            background-color: #fff;
             color: #000;
-            box-shadow: 7px 7px 21px -16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        ul.custom-list li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
         }
 
         ul.custom-list li .title {
@@ -253,14 +303,20 @@
 
         .resultbox>div {
             background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            border: none;
+            border-radius: 12px;
             padding: 20px;
             font-size: 1.2em;
-            box-shadow: 0 7px 10px rgb(0 0 0 / 10%);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             overflow: auto;
+            transition: all 0.3s ease;
+        }
+
+        .resultbox>div:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 20px rgba(0, 0, 0, 0.15);
         }
 
         .resultbox1 {
@@ -287,6 +343,16 @@
             margin-bottom: 20px;
             color: #007bff;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-title i,
+        .stats-title i,
+        .study-title i {
+            margin-right: 10px;
+            color: #007bff;
         }
 
         #progress-stats,
@@ -298,8 +364,34 @@
 
         #progress-stats div,
         #performance-stats div {
-            margin: 10px 0;
+            margin: 15px 0;
             font-size: 1.1em;
+            display: flex;
+            align-items: center;
+        }
+        
+        #progress-stats div i,
+        #performance-stats div i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            color: #0056b3;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #00bfff);
+            border-radius: 6px;
+            transition: width 0.5s ease;
         }
 
         #study-list {
@@ -480,26 +572,31 @@
             <div class="swiper-slide slide1">
                 <div class="resultbox">
                     <div class="resultbox1">
-                        <div class="progress-title">学習進捗</div>
+                        <div class="progress-title"><i class="fas fa-book-open"></i>学習進捗</div>
                         <div id="progress-stats">
-                            <div>総問題数: <span id="total-questions">0</span></div>
-                            <div>学習済み: <span id="answered-questions">0</span></div>
-                            <div>正解: <span id="correct-answers">0</span></div>
-                            <div>不正解: <span id="wrong-answers">0</span></div>
-                            <div>進捗率: <span id="progress-percentage">0</span>%</div>
+                            <div><i class="fas fa-tasks"></i>総問題数: <span id="total-questions">0</span></div>
+                            <div><i class="fas fa-check-circle"></i>学習済み: <span id="answered-questions">0</span></div>
+                            <div><i class="fas fa-smile"></i>正解: <span id="correct-answers">0</span></div>
+                            <div><i class="fas fa-times-circle"></i>不正解: <span id="wrong-answers">0</span></div>
+                            <div>
+                                <i class="fas fa-chart-pie"></i>進捗率: <span id="progress-percentage">0</span>%
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="resultbox2">
-                        <div class="stats-title">統計情報</div>
+                        <div class="stats-title"><i class="fas fa-chart-bar"></i>統計情報</div>
                         <div id="performance-stats">
-                            <div>平均正解率: <span id="avg-accuracy">0</span>%</div>
-                            <div>最高連続正解: <span id="max-streak">0</span></div>
-                            <div>現在の連続正解: <span id="current-streak">0</span></div>
-                            <div>平均解答時間: <span id="avg-time">0</span>秒</div>
+                            <div><i class="fas fa-percentage"></i>平均正解率: <span id="avg-accuracy">0</span>%</div>
+                            <div><i class="fas fa-trophy"></i>最高連続正解: <span id="max-streak">0</span></div>
+                            <div><i class="fas fa-fire"></i>現在の連続正解: <span id="current-streak">0</span></div>
+                            <div><i class="fas fa-stopwatch"></i>平均解答時間: <span id="avg-time">0</span>秒</div>
                         </div>
                     </div>
                     <div class="resultbox3">
-                        <div class="study-title">学習中の問題</div>
+                        <div class="study-title"><i class="fas fa-exclamation-circle"></i>学習中の問題</div>
                         <ul id="study-list"></ul>
                     </div>
                     <div class="resultbox4">
@@ -532,7 +629,10 @@
             <div class="swiper-slide slide3">
                 <div class="tangolist">
                     <h1>単語リスト</h1>
-                    <input type="text" class="searchbox" placeholder="検索" oninput="filterWords()">
+                    <div class="search-container">
+                        <input type="text" class="searchbox" placeholder="検索" oninput="filterWords()">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
                     <ul id="wordList" class="custom-list"></ul>
                 </div>
             </div>
@@ -563,6 +663,7 @@
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="./search.js"></script>
     <script>
         var swiper = new Swiper('.swiper-container', {
             direction: 'horizontal',
@@ -666,19 +767,25 @@
             }
         }
 
-loadQuestions().then(() => {
-    document.getElementById('total-questions').textContent = questions.length;
-    currentIndex = Math.floor(Math.random() * questions.length);
-    
-    // もしログインしていれば、サーバーから学習進捗データを読み込む
-    if (accid && password) {
-        loadProgressFromServer();
-    }
-    
-    showNextQuestion();
-    initializeChart();
-    populateWordList();
-});
+        loadQuestions().then(() => {
+            document.getElementById('total-questions').textContent = questions.length;
+            currentIndex = Math.floor(Math.random() * questions.length);
+            
+            // もしログインしていれば、サーバーから学習進捗データを読み込む
+            if (accid && password) {
+                loadProgressFromServer();
+            }
+            
+            showNextQuestion();
+            initializeChart();
+            populateWordList();
+            
+            // 検索インデックスを事前構築（バックグラウンドで実行）
+            setTimeout(() => {
+                buildSearchIndex();
+                console.log("検索インデックスを事前構築しました");
+            }, 1000);
+        });
 
         function populateWordList() {
             const wordList = document.getElementById('wordList');
@@ -852,8 +959,9 @@ loadQuestions().then(() => {
             document.getElementById('answered-questions').textContent = answeredQuestions.size;
             document.getElementById('correct-answers').textContent = correctCount;
             document.getElementById('wrong-answers').textContent = wrongCount;
-            document.getElementById('progress-percentage').textContent =
-                ((answeredQuestions.size / questions.length) * 100).toFixed(1);
+            const progressPercentage = (answeredQuestions.size / questions.length) * 100;
+            document.getElementById('progress-percentage').textContent = progressPercentage.toFixed(1);
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
 
             document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(1);
             document.getElementById('max-streak').textContent = maxStreak;
@@ -1206,27 +1314,10 @@ loadQuestions().then(() => {
         document.getElementById('answer3').addEventListener('click', onAnswerClick);
         document.getElementById('answer4').addEventListener('click', onAnswerClick);
 
-        function filterWords() {
-            const searchbox = document.querySelector('.searchbox');
-            const searchword = searchbox.value.toLowerCase(); // 小文字に変換して比較
-            const wordList = document.getElementById('wordList');
-            const lis = wordList.getElementsByTagName('li');
-            for (let i = 0; i < lis.length; i++) {
-                const li = lis[i];
-                const title = li.querySelector('.tangotitle').textContent.toLowerCase(); // 小文字に変換
-                const content = li.querySelector('.content').textContent.toLowerCase(); // 小文字に変換
-                            if (title.includes(searchword) || content.includes(searchword)) {
-                                li.style.display = 'block';
-                            } else {
-                                li.style.display = 'none';
-                            }
-                        }
-                    }
-
-                    // 初期化時にモーダルをセットアップ (ITパスポート試験の場合のみ)
-                    if (isItpass) {
-                        MicroModal.init();
-                    }
-                </script>
+        // 初期化時にモーダルをセットアップ (ITパスポート試験の場合のみ)
+        if (isItpass) {
+            MicroModal.init();
+        }
+    </script>
 </body>
 </html>

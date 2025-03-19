@@ -79,6 +79,31 @@ app.add_middleware(
 # 非同期 DB 操作用クラス
 class DB:
     @staticmethod
+    async def _update_data(user, subject: str, is_correct: bool):
+        nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
+        def safe_load(data):
+            try:
+                d = json.loads(data) if data else {}
+            except json.JSONDecodeError:
+                d = {}
+            return d if isinstance(d, dict) else {}
+        correctdata = safe_load(user.correctdata)
+        baddata = safe_load(user.baddata)
+        if nowtime not in correctdata:
+            correctdata[nowtime] = {}
+        if nowtime not in baddata:
+            baddata[nowtime] = {}
+        subject_key = subject if subject else 'other'
+        if is_correct:
+            user.correct += 1
+            correctdata[nowtime][subject_key] = correctdata[nowtime].get(subject_key, 0) + 1
+        else:
+            user.bad += 1
+            baddata[nowtime][subject_key] = baddata[nowtime].get(subject_key, 0) + 1
+        user.correctdata = json.dumps(correctdata)
+        user.baddata = json.dumps(baddata)
+    
+    @staticmethod
     async def password(id: str):
         async with async_session() as session:
             result = await session.execute(select(Account).filter_by(userid=id))
@@ -743,6 +768,50 @@ async def get_category_stats(id: str, password: str):
     except Exception as e:
         print(f"Error in get_category_stats: {e}")
         return {"message": "internal server error"}
+
+@app.post("/api/get/advice")
+async def get_advice(data: Data):
+    """
+    ユーザーに対してアドバイスを提供するエンドポイント
+    """
+    if await DB.password(data.id) != data.password:
+        return {"message": "password is wrong"}
+    
+    # 学習データを取得
+    all_answers = await DB.get_all_answers(data.id)
+    if not all_answers:
+        return {"advice": "アドバイスを生成するためのデータがありません"}
+
+    prompt = """
+        #目的
+        学習アドバイザーの専門家として、
+        まず、以下の学習データを分析して
+        今後の具体的な学習方法などについてアドバイスをしてください。
+
+        #出力条件
+        140字から180字程度
+
+        #前提データ
+        今日は2025年3月19日です。
+
+        #学習データ
+        直近の学習動向(10日以内)
+        3月11日 総取り組み数 43 正解数 21 不正解数 22
+        3月13日 総取り組み数 60正解数 25不正解数 35
+        3月15日 総取り組み数 40正解数 30不正解数 10
+        3月16日 総取り組み数 50正解数 25不正解数 25
+        学習カテゴリ(10日以内)
+        ITパスポート 97問
+        ビジネス 1級 48問
+        ビジネス 2級 46問
+    """
+
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content([prompt])
+        advice = response.text
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating advice: {str(e)}")
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

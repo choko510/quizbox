@@ -9,6 +9,30 @@
     <title>notlet</title>
     <link rel="manifest" href="manifest.json">
     <link rel="prerender" href="/play" />
+    <style>
+        .progress-container {
+            height: 6px;
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            overflow: hidden;
+        }
+        .progress-learned {
+            background-color: #4caf50; /* 緑色 - 学習済み */
+            height: 100%;
+        }
+        .progress-learning {
+            background-color: #ff9800; /* オレンジ色 - 学習中 */
+            height: 100%;
+        }
+        .progress-unlearned {
+            background-color: #e0e0e0; /* グレー - 未学習 */
+            height: 100%;
+        }
+    </style>
 </head>
 
 <body>
@@ -68,6 +92,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+
+    <script>
+        if (!Cookies.get('id')) {
+            const cookieId = Math.random().toString(36).substring(2);
+            Cookies.set('id', cookieId, { expires: 30 });
+            const password = Math.random().toString(36).substring(2);
+            Cookies.set('password', password, { expires: 30 });
+            (async () => {
+                const response = await fetch('api/registration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: cookieId,
+                        password: password
+                    })
+                });
+            })();
+        }
+    </script>
 
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
@@ -202,6 +247,136 @@
         </div>
     </div>
     <script src="score-dashboard.js"></script>
+    
+    <script>
+        // 問題の進捗状況を表示するためのスクリプト
+        document.addEventListener('DOMContentLoaded', async function() {
+            // ユーザーID取得
+            const userId = Cookies.get('id');
+            const password = Cookies.get('password');
+            
+            if (userId && password) {
+                try {
+                    // 全ての問題セットの進捗データを取得
+                    const response = await fetch('/api/get_all_progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: userId, password: password })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('進捗データの取得に失敗しました');
+                    }
+                    
+                    const data = await response.json();
+                    console.log('進捗データ:', data); // デバッグ用
+                    const allProgressData = data.all_progress_data || {};
+                    
+                    // 全問題リンクに対してプログレスバーを追加
+                    const categoryDivs = document.querySelectorAll('.category');
+                    categoryDivs.forEach(category => {
+                        const links = category.querySelectorAll('a');
+                        links.forEach(link => {
+                            // マッピング：hrefに"beta"が含まれていれば"hard"、そうでなければ"it"として進捗データを取得
+                            const progressKey = link.href.indexOf('beta') !== -1 ? 'hard' : 'it';
+                            
+                            // 進捗データの抽出 (linkElement を第三引数として渡す)
+                            const progressData = extractProgressData(allProgressData, progressKey, link);
+                            
+                            // プログレスバー作成・追加
+                            createProgressBar(link, progressData);
+                        });
+                    });
+                } catch (error) {
+                    console.error('プログレスバーの表示エラー:', error);
+                }
+            }
+        });
+
+        // URLから問題IDを抽出する関数
+        function extractProblemId(href) {
+            const url = new URL(href, window.location.origin);
+            const idParam = url.searchParams.get('id');
+            
+            if (idParam) {
+                return idParam;
+            }
+            
+            // idパラメータがない場合はパスの最後の部分を使用
+            const pathParts = url.pathname.split('/').filter(part => part);
+            return pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'default';
+        }
+
+        // 進捗データをAPI形式から使いやすい形式に変換する関数（リンクのテキストからカテゴリを判別）
+        function extractProgressData(allProgressData, group, linkElement) {
+            // デフォルト値
+            const defaultData = {
+                learned: 0,  // 学習済み（正解した問題）
+                learning: 0, // 学習中（回答したが正解していない問題）
+                total: 100   // 総問題数
+            };
+            
+            const groupData = allProgressData[group];
+            if (groupData && groupData.categoryData) {
+                const categories = groupData.categoryData;
+                // リンクテキストと各カテゴリ名を部分一致で判別
+                for (const category in categories) {
+                    if (linkElement.textContent.indexOf(category) !== -1) {
+                        const catData = categories[category];
+                        const extracted = { learned: catData.correct, learning: 0, total: catData.total };
+                        console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
+                        return extracted;
+                    }
+                }
+            }
+            console.log('No matching category for', linkElement.textContent, '- using default:', defaultData);
+            return defaultData;
+        }
+
+        // プログレスバーを作成して挿入する関数
+        function createProgressBar(linkElement, progressData) {
+            // 既存のプログレスバーがあれば削除
+            const existingProgressBar = linkElement.nextElementSibling;
+            if (existingProgressBar && existingProgressBar.classList.contains('progress-container')) {
+                existingProgressBar.remove();
+            }
+            
+            // 総数が0の場合はデフォルト値を使用
+            const total = progressData.total || 100;
+            
+            // パーセンテージ計算
+            const learnedPercent = Math.min(100, Math.max(0, (progressData.learned / total) * 100)) || 0;
+            const learningPercent = Math.min(100 - learnedPercent, Math.max(0, (progressData.learning / total) * 100)) || 0;
+            const unlearnedPercent = 100 - learnedPercent - learningPercent;
+            
+            // プログレスバー要素作成
+            const container = document.createElement('div');
+            container.className = 'progress-container';
+            
+            const learnedBar = document.createElement('div');
+            learnedBar.className = 'progress-learned';
+            learnedBar.style.width = `${learnedPercent}%`;
+            learnedBar.title = `学習済み: ${progressData.learned}問 (${learnedPercent.toFixed(1)}%)`;
+            
+            const learningBar = document.createElement('div');
+            learningBar.className = 'progress-learning';
+            learningBar.style.width = `${learningPercent}%`;
+            learningBar.title = `学習中: ${progressData.learning}問 (${learningPercent.toFixed(1)}%)`;
+            
+            const unlearnedBar = document.createElement('div');
+            unlearnedBar.className = 'progress-unlearned';
+            unlearnedBar.style.width = `${unlearnedPercent}%`;
+            unlearnedBar.title = `未学習: ${total - progressData.learned - progressData.learning}問 (${unlearnedPercent.toFixed(1)}%)`;
+            
+            // 組み立て
+            container.appendChild(learnedBar);
+            container.appendChild(learningBar);
+            container.appendChild(unlearnedBar);
+            
+            // リンク要素の後に挿入
+            linkElement.insertAdjacentElement('afterend', container);
+        }
+    </script>
 </body>
 
 </html>
