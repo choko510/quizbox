@@ -14,7 +14,9 @@
 
 <body>
     <a href="../" class="back"></a>
-    <a href="javascript:void(0);" id="settings-btn" style="position: fixed; bottom: 10px; right: 10px; font-size: 20px; color: #666; z-index: 10000;"><i class="fas fa-cog"></i></a>
+    <a href="javascript:void(0);" id="settings-btn"
+        style="position: fixed; bottom: 10px; right: 10px; font-size: 20px; color: #666; z-index: 10000;"><i
+            class="fas fa-cog"></i></a>
     <div class="swiper-container">
         <div class="swiper-wrapper">
 
@@ -118,7 +120,7 @@
             </div>
         </div>
     </div>
-    
+
     <link rel="stylesheet" href="../../modal.css">
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -232,16 +234,16 @@
         loadQuestions().then(() => {
             document.getElementById('total-questions').textContent = questions.length;
             currentIndex = Math.floor(Math.random() * questions.length);
-            
+
             // もしログインしていれば、サーバーから学習進捗データを読み込む
             if (accid && password) {
                 loadProgressFromServer();
             }
-            
+
             showNextQuestion();
             initializeChart();
             populateWordList();
-            
+
             // 検索インデックスを事前構築（バックグラウンドで実行）
             setTimeout(() => {
                 buildSearchIndex();
@@ -479,7 +481,7 @@
                 nextIndex();
                 showNextQuestion();
                 sendScore("add_correct", accid, password);
-                
+
                 // カテゴリー情報を保存（カテゴリーによって異なる情報を記録）
                 saveCategoryProgress(true);
             } else {
@@ -496,7 +498,7 @@
                         updateStats();
                         showNextQuestion();
                         sendScore("add_bad", accid, password);
-                        
+
                         // カテゴリー情報を保存（間違えた場合）
                         saveCategoryProgress(false);
                     }
@@ -553,7 +555,7 @@
         function saveCategoryProgress(isCorrect) {
             // 現在の問題種別に基づいてカテゴリを決定
             let category;
-            
+
             // URLから現在のカテゴリを特定
             if (isItpass) {
                 if (mondai === 'management') {
@@ -580,7 +582,7 @@
                     category = "その他";
                 }
             }
-            
+
             // ローカルストレージからカテゴリーデータを取得
             let categoryData = {};
             const storedData = localStorage.getItem('category_data');
@@ -591,7 +593,7 @@
                     console.error('カテゴリーデータの解析エラー:', e);
                 }
             }
-            
+
             // カテゴリーがまだ存在しない場合は初期化
             if (!categoryData[category]) {
                 categoryData[category] = {
@@ -600,18 +602,18 @@
                     weakAreas: []
                 };
             }
-            
+
             // データを更新
             if (isCorrect) {
                 categoryData[category].correct += 1;
             }
             categoryData[category].total += 1;
-            
+
             // 不正解の場合、弱点分野に追加（この例では現在の問題の内容を使用）
             if (!isCorrect) {
                 const currentQuestion = questions[currentIndex];
                 let weakArea = '';
-                
+
                 // カテゴリーによって弱点分野の特定方法を変える
                 if (isItpass) {
                     // ITパスポートの場合は特定の単語からカテゴリを推測
@@ -629,7 +631,7 @@
                     // 他のカテゴリーはとりあえず問題の単語を使用
                     weakArea = currentQuestion.word.substring(0, 10); // 先頭10文字を使用
                 }
-                
+
                 // まだ弱点分野リストにない場合のみ追加
                 if (!categoryData[category].weakAreas.includes(weakArea)) {
                     categoryData[category].weakAreas.push(weakArea);
@@ -639,23 +641,23 @@
                     }
                 }
             }
-            
+
             // 更新したデータをローカルストレージに保存
             localStorage.setItem('category_data', JSON.stringify(categoryData));
-            
+
             // サーバーにも保存（ログインしている場合のみ）
             if (accid && password) {
                 saveProgressToServer(categoryData);
             }
-            
+
             console.log(`カテゴリー「${category}」のデータを更新しました。正解: ${isCorrect ? 'はい' : 'いいえ'}`);
         }
-        
+
         // サーバーに学習進捗データを保存する関数
         function saveProgressToServer(categoryData) {
             const currentURL = location;
             const url = currentURL.protocol + "//" + currentURL.host + "/api/save_progress";
-            
+
             // 学習進捗データを作成
             const progressData = {
                 categoryData: categoryData,
@@ -667,7 +669,7 @@
                 studyingQuestions: Array.from(studyingQuestions),
                 totalQuestions: questions.length  // 問題の総数を追加
             };
-            
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -690,14 +692,14 @@
                 console.error('Error saving progress data:', error);
             });
         }
-        
+
         // サーバーから学習進捗データを取得する関数
         function loadProgressFromServer() {
             if (!accid || !password) return;
-            
+
             const currentURL = location;
             const url = currentURL.protocol + "//" + currentURL.host + "/api/get_progress";
-            
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -722,14 +724,14 @@
                 console.error('Error loading progress data:', error);
             });
         }
-        
+
         // サーバーから取得した学習進捗データを適用する関数
         function applyProgressData(progressData) {
             if (progressData.categoryData) {
                 // ローカルストレージに保存されているデータとマージ
                 const localData = localStorage.getItem('category_data');
                 let mergedData = progressData.categoryData;
-                
+
                 if (localData) {
                     try {
                         const parsedLocalData = JSON.parse(localData);
@@ -739,34 +741,34 @@
                         console.error('ローカルデータの解析エラー:', e);
                     }
                 }
-                
+
                 localStorage.setItem('category_data', JSON.stringify(mergedData));
             }
-            
+
             if (progressData.answeredQuestions) {
                 answeredQuestions = new Set(progressData.answeredQuestions);
             }
-            
+
             if (progressData.maxStreak) {
                 maxStreak = progressData.maxStreak;
             }
-            
+
             if (progressData.performanceHistory) {
                 performanceHistory = progressData.performanceHistory;
             }
-            
+
             if (progressData.questionStats) {
                 questionStats = new Map(progressData.questionStats);
             }
-            
+
             if (progressData.answerTimes) {
                 answerTimes = progressData.answerTimes;
             }
-            
+
             if (progressData.studyingQuestions) {
                 studyingQuestions = new Set(progressData.studyingQuestions);
             }
-            
+
             // 統計情報を更新
             updateStats();
         }
@@ -780,9 +782,10 @@
         if (isItpass) {
             MicroModal.init();
         }
-    document.getElementById('settings-btn').addEventListener('click', function() {
-        MicroModal.show('settings-modal');
-    });
+        document.getElementById('settings-btn').addEventListener('click', function () {
+            MicroModal.show('settings-modal');
+        });
     </script>
 </body>
+
 </html>

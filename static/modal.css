@@ -1,18 +1,20 @@
 .modal {
     font-family: 'Noto Sans Japanese', -apple-system, BlinkMacSystemFont, avenir next, avenir, helvetica neue, helvetica, ubuntu, roboto, noto, segoe ui, arial, sans-serif;
 }
+
 .modal__overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
+
 .modal__container {
     background-color: #fff;
     width: 80vw;
@@ -21,9 +23,10 @@
     border-radius: 16px;
     overflow-y: auto;
     box-sizing: border-box;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
     padding: 20px;
 }
+
 .modal__header {
     display: flex;
     justify-content: space-between;
@@ -32,6 +35,7 @@
     border-bottom: 1px solid #eaeaea;
     margin-bottom: 15px;
 }
+
 .modal__title {
     margin-top: 0;
     margin-bottom: 10px;
@@ -41,6 +45,7 @@
     color: #2c3e50;
     box-sizing: border-box;
 }
+
 .modal__close {
     background: transparent;
     border: 0;
@@ -48,10 +53,15 @@
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .modal__close:hover {
     transform: scale(1.1);
 }
-.modal__header .modal__close:before { content: "\2715"; }
+
+.modal__header .modal__close:before {
+    content: "\2715";
+}
+
 .modal__content {
     margin: 1rem auto;
     line-height: 1.5;
@@ -71,53 +81,87 @@
     transform: translateZ(0);
     transition: -webkit-transform .25s ease-out;
     transition: transform .25s ease-out;
-    transition: transform .25s ease-out,-webkit-transform .25s ease-out;
+    transition: transform .25s ease-out, -webkit-transform .25s ease-out;
 }
-.modal__btn:focus, .modal__btn:hover {
+
+.modal__btn:focus,
+.modal__btn:hover {
     -webkit-transform: scale(1.05);
     transform: scale(1.05);
 }
+
 .modal__btn-primary {
     background-color: #00449e;
     color: #fff;
 }
+
 /**************************\
 Demo Animation Style
 \**************************/
 @keyframes mmfadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
+
 @keyframes mmfadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
+
 @keyframes mmslideIn {
-from { transform: translateY(15%); }
-    to { transform: translateY(0); }
+    from {
+        transform: translateY(15%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
+
 @keyframes mmslideOut {
-    from { transform: translateY(0); }
-    to { transform: translateY(-10%); }
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10%);
+    }
 }
+
 .micromodal-slide {
     display: none;
 }
+
 .micromodal-slide.is-open {
     display: block;
 }
+
 .micromodal-slide[aria-hidden="false"] .modal__overlay {
     animation: mmfadeIn .3s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
+
 .micromodal-slide[aria-hidden="false"] .modal__container {
     animation: mmslideIn .3s cubic-bezier(0, 0, .2, 1);
 }
+
 .micromodal-slide[aria-hidden="true"] .modal__overlay {
     animation: mmfadeOut .3s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
+
 .micromodal-slide[aria-hidden="true"] .modal__container {
     animation: mmslideOut .3s cubic-bezier(0, 0, .2, 1);
 }
+
 .micromodal-slide .modal__container,
 .micromodal-slide .modal__overlay {
     will-change: transform;
@@ -130,7 +174,7 @@ from { transform: translateY(15%); }
         height: 92vh;
         border-radius: 12px;
     }
-    
+
     .modal__overlay {
         bottom: -55px;
     }

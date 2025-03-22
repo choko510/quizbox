@@ -45,19 +45,157 @@ input[type="file"] {
     border-radius: 5px;
 }
 
-.btn {
+/* 削除ボタンのスタイル */
+.delete-btn {
+    margin-left: 10px;
+    background-color: #ff6666;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 0.9em;
+}
+
+/* 一括削除ボタンのスタイル */
+#bulkDelete {
+    background-color: #ff3333;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 1em;
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 200px;
+}
+
+/* li要素のスタイル調整 */
+#fileContent li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+}
+
+#fileContent li:hover {
+    background-color: #f0f0f0;
+}
+
+#fileContent li p {
+    margin: 0;
+    padding: 5px;
+    min-width: 100px;
+    flex: 1;
+    word-break: break-all;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+#fileContent li p:focus {
+    border-color: #4CAF50;
+    outline: none;
+    background-color: white;
+}
+
+p[contenteditable]:empty:before {
+    content: attr(data-placeholder);
+    color: #999;
+}
+
+.disable-btn {
     display: inline-block;
     padding: 10px 20px;
-    margin: -10vh;
-    background-color: #007bff;
+    margin: 10px 5px;
+    background-color: #ccc;
     color: white;
     text-decoration: none;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+    cursor: not-allowed;
+}
+
+.disable-btn:hover {
+    background-color: #ccc;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
 }
 
 .btn:hover {
-    background-color: #0056b3;
+    background-color: #45a049;
+}
+
+.preview-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    touch-action: none;
+}
+
+.preview-content {
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+}
+
+.preview-close {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px;
+    /* タッチ操作用に領域拡大 */
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 90vh;
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background-color: #3498db;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 1em;
+}
+
+.btn-secondary:hover {
+    background-color: #2980b9;
 }
 
 .file-content {
@@ -67,12 +205,32 @@ input[type="file"] {
     text-align: left;
 }
 
-.file-content li {
-    background: #f1f1f1;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
+.feedback-container {
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #4CAF50;
+    display: none;
+}
+
+.feedback-container.good-feedback {
+    border-left-color: #2ecc71;
+    background-color: #eafaf1;
+    padding: 6px 8px;
+}
+
+.feedback-status.good {
+    color: #27ae60;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.feedback-status.good:before {
+    content: "✓";
+    margin-right: 5px;
+    font-size: 1.2em;
 }
 
 /* ---- レスポンシブ対応 ---- */
@@ -133,7 +291,8 @@ input[type="file"] {
         padding: 15px;
     }
 
-    .container1, .container2 {
+    .container1,
+    .container2 {
         width: 100%;
         max-width: 100%;
         margin-bottom: 20px;
@@ -147,7 +306,8 @@ input[type="file"] {
         box-sizing: border-box;
     }
 
-    .btn, .disable-btn {
+    .btn,
+    .disable-btn {
         display: block;
         width: 100%;
         margin: 15px auto;
@@ -182,6 +342,25 @@ input[type="file"] {
         margin-left: 0;
         align-self: flex-end;
     }
+
+    .buttons-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .action-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 
 /* 横幅が600px以下のときの処理 */
@@ -195,7 +374,8 @@ input[type="file"] {
         border-radius: 8px;
     }
 
-    .btn, .disable-btn {
+    .btn,
+    .disable-btn {
         padding: 10px;
         font-size: 0.95em;
     }

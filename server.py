@@ -4,7 +4,7 @@ import json
 import os
 import random
 from contextlib import asynccontextmanager
-from typing import List
+from typing import List, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
@@ -290,13 +290,13 @@ class DB:
             return None
 
     @staticmethod
-    async def get_mondai_userids(name: str):
+    async def get_mondai_userids(userid: str):
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(name=name))
+            result = await session.execute(select(Mondai).filter_by(userid=userid))
             mondai_list = result.scalars().all()
             if not mondai_list:
                 return None
-            return [m.userid for m in mondai_list]
+            return [m.name for m in mondai_list]
 
     @staticmethod
     async def save_mondai(name: str, userid: str, mondai_data):
@@ -389,7 +389,7 @@ async def root(request: Request):
             usermondai = await DB.get_mondai_userids(userid)
         except:
             usermondai = []
-
+        print(usermondai)
         if usermondai:
             html = """
             <div class="category" data-category="other">
@@ -598,8 +598,58 @@ async def upload_image(file: UploadFile = File(...)):
 class ImageData(BaseModel):
     id: str
 
+class TextData(BaseModel):
+    text: List[str]
+    checkType: str = "quality"
+
+@app.post("/api/process/text")
+async def process_text(data: TextData):
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        results = []
+        if data.checkType == "quality":
+            # 最大5問まで処理する（APIの負荷を考慮）
+            for i, problem_text in enumerate(data.text[:5]):
+                prompt = f"""
+以下の問題と回答のペアを評価してください。特に以下の点に注意してください：
+1. 質問の明確さ（曖昧さはないか）
+2. 回答の正確性と適切さ
+3. 誤字脱字や文法的な問題
+4. 問題と回答のペアとしての整合性
+
+評価結果を簡潔に記述してください。問題点があれば具体的な改善案も提示してください。
+HTMLタグは使用せず、マークダウン形式で回答してください。
+
+{problem_text}
+                """
+                response = model.generate_content(prompt)
+                results.append({
+                    "feedback": response.text,
+                    "index": i
+                })
+        else:
+            prompt = f"以下のテキストを要約してください：\n{' '.join(data.text)}"
+            response = model.generate_content(prompt)
+            results.append({"feedback": response.text, "index": 0})
+
+        return JSONResponse(
+            content={"status": "success", "results": results},
+            status_code=200
+        )
+    except Exception as e:
+        raise HTTPException(
+            content={"status": "failed", "message": f"Error processing text: {str(e)}"},
+            status_code=500
+        )
+
 @app.post("/api/process/image")
-async def process_image(data: ImageData):
+async def process_image(data: Union[ImageData, TextData]):
+    # テキスト処理の場合
+    if hasattr(data, 'text'):
+        return await process_text(data)
+    
+    # 画像処理の場合
     image_path = f"./upload/img/{data.id}"
     if not os.path.exists(image_path):
         raise HTTPException(

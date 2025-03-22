@@ -7,39 +7,48 @@ body {
     font-family: 'Noto Sans Japanese', sans-serif;
     background-color: #ebedf1;
 }
+
 .swiper-container {
     width: 100%;
     height: 100%;
 }
+
 .swiper-slide {
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 18px;
 }
+
 .slide2 {
     overflow: hidden;
 }
+
 .slide3 {
     overflow: auto;
     position: relative;
 }
+
 #question {
     margin-top: 10%;
     font-size: 27px;
     text-align: center;
 }
+
 .mondai-image {
     max-width: 90%;
     margin-top: 10px;
 }
+
 ul {
     margin-top: 3.7%;
     list-style: none;
 }
+
 li {
     margin-bottom: 20px;
 }
+
 button {
     font-family: 'Noto Sans Japanese', sans-serif;
     border: 1px solid #ccc;
@@ -61,9 +70,11 @@ button {
     transform: translateX(-5.7%);
     transition: transform .3s, box-shadow .3s;
 }
+
 button:hover {
     box-shadow: 0 7px 10px rgb(0 0 0 / 15%);
 }
+
 .main {
     position: absolute;
     left: 50%;
@@ -75,41 +86,50 @@ button:hover {
     background-color: #fbfbfb;
     box-shadow: 7px 7px 21px -16px rgba(0, 0, 0, 0.1);
 }
+
 .title {
     margin: 0 auto;
     width: 65%;
 }
+
 .tangotitle {
     font-size: 120%;
     font-weight: bold;
 }
+
 .content {
     margin-left: 2px;
     color: #333;
 }
+
 #score {
     font-size: 140%;
     position: absolute;
     bottom: 0;
     left: 0;
 }
+
 .kaisetubtn {
     position: absolute;
     bottom: 4px;
     right: 2px;
     font-size: 110%;
 }
+
 .popup {
     font-size: 110%;
 }
+
 .correct {
     font-size: 110%;
     font-weight: bold;
 }
+
 .hardlink {
     color: #000;
     text-decoration: none;
 }
+
 .back {
     color: #000;
     box-sizing: border-box;
@@ -122,6 +142,7 @@ button:hover {
     border-radius: 100px;
     z-index: 10000;
 }
+
 .back::after {
     content: "";
     display: block;
@@ -135,6 +156,7 @@ button:hover {
     left: 6px;
     top: 4px;
 }
+
 .back-button {
     position: absolute;
     top: 10px;
@@ -148,9 +170,11 @@ button:hover {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .back-button:hover {
     background-color: #0056b3;
 }
+
 .tangolist {
     position: absolute;
     top: 20px;
@@ -159,12 +183,14 @@ button:hover {
     left: 5%;
     right: 5%;
 }
+
 .tangolist h1 {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
     color: #007bff;
 }
+
 .tangolist h1:before {
     content: '\f02d';
     font-family: 'Font Awesome 5 Free';
@@ -172,10 +198,12 @@ button:hover {
     margin-right: 10px;
     color: #007bff;
 }
+
 .search-container {
     position: relative;
     margin-bottom: 20px;
 }
+
 .searchbox {
     width: 100%;
     padding: 12px 40px 12px 15px;
@@ -187,14 +215,17 @@ button:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s;
 }
+
 .searchbox:focus {
     border-color: #007bff;
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
     outline: none;
 }
+
 .searchbox::placeholder {
     color: #999;
 }
+
 .search-icon {
     position: absolute;
     top: 50%;
@@ -202,6 +233,7 @@ button:hover {
     transform: translateY(-50%);
     color: #999;
 }
+
 ul.custom-list {
     list-style-type: none;
     padding: 0;
@@ -209,6 +241,7 @@ ul.custom-list {
     max-height: 77vh;
     overflow-y: auto;
 }
+
 ul.custom-list li {
     margin-bottom: 20px;
     border-radius: 12px;
@@ -218,27 +251,34 @@ ul.custom-list li {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
 }
+
 ul.custom-list li:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
+
 ul.custom-list li .title {
     font-weight: bold;
     margin-right: 20px;
 }
+
 ul.custom-list li .content {
     flex: 1;
 }
+
 .swiper-button-next,
 .swiper-button-prev {
     color: #007bff;
 }
+
 .swiper-pagination-bullet {
     background: #007bff;
 }
+
 .swiper-pagination-bullet-active {
     background: #0056b3;
 }
+
 .resultbox {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -248,6 +288,7 @@ ul.custom-list li .content {
     height: 90%;
     margin: auto;
 }
+
 .resultbox>div {
     background-color: #fff;
     border: none;
@@ -260,22 +301,28 @@ ul.custom-list li .content {
     overflow: auto;
     transition: all 0.3s ease;
 }
+
 .resultbox>div:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 20px rgba(0, 0, 0, 0.15);
 }
+
 .resultbox1 {
     grid-area: 1 / 1 / 2 / 2;
 }
+
 .resultbox2 {
     grid-area: 1 / 2 / 2 / 3;
 }
+
 .resultbox3 {
     grid-area: 2 / 1 / 3 / 2;
 }
+
 .resultbox4 {
     grid-area: 2 / 2 / 3 / 3;
 }
+
 .progress-title,
 .stats-title,
 .study-title {
@@ -288,18 +335,21 @@ ul.custom-list li .content {
     align-items: center;
     justify-content: center;
 }
+
 .progress-title i,
 .stats-title i,
 .study-title i {
     margin-right: 10px;
     color: #007bff;
 }
+
 #progress-stats,
 #performance-stats,
 #study-list {
     width: 100%;
     text-align: left;
 }
+
 #progress-stats div,
 #performance-stats div {
     margin: 15px 0;
@@ -307,6 +357,7 @@ ul.custom-list li .content {
     display: flex;
     align-items: center;
 }
+
 #progress-stats div i,
 #performance-stats div i {
     margin-right: 10px;
@@ -314,6 +365,7 @@ ul.custom-list li .content {
     text-align: center;
     color: #0056b3;
 }
+
 .progress-bar-container {
     width: 100%;
     height: 12px;
@@ -322,18 +374,21 @@ ul.custom-list li .content {
     margin-top: 5px;
     overflow: hidden;
 }
+
 .progress-bar {
     height: 100%;
     background: linear-gradient(90deg, #007bff, #00bfff);
     border-radius: 6px;
     transition: width 0.5s ease;
 }
+
 #study-list {
     list-style: none;
     padding: 0;
     margin: 0;
     overflow-y: auto;
 }
+
 .study-item {
     padding: 10px;
     margin: 5px 0;
@@ -342,22 +397,27 @@ ul.custom-list li .content {
     border-left: 4px solid #ffc107;
     font-size: 0.9em;
 }
+
 .study-item.long-time {
     border-left-color: #dc3545;
 }
+
 .study-item.wrong-answer {
     border-left-color: #dc3545;
 }
+
 #performance-chart {
     width: 100% !important;
     height: 100% !important;
 }
+
 .ansbg ul {
     max-width: 800px;
     margin: 20px auto;
     padding: 0;
     list-style: none;
 }
+
 .lia,
 .lii,
 .liu,
@@ -369,6 +429,7 @@ ul.custom-list li .content {
     box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
     transition: .2s ease;
 }
+
 .lia:hover,
 .lii:hover,
 .liu:hover,
@@ -377,89 +438,113 @@ ul.custom-list li .content {
     box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
     transform: translateY(-1px);
 }
+
 .cite {
     color: #2563eb;
     font-weight: 600;
     display: block;
     margin-bottom: .5em;
 }
+
 .m,
 strong {
     color: #2563eb;
 }
+
 @media screen and (max-height: 600px) {
     body {
         background-color: #fbfbfb;
     }
+
     #question {
         margin-top: 1%;
         font-size: 1em;
     }
+
     .main {
         box-shadow: none;
         height: 68vh;
     }
+
     button {
         padding: .3em 1em;
     }
 }
+
 @media screen and (max-width: 540px) {
     body {
         background-color: #fbfbfb;
     }
+
     .main {
         box-shadow: none;
     }
+
     button {
         width: 300px;
         font-size: 0.9em;
     }
+
     .title {
         width: 100%;
     }
+
     .popup {
         font-size: 105%;
     }
+
     #score {
         font-size: 110%;
     }
+
     li {
         margin-bottom: 11px;
     }
+
     #question {
         font-size: 24px;
     }
+
     .sp {
         margin-top: 7%;
     }
+
     .resultbox {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(4, 1fr);
     }
+
     .resultbox1 {
         grid-area: 1 / 1 / 2 / 2;
     }
+
     .resultbox2 {
         grid-area: 2 / 1 / 3 / 2;
     }
+
     .resultbox3 {
         grid-area: 3 / 1 / 4 / 2;
     }
+
     .resultbox4 {
         grid-area: 4 / 1 / 5 / 2;
     }
+
     .resultbox>div {
         font-size: 0.9em;
         padding: 10px;
     }
+
     .progress-title,
     .stats-title,
     .study-title {
         font-size: 1.2em;
     }
+
     .tangotitle {
         font-size: 90%;
     }
+
     .content {
         font-size: 80%;
     }

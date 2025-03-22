@@ -20,16 +20,22 @@
             display: flex;
             overflow: hidden;
         }
+
         .progress-learned {
-            background-color: #4caf50; /* 緑色 - 学習済み */
+            background-color: #4caf50;
+            /* 緑色 - 学習済み */
             height: 100%;
         }
+
         .progress-learning {
-            background-color: #ff9800; /* オレンジ色 - 学習中 */
+            background-color: #ff9800;
+            /* オレンジ色 - 学習中 */
             height: 100%;
         }
+
         .progress-unlearned {
-            background-color: #e0e0e0; /* グレー - 未学習 */
+            background-color: #e0e0e0;
+            /* グレー - 未学習 */
             height: 100%;
         }
     </style>
@@ -247,14 +253,14 @@
         </div>
     </div>
     <script src="score-dashboard.js"></script>
-    
+
     <script>
         // 問題の進捗状況を表示するためのスクリプト
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             // ユーザーID取得
             const userId = Cookies.get('id');
             const password = Cookies.get('password');
-            
+
             if (userId && password) {
                 try {
                     // 全ての問題セットの進捗データを取得
@@ -263,15 +269,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: userId, password: password })
                     });
-                    
+
                     if (!response.ok) {
                         throw new Error('進捗データの取得に失敗しました');
                     }
-                    
+
                     const data = await response.json();
                     console.log('進捗データ:', data); // デバッグ用
                     const allProgressData = data.all_progress_data || {};
-                    
+
                     // 全問題リンクに対してプログレスバーを追加
                     const categoryDivs = document.querySelectorAll('.category');
                     categoryDivs.forEach(category => {
@@ -279,10 +285,10 @@
                         links.forEach(link => {
                             // マッピング：hrefに"beta"が含まれていれば"hard"、そうでなければ"it"として進捗データを取得
                             const progressKey = link.href.indexOf('beta') !== -1 ? 'hard' : 'it';
-                            
+
                             // 進捗データの抽出 (linkElement を第三引数として渡す)
                             const progressData = extractProgressData(allProgressData, progressKey, link);
-                            
+
                             // プログレスバー作成・追加
                             createProgressBar(link, progressData);
                         });
@@ -297,11 +303,11 @@
         function extractProblemId(href) {
             const url = new URL(href, window.location.origin);
             const idParam = url.searchParams.get('id');
-            
+
             if (idParam) {
                 return idParam;
             }
-            
+
             // idパラメータがない場合はパスの最後の部分を使用
             const pathParts = url.pathname.split('/').filter(part => part);
             return pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'default';
@@ -315,7 +321,7 @@
                 learning: 0, // 学習中（回答したが正解していない問題）
                 total: 100   // 総問題数
             };
-            
+
             const groupData = allProgressData[group];
             if (groupData && groupData.categoryData) {
                 const categories = groupData.categoryData;
@@ -340,42 +346,42 @@
             if (existingProgressBar && existingProgressBar.classList.contains('progress-container')) {
                 existingProgressBar.remove();
             }
-            
+
             // 総数が0の場合はデフォルト値を使用
             const total = progressData.total || 100;
-            
+
             // パーセンテージ計算
             const learnedPercent = Math.min(100, Math.max(0, (progressData.learned / total) * 100)) || 0;
             const learningPercent = Math.min(100 - learnedPercent, Math.max(0, (progressData.learning / total) * 100)) || 0;
             const unlearnedPercent = 100 - learnedPercent - learningPercent;
-            
+
             // プログレスバー要素作成
             const container = document.createElement('div');
             container.className = 'progress-container';
-            
+
             const learnedBar = document.createElement('div');
             learnedBar.className = 'progress-learned';
             learnedBar.style.width = `${learnedPercent}%`;
             learnedBar.title = `学習済み: ${progressData.learned}問 (${learnedPercent.toFixed(1)}%)`;
-            
+
             const learningBar = document.createElement('div');
             learningBar.className = 'progress-learning';
             learningBar.style.width = `${learningPercent}%`;
             learningBar.title = `学習中: ${progressData.learning}問 (${learningPercent.toFixed(1)}%)`;
-            
+
             const unlearnedBar = document.createElement('div');
             unlearnedBar.className = 'progress-unlearned';
             unlearnedBar.style.width = `${unlearnedPercent}%`;
             unlearnedBar.title = `未学習: ${total - progressData.learned - progressData.learning}問 (${unlearnedPercent.toFixed(1)}%)`;
-            
+
             // 組み立て
             container.appendChild(learnedBar);
             container.appendChild(learningBar);
             container.appendChild(unlearnedBar);
-            
+
             // リンク要素の後に挿入
             linkElement.insertAdjacentElement('afterend', container);
-        }
+        } 
     </script>
 </body>
 
