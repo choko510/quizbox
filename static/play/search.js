@@ -57,12 +57,7 @@ function convertRomajiToHiragana(romaji) {
 
         // 1文字のパターンをチェック
         temp = romaji.substring(i, i + 1);
-        if (romajiToHiraganaMap[temp]) {
-            result += romajiToHiraganaMap[temp];
-        } else {
-            // マッピングにない文字はそのまま
-            result += temp;
-        }
+        result += (romajiToHiraganaMap[temp] || temp);
         i++;
     }
 
@@ -71,23 +66,19 @@ function convertRomajiToHiragana(romaji) {
 
 // ひらがな→カタカナ変換関数
 function hiraganaToKatakana(str) {
-    // ひらがなの文字コード範囲：\u3041～\u3096
-    return str.replace(/([\u3041-\u3096])/g, function (match) {
-        // 対応するカタカナに変換（文字コードを0x60ずらす）
-        return String.fromCharCode(match.charCodeAt(0) + 0x60);
-    });
+    return str.replace(/([\u3041-\u3096])/g, match =>
+        String.fromCharCode(match.charCodeAt(0) + 0x60)
+    );
 }
 
 // カタカナ→ひらがな変換関数
 function katakanaToHiragana(str) {
-    // カタカナの文字コード範囲：\u30A1～\u30F6
-    return str.replace(/([\u30A1-\u30F6])/g, function (match) {
-        // 対応するひらがなに変換（文字コードを0x60ずらす）
-        return String.fromCharCode(match.charCodeAt(0) - 0x60);
-    });
+    return str.replace(/([\u30A1-\u30F6])/g, match =>
+        String.fromCharCode(match.charCodeAt(0) - 0x60)
+    );
 }
 
-// N-gramジェネレーター関数
+// N-gramジェネレーター関数（変更なし）
 function generateNgrams(text, n = 2) {
     const ngrams = [];
     for (let i = 0; i <= text.length - n; i++) {
@@ -96,32 +87,27 @@ function generateNgrams(text, n = 2) {
     return ngrams;
 }
 
-// 文字列の類似度を計算する関数（N-gram比較）
+// 文字列の類似度を計算する関数
 function calculateSimilarity(text1, text2) {
-    // 短いテキストの場合は直接比較
     if (text1.length < 3 || text2.length < 3) {
         return text2.includes(text1) ? 1 : 0;
     }
 
     const ngrams1 = generateNgrams(text1, 2);
-    const ngrams2 = generateNgrams(text2, 2);
-
-    // 共通するN-gramを探す
+    const ngrams2Set = new Set(generateNgrams(text2, 2));
     let matches = 0;
     for (const ngram of ngrams1) {
-        if (ngrams2.some(n => n === ngram)) {
+        if (ngrams2Set.has(ngram)) {
             matches++;
         }
     }
-
-    // 類似度を計算 (0～1の間の値)
     return matches / Math.max(ngrams1.length, 1);
 }
 
 // 検索インデックス（初回検索時に構築）
 let searchIndex = null;
 
-// 検索インデックスを構築する関数
+// 検索インデックスを構築する関数（互換性はそのまま）
 function buildSearchIndex() {
     if (searchIndex) return searchIndex; // すでに構築済みならそれを返す
 
@@ -129,19 +115,17 @@ function buildSearchIndex() {
     const index = {};
 
     questions.forEach((question, idx) => {
-        // 検索対象のテキスト
+        // 検索対象のテキスト（環境によって条件分岐）
         const title = isItpass ? question.description : question.word;
         const content = isItpass ? question.kaisetu : question.description;
 
-        // 単語のトークン化
+        // 単語のトークン化（小文字変換）
         const titleTokens = title.toLowerCase().split(/\s+/);
         const contentTokens = content.toLowerCase().split(/\s+/);
 
-        // インデックスに追加
         [...titleTokens, ...contentTokens].forEach(token => {
             if (token.length < 2) return; // 短すぎる単語はスキップ
 
-            // トークンと2-gramをインデックス化
             if (!index[token]) index[token] = new Set();
             index[token].add(idx);
 
@@ -154,7 +138,7 @@ function buildSearchIndex() {
         });
     });
 
-    // SetをArrayに変換してインデックスを最終化
+    // Set を Array に変換して最終化
     Object.keys(index).forEach(key => {
         index[key] = Array.from(index[key]);
     });
@@ -164,12 +148,16 @@ function buildSearchIndex() {
     return index;
 }
 
+// フィルターと検索処理（検索インデックスを活用して候補を絞る）
 function filterWords() {
+    const searchbox = document.querySelector('.searchbox');
+    if (!searchbox) return;
+    const searchword = searchbox.value.toLowerCase().trim();
+
     // フィルターUI要素の取得または作成
     let filterSelect = document.getElementById('answerFilter');
     if (!filterSelect) {
-        // フィルターUI要素がない場合は作成
-        const searchboxParent = document.querySelector('.searchbox').parentElement;
+        const searchboxParent = searchbox.parentElement;
         const filterDiv = document.createElement('div');
         filterDiv.className = 'filter-options';
         filterDiv.style.margin = '10px 0';
@@ -197,14 +185,11 @@ function filterWords() {
         });
 
         filterDiv.appendChild(filterSelect);
-        searchboxParent.insertBefore(filterDiv, document.querySelector('.searchbox').nextSibling);
+        searchboxParent.insertBefore(filterDiv, searchbox.nextSibling);
 
-        // イベントリスナーを追加
         filterSelect.addEventListener('change', filterWords);
     }
 
-    const searchbox = document.querySelector('.searchbox');
-    const searchword = searchbox.value.toLowerCase(); // 小文字に変換
     const filterValue = filterSelect.value; // フィルター値
 
     // ローマ字→ひらがな変換
@@ -214,17 +199,46 @@ function filterWords() {
     const index = buildSearchIndex();
 
     const wordList = document.getElementById('wordList');
+    if (!wordList) return;
     const lis = wordList.getElementsByTagName('li');
 
-    // 検索結果の関連度を格納する配列
+    // 事前に候補インデックスを抽出（検索語がある場合のみ）
+    let candidateIndices = new Set();
+    if (searchword) {
+        const searchVariants = [
+            searchword,
+            hiraganaSearch,
+            katakanaToHiragana(searchword),
+            hiraganaToKatakana(searchword)
+        ];
+        searchVariants.forEach(variant => {
+            if (index[variant]) {
+                index[variant].forEach(i => candidateIndices.add(i));
+            }
+            // variant の2-gramからも候補を追加
+            generateNgrams(variant, 2).forEach(ngram => {
+                if (index[ngram]) {
+                    index[ngram].forEach(i => candidateIndices.add(i));
+                }
+            });
+        });
+    } else {
+        // 検索語が空の場合は全件対象
+        for (let i = 0; i < lis.length; i++) {
+            candidateIndices.add(i);
+        }
+    }
+
+    // 検索結果の関連度を格納する配列（ハイライト等に利用可能）
     const resultScores = [];
 
+    // 各リスト項目について処理
     for (let i = 0; i < lis.length; i++) {
         const li = lis[i];
         const title = li.querySelector('.tangotitle').textContent.toLowerCase();
         const content = li.querySelector('.content').textContent.toLowerCase();
 
-        // フィルタリング（回答状態による）
+        // 回答状態によるフィルタリング（グローバル変数 answeredQuestions, questionStats を使用）
         let showByFilter = true;
         if (filterValue !== 'all') {
             if (filterValue === 'unanswered') {
@@ -236,51 +250,40 @@ function filterWords() {
             }
         }
 
-        // 検索ワードが空の場合はフィルターのみ適用
-        if (!searchword) {
-            li.style.display = showByFilter ? 'block' : 'none';
+        // 検索語がある場合、候補に含まれていなければ非表示
+        if (searchword && !candidateIndices.has(i)) {
+            li.style.display = 'none';
             continue;
         }
 
-        // 検索ロジック
+        // 検索ロジック（従来の条件を踏襲）
         let score = 0;
-
-        // 完全一致の場合は高スコア
         if (title.includes(searchword) || content.includes(searchword)) {
             score = 1.0;
-        }
-        // ひらがな変換した検索語で一致
-        else if (title.includes(hiraganaSearch) || content.includes(hiraganaSearch)) {
+        } else if (title.includes(hiraganaSearch) || content.includes(hiraganaSearch)) {
             score = 0.9;
-        }
-        // カタカナ→ひらがなの変換で比較
-        else if (title.includes(katakanaToHiragana(searchword)) ||
+        } else if (title.includes(katakanaToHiragana(searchword)) ||
             content.includes(katakanaToHiragana(searchword))) {
             score = 0.8;
-        }
-        // ひらがな→カタカナの変換で比較
-        else if (title.includes(hiraganaToKatakana(searchword)) ||
+        } else if (title.includes(hiraganaToKatakana(searchword)) ||
             content.includes(hiraganaToKatakana(searchword))) {
             score = 0.8;
-        }
-        // N-gram類似度による部分一致
-        else {
+        } else {
             const titleSimilarity = calculateSimilarity(searchword, title);
             const contentSimilarity = calculateSimilarity(searchword, content);
             score = Math.max(titleSimilarity, contentSimilarity);
         }
 
-        // スコア閾値と回答フィルターの両方を満たす場合のみ表示
-        const showBySearch = score >= 0.3; // 類似度30%以上を表示
+        const showBySearch = score >= 0.2; // 類似度20%以上で表示
         li.style.display = (showBySearch && showByFilter) ? 'block' : 'none';
 
-        // ハイライト表示（一致部分を強調）
         if (showBySearch && showByFilter) {
             resultScores.push({ index: i, score: score });
+            // ※必要に応じて、一致部分のハイライト処理をここで追加可能
         }
     }
 
-    // 検索結果がない場合のメッセージ
+    // 検索結果がない場合のメッセージ処理
     const noResultMsg = document.getElementById('noResultMessage');
     if (resultScores.length === 0 && searchword) {
         if (!noResultMsg) {

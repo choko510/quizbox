@@ -8,135 +8,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="toast.css">
-    <style>
-        /* 簡易的な削除ボタンのスタイル例 */
-        .delete-btn {
-            margin-left: 10px;
-            background-color: #ff6666;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            padding: 2px 6px;
-            font-size: 0.9em;
-        }
-
-        /* 一括削除ボタンのスタイル例 */
-        #bulkDelete {
-            background-color: #ff3333;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            padding: 5px 10px;
-            font-size: 1em;
-            margin-bottom: 10px;
-            width: 100%;
-            max-width: 200px;
-        }
-
-        /* li要素のスタイル調整 */
-        #fileContent li {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
-
-        #fileContent li p {
-            margin: 0;
-            min-width: 80px;
-            word-break: break-all;
-        }
-        
-        p[contenteditable]:empty:before {
-            content: attr(data-placeholder);
-            color: #999;
-        }
-
-        .disable-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px 5px;
-            background-color: #ccc;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            cursor: not-allowed;
-        }
-
-        .disable-btn:hover {
-            background-color: #ccc;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px 5px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background-color: #45a049;
-        }
-
-        .preview-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            touch-action: none;
-        }
-
-        .preview-content {
-            max-width: 90%;
-            max-height: 90%;
-            position: relative;
-        }
-
-        .preview-close {
-            position: absolute;
-            top: -30px;
-            right: 0;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 10px;  /* タッチ操作用に領域拡大 */
-        }
-
-        .preview-image {
-            max-width: 100%;
-            max-height: 90vh;
-        }
-        
-        @media (max-width: 768px) {
-            .buttons-container {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                margin-top: 20px;
-            }
-            
-            .action-buttons {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                margin-top: 20px;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -161,7 +32,13 @@
         <div class="box container2">
             <p style="font-size: 105%;">読み込んだ問題</p>
             <p id="total-accs">問題数: 0</p>
-            <button id="bulkDelete">一括削除</button>
+            <div class="action-row">
+                <button id="bulkDelete">一括削除</button>
+                <button id="exportJSON" class="btn-secondary">エクスポート</button>
+                <button id="checkQuality" class="btn-secondary">品質チェック</button>
+                <div id="save-status" style="margin-left: auto; font-size: 0.8em; color: #777;"></div>
+            </div>
+            <!-- ヒントテキストを削除 -->
             <ul id="fileContent" class="file-content"></ul>
         </div>
     </div>
@@ -169,13 +46,14 @@
     <div class="preview-container">
         <div class="preview-content">
             <span class="preview-close">&times;</span>
-            <img class="preview-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Preview">
+            <img class="preview-image"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Preview">
         </div>
     </div>
 
     <div class="modal micromodal-slide" id="downloadlist" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title" >
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
                 <header class="modal__header">
                     <h2 class="modal__title" id="modal-1-title">テンプレートリスト</h2>
                     <button class="modal__close" aria-label="Close modal" data-micromodal-close>&times;</button>
@@ -211,19 +89,21 @@
         function updateTotalCount() {
             const ul = document.getElementById('fileContent');
             const lis = ul.querySelectorAll('li');
-            let count = lis.length - 1;
-            if (lis.length > 0) {
-                const lastLi = lis[lis.length - 1];
-                const ps = lastLi.querySelectorAll('p');
-                if (ps.length >= 2 && ps[0].innerText.trim() === '' && ps[1].innerText.trim() === '') {
-                    count--;
+
+            // 有効な問題数をカウント（空の問題は除外）
+            let validCount = 0;
+            for (const li of lis) {
+                const ps = li.querySelectorAll('p');
+                if (ps.length >= 2 && ps[0].innerText.trim() !== '' && ps[1].innerText.trim() !== '') {
+                    validCount++;
                 }
             }
-            document.getElementById('total-accs').innerText = '問題数: ' + count;
+
+            document.getElementById('total-accs').innerText = '問題数: ' + validCount;
 
             const saveBtn = document.getElementById('saveBtn');
             const releaseBtn = document.getElementById('releaseBtn');
-            if (count > 0) {
+            if (validCount > 0) {
                 saveBtn.classList.remove('disable-btn');
                 saveBtn.classList.add('btn');
                 releaseBtn.classList.remove('disable-btn');
@@ -255,7 +135,7 @@
             const delBtn = document.createElement('button');
             delBtn.innerText = '削除';
             delBtn.classList.add('delete-btn');
-            delBtn.addEventListener('click', function() {
+            delBtn.addEventListener('click', function () {
                 li.remove();
                 updateTotalCount();
                 if (document.getElementById('fileContent').querySelectorAll('li').length === 0) {
@@ -305,12 +185,12 @@
             container.style.display = 'flex';
         }
 
-        document.querySelector('.preview-close').addEventListener('click', function() {
+        document.querySelector('.preview-close').addEventListener('click', function () {
             document.querySelector('.preview-container').style.display = 'none';
         });
 
         /* ----- 画像アップロード処理 ----- */
-        document.getElementById('imageLoad').addEventListener('change', async function(e) {
+        document.getElementById('imageLoad').addEventListener('change', async function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -327,7 +207,7 @@
 
                 if (uploadData.status === 'success') {
                     showToast('画像がアップロードされました');
-                    
+
                     // 画像解析
                     const processResponse = await fetch('/api/process/image', {
                         method: 'POST',
@@ -347,7 +227,7 @@
 
                     // プレビュー表示
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         showPreview(e.target.result);
                     };
                     reader.readAsDataURL(file);
@@ -372,30 +252,30 @@
             updateTotalCount();
         }
 
-        document.getElementById('txtload').addEventListener('change', function(e) {
+        document.getElementById('txtload').addEventListener('change', function (e) {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = e => handleFileContent(e.target.result.split('\n'));
             reader.readAsText(file);
         });
 
-        document.getElementById('csvload').addEventListener('change', function(e) {
+        document.getElementById('csvload').addEventListener('change', function (e) {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = e => handleFileContent(e.target.result.split('\n'));
             reader.readAsText(file);
         });
 
-        document.getElementById('xlsxload').addEventListener('change', function(e) {
+        document.getElementById('xlsxload').addEventListener('change', function (e) {
             const file = e.target.files[0];
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const content = document.getElementById('fileContent');
                 content.innerHTML = '';
-                
+
                 for (let i = 1; i < 1000; i++) {
                     const answer = sheet['A' + i];
                     const question = sheet['B' + i];
@@ -417,7 +297,7 @@
 
         /* ----- ドラッグ＆ドロップ処理 ----- */
         document.addEventListener('dragover', e => e.preventDefault());
-        document.addEventListener('drop', function(e) {
+        document.addEventListener('drop', function (e) {
             e.preventDefault();
             const file = e.dataTransfer.files[0];
             const reader = new FileReader();
@@ -528,7 +408,7 @@
             }
 
             try {
-                const response = await fetch('/api/edit/mondai', {
+                const response = await fetch('/api/make/mondai', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -557,20 +437,240 @@
             }
         }
 
-        /* ----- 初期化処理 ----- */
-        document.addEventListener('DOMContentLoaded', function() {
+        /* ----- エクスポート機能 ----- */
+        function exportToJSON() {
             const content = document.getElementById('fileContent');
-            content.innerHTML = '';
-            content.appendChild(createEditablePair());
-            updateTotalCount();
+            const lis = content.querySelectorAll('li');
+            const mondai = [];
 
-            document.getElementById('bulkDelete').addEventListener('click', function() {
-                content.innerHTML = '';
-                content.appendChild(createEditablePair());
-                updateTotalCount();
+            lis.forEach(li => {
+                const p = li.querySelectorAll('p');
+                if (p.length >= 2) {
+                    const answer = p[0].innerText.trim();
+                    const question = p[1].innerText.trim();
+                    if (answer && question) {
+                        mondai.push({
+                            answer: answer,
+                            question: question
+                        });
+                    }
+                }
             });
 
-            document.getElementById('fileContent').addEventListener('click', function(e) {
+            if (mondai.length === 0) {
+                showToast('エクスポートする問題がありません。');
+                return;
+            }
+
+            const data = JSON.stringify(mondai, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mondai_' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast('問題をエクスポートしました');
+        }
+
+        /* ----- 自動保存機能 ----- */
+        function saveToLocalStorage() {
+            const content = document.getElementById('fileContent');
+            const lis = content.querySelectorAll('li');
+            const mondai = [];
+
+            lis.forEach(li => {
+                const p = li.querySelectorAll('p');
+                if (p.length >= 2) {
+                    const answer = p[0].innerText.trim();
+                    const question = p[1].innerText.trim();
+                    if (answer || question) {  // 片方だけでも保存
+                        mondai.push({
+                            answer: answer,
+                            question: question
+                        });
+                    }
+                }
+            });
+
+            localStorage.setItem('mondai_autosave', JSON.stringify(mondai));
+            document.getElementById('save-status').innerText = '自動保存: ' + new Date().toLocaleTimeString();
+        }
+
+        function restoreFromLocalStorage() {
+            const savedData = localStorage.getItem('mondai_autosave');
+            if (!savedData) return false;
+
+            try {
+                const mondai = JSON.parse(savedData);
+                if (!Array.isArray(mondai) || mondai.length === 0) return false;
+
+                const content = document.getElementById('fileContent');
+                content.innerHTML = '';
+
+                mondai.forEach(item => {
+                    if (item && (item.answer || item.question)) {
+                        content.appendChild(createEditablePair(
+                            item.answer || '',
+                            item.question || ''
+                        ));
+                    }
+                });
+
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+                showToast('前回の編集内容を復元しました');
+                return true;
+            } catch (e) {
+                console.error('自動保存データの復元に失敗:', e);
+                return false;
+            }
+        }
+
+        /* ----- 品質チェック機能 ----- */
+        async function checkQuality() {
+            const content = document.getElementById('fileContent');
+            const lis = content.querySelectorAll('li');
+            const mondai = [];
+
+            // 有効な問題を収集
+            lis.forEach(li => {
+                const p = li.querySelectorAll('p');
+                if (p.length >= 2) {
+                    const answer = p[0].innerText.trim();
+                    const question = p[1].innerText.trim();
+                    if (answer && question) {
+                        mondai.push({
+                            element: li,
+                            text: `問題：${question}\n回答：${answer}`
+                        });
+                    }
+                }
+            });
+
+            if (mondai.length === 0) {
+                showToast('チェックする問題がありません。');
+                return;
+            }
+
+            // 最大5問までチェック（APIの負荷を考慮）
+            const targetMondai = mondai.slice(0, 5);
+            const textArray = targetMondai.map(item => item.text);
+
+            showToast('問題をチェック中...');
+
+            try {
+                // 品質チェックAPIを一括で呼び出す
+                const response = await fetch('/api/process/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: textArray,
+                        checkType: 'quality'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.results) {
+                    // 各問題のフィードバックを表示
+                    data.results.forEach(result => {
+                        const item = targetMondai[result.index];
+                        if (!item) return;
+
+                        // すでにフィードバックがあれば削除
+                        const existingFeedback = item.element.querySelector('.feedback-container');
+                        if (existingFeedback) {
+                            existingFeedback.remove();
+                        }
+
+                        // フィードバックの内容を確認
+                        const feedbackText = result.feedback || '';
+
+                        // 問題なしかどうかを判定
+                        const isGood = feedbackText.includes('問題ありません') ||
+                            feedbackText.includes('良好です') ||
+                            feedbackText.includes('適切です') ||
+                            feedbackText.includes('明確です');
+
+                        // フィードバックの表示
+                        const feedbackDiv = document.createElement('div');
+                        feedbackDiv.className = 'feedback-container';
+
+                        if (isGood) {
+                            // 問題なしの場合は緑色のスタイルで簡潔に表示
+                            feedbackDiv.classList.add('good-feedback');
+                            feedbackDiv.innerHTML = '<span class="feedback-status good">✓ 良好</span>';
+                        } else {
+                            // 改善提案がある場合は通常のスタイルで詳細を表示
+                            // マークダウン形式のテキストをシンプルに表示（太字、斜体等の基本的なフォーマットを保持）
+                            const feedback = feedbackText
+                                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                                .replace(/\n/g, '<br>');
+
+                            feedbackDiv.innerHTML = feedback;
+                        }
+
+                        feedbackDiv.style.display = 'block';
+                        item.element.appendChild(feedbackDiv);
+                    });
+                }
+
+                showToast('問題のチェックが完了しました');
+            } catch (error) {
+                console.error('品質チェックエラー:', error);
+                showToast('チェック中にエラーが発生しました');
+            }
+        }
+
+        /* ----- 初期化処理 ----- */
+        document.addEventListener('DOMContentLoaded', function () {
+            const content = document.getElementById('fileContent');
+            content.innerHTML = '';
+
+            // ローカルストレージからの復元を試みる
+            const restored = restoreFromLocalStorage();
+
+            // 復元できなければ新規作成
+            if (!restored) {
+                content.appendChild(createEditablePair());
+                updateTotalCount();
+            }
+
+            // 自動保存の設定
+            const autoSaveInterval = 30000;  // 30秒ごと
+            setInterval(saveToLocalStorage, autoSaveInterval);
+
+            // 入力イベントでも自動保存（イベントの集約）
+            let saveTimeout;
+            content.addEventListener('input', function () {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveToLocalStorage, 1000);
+            });
+
+            // 一括削除ボタンの設定
+            document.getElementById('bulkDelete').addEventListener('click', function () {
+                if (confirm('すべての問題を削除してもよろしいですか？')) {
+                    content.innerHTML = '';
+                    content.appendChild(createEditablePair());
+                    updateTotalCount();
+                    saveToLocalStorage();
+                }
+            });
+
+            // エクスポートボタンの設定
+            document.getElementById('exportJSON').addEventListener('click', exportToJSON);
+
+            // 品質チェックボタンの設定
+            document.getElementById('checkQuality').addEventListener('click', checkQuality);
+
+            // クリップボードコピー機能
+            document.getElementById('fileContent').addEventListener('click', function (e) {
                 const target = e.target;
                 if (!target.isContentEditable && target.tagName === 'P') {
                     navigator.clipboard.writeText(target.innerText)
@@ -580,4 +680,5 @@
         });
     </script>
 </body>
+
 </html>

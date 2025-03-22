@@ -609,36 +609,57 @@ async def process_text(data: TextData):
         
         results = []
         if data.checkType == "quality":
-            # 最大5問まで処理する（APIの負荷を考慮）
-            for i, problem_text in enumerate(data.text[:5]):
+            # 最大10問まで処理する
+            for i, problem_text in enumerate(data.text[:10]):
+                if not problem_text.strip():  # 空のテキストをスキップ
+                    continue
+                    
                 prompt = f"""
-以下の問題と回答のペアを評価してください。特に以下の点に注意してください：
-1. 質問の明確さ（曖昧さはないか）
-2. 回答の正確性と適切さ
-3. 誤字脱字や文法的な問題
-4. 問題と回答のペアとしての整合性
+                    以下の問題と回答のペアを評価してください。特に以下の点に注意してください：
+                    1. 質問の明確さ（曖昧さはないか）
+                    2. 回答の正確性と適切さ
+                    3. 誤字脱字や文法的な問題
+                    4. 問題と回答のペアとしての整合性
 
-評価結果を簡潔に記述してください。問題点があれば具体的な改善案も提示してください。
-HTMLタグは使用せず、マークダウン形式で回答してください。
-
-{problem_text}
+                    評価結果を簡潔に記述してください。問題点があれば具体的な改善案も提示してください。
+                    HTMLタグは使用せず、マークダウン形式で回答してください。
+                    
+                    以下問題:
+                    {problem_text}
                 """
-                response = model.generate_content(prompt)
-                results.append({
-                    "feedback": response.text,
-                    "index": i
-                })
-        else:
+                try:
+                    response = model.generate_content(prompt)
+                    results.append({
+                        "feedback": response.text,
+                        "index": i,
+                        "status": "success"
+                    })
+                except Exception as err:
+                    # 個別の問題の処理エラーを記録するが、全体の処理は続行
+                    results.append({
+                        "feedback": f"この問題の処理中にエラーが発生しました。",
+                        "index": i,
+                        "status": "error",
+                        "error": str(err)
+                    })
+        elif data.checkType == "summary":
             prompt = f"以下のテキストを要約してください：\n{' '.join(data.text)}"
             response = model.generate_content(prompt)
-            results.append({"feedback": response.text, "index": 0})
+            results.append({"feedback": response.text, "index": 0, "status": "success"})
+        else:
+            # 未知のcheckTypeに対する処理
+            return JSONResponse(
+                content={"status": "failed", "message": f"不明な処理タイプ: {data.checkType}"},
+                status_code=400
+            )
 
         return JSONResponse(
             content={"status": "success", "results": results},
             status_code=200
         )
     except Exception as e:
-        raise HTTPException(
+        print(f"Text processing error: {str(e)}")  # サーバーログにエラーを出力
+        return JSONResponse(
             content={"status": "failed", "message": f"Error processing text: {str(e)}"},
             status_code=500
         )
