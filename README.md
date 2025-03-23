@@ -2,4 +2,17 @@
 4-option quiz-style learning site
 
 # DEMO
-https://choko510.github.io/quizbox/app/
+https://quizbox.choko.cc/
+
+# RUN
+```sh
+pip install -r requirements.txt
+```
+
+```sh
+copy .env.example .env
+```
+
+```sh
+python main.py
+```
