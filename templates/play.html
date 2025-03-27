@@ -5,11 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4択クイズ</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11.2.5/swiper-bundle.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
 </head>
 
 <body>
@@ -121,23 +120,27 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../modal.css">
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <link rel="stylesheet" href="./word-dictionary.css">
     <script src="./search.js"></script>
     <script>
-        var swiper = new Swiper('.swiper-container', {
-            direction: 'horizontal',
+        const swiper = new Swiper(".swiper-container", {
+            direction: "horizontal",
             loop: false,
             initialSlide: 1,
             navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
             },
             mousewheel: false,
+            noSwiping: true,
+            noSwipingClass: "no-swiping",
         });
 
         function getParam(name, url) {
@@ -262,6 +265,7 @@
 
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'content';
+                contentDiv.classList.add('no-swiping');
                 contentDiv.innerHTML = isItpass ? question.kaisetu : question.description;
 
                 if (isItpass || titleDiv.textContent.endsWith("か。") ||
@@ -778,10 +782,11 @@
         document.getElementById('answer3').addEventListener('click', onAnswerClick);
         document.getElementById('answer4').addEventListener('click', onAnswerClick);
 
-        // 初期化時にモーダルをセットアップ (ITパスポート試験の場合のみ)
-        if (isItpass) {
-            MicroModal.init();
-        }
+        // モーダルを初期化（単語辞書モーダルと他のモーダル用）
+        MicroModal.init({
+            awaitOpenAnimation: true,
+            awaitCloseAnimation: true
+        });
         document.getElementById('settings-btn').addEventListener('click', function () {
             MicroModal.show('settings-modal');
         });

@@ -18,6 +18,7 @@ import aiofiles
 import xxhash
 import numpy as np
 import google.generativeai as genai
+import aiohttp
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -55,7 +56,9 @@ class Mondai(Base):
     name = Column(String, primary_key=True)
     userid = Column(String)
     mondai = Column(String)
-
+    is_public = Column(Integer, default=1)  # 1=公開、0=非公開
+    created_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
+    updated_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
 
 templates = Jinja2Templates(directory="templates")
 
@@ -297,25 +300,94 @@ class DB:
             if not mondai_list:
                 return None
             return [m.name for m in mondai_list]
+            
+    @staticmethod
+    async def get_mondai_details(userid: str):
+        """
+        ユーザーの作成した問題の詳細情報を取得する
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(userid=userid))
+            mondai_list = result.scalars().all()
+            if not mondai_list:
+                return []
+                
+            detail_list = []
+            for m in mondai_list:
+                try:
+                    mondai_data = json.loads(m.mondai) if m.mondai else []
+                    detail_list.append({
+                        "name": m.name,
+                        "data": mondai_data,
+                        "is_public": bool(m.is_public),
+                        "problemCount": len(mondai_data),
+                        "created_at": m.created_at,
+                        "updated_at": m.updated_at
+                    })
+                except (json.JSONDecodeError, Exception) as e:
+                    print(f"Error parsing mondai data for {m.name}: {e}")
+                    # エラーがあっても続行
+                    pass
+                    
+            return detail_list
 
     @staticmethod
-    async def save_mondai(name: str, userid: str, mondai_data):
+    async def save_mondai(name: str, userid: str, mondai_data, is_public: bool = True):
         async with async_session() as session:
             new_mondai = Mondai(
                 name=name,
                 userid=userid,
-                mondai=json.dumps(mondai_data)
+                mondai=json.dumps(mondai_data),
+                is_public=1 if is_public else 0,
+                created_at=datetime.datetime.now().isoformat(),
+                updated_at=datetime.datetime.now().isoformat()
             )
             session.add(new_mondai)
             await session.commit()
 
     @staticmethod
-    async def edit_mondai(name: str, userid: str, mondai_data):
+    async def edit_mondai(name: str, userid: str, mondai_data, is_public: bool = None):
         async with async_session() as session:
             result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
             mondai = result.scalar_one_or_none()
             if mondai:
                 mondai.mondai = json.dumps(mondai_data)
+                mondai.updated_at = datetime.datetime.now().isoformat()
+                # 公開状態も更新する場合
+                if is_public is not None:
+                    mondai.is_public = 1 if is_public else 0
+                await session.commit()
+                return True
+            else:
+                return False
+    
+    @staticmethod
+    async def toggle_mondai_visibility(name: str, userid: str):
+        """
+        問題の公開状態を切り替える
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            mondai = result.scalar_one_or_none()
+            if mondai:
+                # 現在の状態を逆にする (1→0, 0→1)
+                mondai.is_public = 1 if mondai.is_public == 0 else 0
+                mondai.updated_at = datetime.datetime.now().isoformat()
+                await session.commit()
+                return {"is_public": bool(mondai.is_public)}
+            else:
+                return None
+    
+    @staticmethod
+    async def delete_mondai(name: str, userid: str):
+        """
+        問題を削除する
+        """
+        async with async_session() as session:
+            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            mondai = result.scalar_one_or_none()
+            if mondai:
+                await session.delete(mondai)
                 await session.commit()
                 return True
             else:
@@ -389,14 +461,14 @@ async def root(request: Request):
             usermondai = await DB.get_mondai_userids(userid)
         except:
             usermondai = []
-        print(usermondai)
+
         if usermondai:
             html = """
             <div class="category" data-category="other">
                 <p>作成した問題</p>
             """
             for mondai in usermondai:
-                html += f"<a href='/mondai/{mondai}'>{mondai}</a>"
+                html += f"<a href='/play/?userid={userid}&name={mondai}'>{mondai}</a>"
 
             html += "</div>"
         else:
@@ -409,6 +481,14 @@ async def root(request: Request):
 @app.get("/play/")
 async def play(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
+
+@app.get("/dashboard/")
+async def dashboard(request: Request):
+    userid = request.cookies.get("id")
+    if not userid:
+        return RedirectResponse(url="/", status_code=302)
+    
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/itpasu/play/")
 async def itpasplay(request: Request):
@@ -517,6 +597,7 @@ class MondaiData(BaseModel):
     userid: str
     password: str
     mondai: List[str]
+    is_public: bool = True
 
 @app.post("/api/make/mondai")
 async def make_mondai(data: MondaiData):
@@ -723,6 +804,96 @@ async def get_mondai_userids(name: str):
         return {"message": "not found"}
     return mondai
 
+@app.post("/api/dashboard/problems")
+async def get_dashboard_problems(data: Data):
+    """
+    ダッシュボード用のユーザーの問題一覧詳細を取得するAPI
+    """
+    if await DB.password(data.id) != data.password:
+        return {"message": "password is wrong"}
+    
+    problems = await DB.get_mondai_details(data.id)
+    return {"problems": problems}
+
+class MondaiIdData(BaseModel):
+    name: str
+    userid: str
+    password: str
+
+@app.post("/api/dashboard/toggle-visibility")
+async def toggle_problem_visibility(data: MondaiIdData):
+    """
+    問題の公開/非公開状態を切り替えるAPI
+    """
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    
+    result = await DB.toggle_mondai_visibility(data.name, data.userid)
+    if result:
+        return {"status": "success", "is_public": result["is_public"]}
+    else:
+        return {"status": "failed", "message": "Problem not found"}
+
+@app.post("/api/dashboard/delete")
+async def delete_problem(data: MondaiIdData):
+    """
+    問題を削除するAPI
+    """
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    
+    success = await DB.delete_mondai(data.name, data.userid)
+    if success:
+        return {"status": "success"}
+    else:
+        return {"status": "failed", "message": "Problem not found"}
+
+class DuplicateMondaiData(BaseModel):
+    original_name: str
+    new_name: str
+    userid: str
+    password: str
+
+@app.post("/api/dashboard/duplicate")
+async def duplicate_problem(data: DuplicateMondaiData):
+    """
+    問題を複製するAPI
+    """
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    
+    # オリジナルの問題を取得
+    mondai = await DB.get_mondai(data.original_name)
+    if not mondai:
+        return {"status": "failed", "message": "Original problem not found"}
+    
+    # 新しい名前で保存
+    try:
+        await DB.save_mondai(data.new_name, data.userid, mondai, True)
+        return {"status": "success"}
+    except Exception as e:
+        print(f"Error duplicating problem: {e}")
+        return {"status": "failed", "message": str(e)}
+
+@app.post("/api/dashboard/stats")
+async def get_problem_stats(data: MondaiIdData):
+    """
+    問題の使用統計を取得するAPI
+    """
+    if await DB.password(data.userid) != data.password:
+        return {"message": "password is wrong"}
+    
+    # 現在はダミーデータを返す
+    # 実際の統計データはユーザーの回答履歴などから計算する必要がある
+    return {
+        "status": "success",
+        "stats": {
+            "usage_count": random.randint(10, 100),
+            "correct_count": random.randint(5, 50),
+            "incorrect_count": random.randint(5, 50)
+        }
+    }
+
 @app.get("/api/mosi/get")
 async def mosiget():
     async with aiofiles.open('./app/itpasu/play/mondai/management.json', mode='r') as f:
@@ -780,6 +951,71 @@ async def get_all_progress(data: Data):
     
     all_progress_data = await DB.get_progress_data(data.id)
     return {"all_progress_data": all_progress_data}
+
+async def fetch_wikipedia_info(word: str):
+    """
+    Wikipediaから指定された単語の情報を取得する非同期関数
+    """
+    try:
+        # Wikipedia APIを使用して情報を取得
+        url = f"https://ja.wikipedia.org/w/api.php?action=query&list=search&srsearch={word}&format=json"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                data = await response.json()
+                if "query" in data and "search" in data["query"] and len(data["query"]["search"]) > 0:
+                    return data["query"]["search"][0]["snippet"]
+                else:
+                    return None
+    except Exception as e:
+        print(f"Error fetching Wikipedia info: {e}")
+        return None
+
+class wordData(BaseModel):
+    word: str
+    mondai: str
+    mondainame: str
+
+@app.post("/api/search/word/")
+async def search_word(data: wordData):
+    """
+    辞書APIから単語の意味を取得するエンドポイント
+    """
+
+    word = data.word
+    
+    if not word:
+        return {
+            "word": word,
+            "definition": "単語が指定されていません。",
+            "success": False
+        }
+    
+    try:
+
+        wiki_response = await fetch_wikipedia_info(word)
+        if wiki_response:
+            return {
+                "word": word,
+                "definition": wiki_response,
+                "success": True
+            }
+        else:
+            model = genai.GenerativeModel("gemini-2.0-flash-lite")
+            prompt = f"以下の単語の意味を説明してください：\n{word}"
+            response = model.generate_content(prompt)
+            return {
+                "word": word,
+                "definition": response.text,
+                "success": True
+            }
+        
+    except Exception as e:
+        return {
+            "word": word,
+            "definition": "定義を取得できませんでした。",
+            "success": False,
+            "error": str(e)
+        }
 
 @app.get("/api/get/category_stats/{id}/{password}")
 async def get_category_stats(id: str, password: str):

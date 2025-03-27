@@ -28,6 +28,243 @@ const romajiToHiraganaMap = {
     'pya': 'ぴゃ', 'pyu': 'ぴゅ', 'pyo': 'ぴょ'
 };
 
+// 単語抽出用の正規表現
+const wordExtractRegex = /([A-Za-z][0-9A-Za-z_]*(?:\/[A-Za-z][0-9A-Za-z_]*)+|(?!.*\/)[一-龥ァ-ヾA-Za-z0-9_]{2,})/g;
+
+// 辞書APIからデータを取得する関数
+async function fetchDictionaryData(word) {
+    try {
+        const response = await fetch(`/api/search/word/${encodeURIComponent(word)}`);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Dictionary fetch error:', error);
+        return { 
+            success: false, 
+            word: word, 
+            definition: 'データを取得できませんでした。' 
+        };
+    }
+}
+
+// 単語の上にマウスオーバーした際に表示するポップオーバーを作成
+function createWordPopover(word) {
+    const popover = document.createElement('div');
+    popover.className = 'word-popover';
+    popover.textContent = `"${word}"の定義を調べる`;
+    popover.style.position = 'absolute';
+    popover.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    popover.style.color = 'white';
+    popover.style.padding = '5px 10px';
+    popover.style.borderRadius = '3px';
+    popover.style.fontSize = '12px';
+    popover.style.zIndex = '1000';
+    popover.style.transition = 'opacity 0.2s';
+    popover.style.pointerEvents = 'none'; // ポップオーバー自体はクリックイベントを通過させる
+    return popover;
+}
+
+// 辞書モーダルを表示する関数
+function showDictionaryModal(word, definition) {
+    // モーダルがまだ作成されていない場合は新規作成
+    let dictionaryModal = document.getElementById('dictionary-modal');
+    if (!dictionaryModal) {
+        dictionaryModal = document.createElement('div');
+        dictionaryModal.className = 'modal micromodal-slide';
+        dictionaryModal.id = 'dictionary-modal';
+        dictionaryModal.setAttribute('aria-hidden', 'true');
+        
+        dictionaryModal.innerHTML = `
+            <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+                <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="dictionary-modal-title">
+                    <header class="modal__header">
+                        <h2 id="dictionary-modal-title" class="modal__title"></h2>
+                    </header>
+                    <main class="modal__content">
+                        <div id="dictionary-modal-definition" class="dictionary-definition"></div>
+                    </main>
+                    <footer class="modal__footer">
+                        <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">閉じる</button>
+                    </footer>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dictionaryModal);
+    }
+    
+    // モーダルの内容を更新
+    document.getElementById('dictionary-modal-title').textContent = word;
+    document.getElementById('dictionary-modal-definition').textContent = definition;
+    
+    // モーダルを表示（MicroModalが初期化されていることを確認）
+    if (typeof MicroModal !== 'undefined') {
+        MicroModal.show('dictionary-modal');
+    } else {
+        console.error('MicroModal is not initialized');
+        alert(`${word}: ${definition}`);
+    }
+}
+
+// 単語をクリックしたときの処理
+async function onWordClick(event, word) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // ローディング表示
+    showDictionaryModal(word, "定義を取得中...", "");
+    
+    // APIから単語の定義を取得
+    const data = await fetchDictionaryData(word);
+    
+    // 取得したデータでモーダルを更新
+    if (data.success) {
+        showDictionaryModal(data.word, data.definition, data.category);
+    } else {
+        showDictionaryModal(word, "定義が見つかりませんでした。", "");
+    }
+}
+
+// テキストノードから対象となる単語を検出してクリック可能な要素に置き換える
+function processTextNode(node) {
+    const text = node.nodeValue;
+    const parent = node.parentNode;
+    
+    // クリック可能とするクラス名のリスト（この要素内の単語を処理する）
+    const validParentClasses = ['content'];
+    
+    // 親要素がクリック可能とする対象でなければスキップ
+    let isValidParent = false;
+    for (const className of validParentClasses) {
+        if (parent.classList && parent.classList.contains(className)) {
+            isValidParent = true;
+            break;
+        }
+    }
+    
+    if (!isValidParent) return;
+    
+    // 単語を検出して置換
+    const matches = text.matchAll(wordExtractRegex);
+    let lastIndex = 0;
+    const fragments = [];
+    
+    const notapplicableword = ['問題', '解説', '解答', '選択肢', '正解', '不正解', '未回答',
+        "方法", "正常", "機能", "無効", "維持", "不明", "時間内","時間","接続","データ",
+        "状態", "確認", "設定", "選択", "操作", "変更", "表示", "実行", "完了",
+        "目的", "内容", "手順", "手法", "条件", "結果", "理由", "対策",
+        "影響", "問題点", "注意点", "考慮", "評価", "分析", "調査", "実験",
+        "右上", "左上", "右下", "左下", "上部", "下部", "中央",
+        "上記", "下記", "前述", "後述", "以下", "以上", "次回", "前回",
+        "現在", "過去", "未来", "同様", "類似", "比較",
+        "何番目","データ内","文字列","合計","指定","範囲","数値","数値内",
+        "一部","A社","B社","C社","D社","E社","F社","G社","H社",
+        "効果","期待","技術","適切","適用",
+        "可能","不可能","有効","必要","不必要","重要",
+        "使用","利用","活用","実装","導入",
+        "部分","全体","全て","特定","特別",
+    ];
+
+    for (const match of matches) {
+
+        // マッチした単語を取得
+        const word = match[0];
+        const startIndex = match.index;
+
+        if (notapplicableword.includes(word)) continue;
+        
+        // マッチする前のテキストを追加
+        if (startIndex > lastIndex) {
+            fragments.push(document.createTextNode(text.substring(lastIndex, startIndex)));
+        }
+        
+        // 単語をクリック可能な要素に変換
+        const wordSpan = document.createElement('span');
+        wordSpan.textContent = word;
+        wordSpan.classList.add('clickable-word');
+        wordSpan.style.cursor = 'pointer';
+        
+        // マウスオーバー時のポップオーバー処理
+        const popover = createWordPopover(word);
+        document.body.appendChild(popover);
+        
+        wordSpan.addEventListener('mouseover', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            popover.style.left = `${rect.left}px`;
+            popover.style.top = `${rect.bottom + 5}px`;
+            popover.style.opacity = '1';
+        });
+        
+        wordSpan.addEventListener('mouseout', () => {
+            popover.style.opacity = '0';
+        });
+        
+        // クリックイベント
+        wordSpan.addEventListener('click', (e) => onWordClick(e, word));
+        
+        fragments.push(wordSpan);
+        lastIndex = startIndex + word.length;
+    }
+    
+    // 残りのテキストを追加
+    if (lastIndex < text.length) {
+        fragments.push(document.createTextNode(text.substring(lastIndex)));
+    }
+    
+    // 元のノードの置き換え
+    if (fragments.length > 0) {
+        const container = document.createDocumentFragment();
+        fragments.forEach(fragment => container.appendChild(fragment));
+        parent.replaceChild(container, node);
+    }
+}
+
+// ドキュメント内の全テキストノードを処理
+function processAllTextNodes() {
+    const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+    
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+        textNodes.push(node);
+    }
+    
+    // 逆順に処理することでDOMの変更による影響を最小化
+    for (let i = textNodes.length - 1; i >= 0; i--) {
+        processTextNode(textNodes[i]);
+    }
+}
+
+// 単語リストが表示された時に単語をクリック可能にする
+function makeWordsClickable() {
+    // 単語リスト内のすべてのテキストノードを処理
+    const wordList = document.getElementById('wordList');
+    if (wordList) {
+        const walker = document.createTreeWalker(
+            wordList,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+            textNodes.push(node);
+        }
+        
+        for (let i = textNodes.length - 1; i >= 0; i--) {
+            processTextNode(textNodes[i]);
+        }
+    }
+}
+
 // ローマ字→ひらがな変換関数
 function convertRomajiToHiragana(romaji) {
     let result = '';
@@ -66,19 +303,19 @@ function convertRomajiToHiragana(romaji) {
 
 // ひらがな→カタカナ変換関数
 function hiraganaToKatakana(str) {
-    return str.replace(/([\u3041-\u3096])/g, match =>
+    return str.replace(/[\u3041-\u3096]/g, match =>
         String.fromCharCode(match.charCodeAt(0) + 0x60)
     );
 }
 
 // カタカナ→ひらがな変換関数
 function katakanaToHiragana(str) {
-    return str.replace(/([\u30A1-\u30F6])/g, match =>
+    return str.replace(/[\u30a1-\u30f6]/g, match =>
         String.fromCharCode(match.charCodeAt(0) - 0x60)
     );
 }
 
-// N-gramジェネレーター関数（変更なし）
+// N-gramジェネレーター関数
 function generateNgrams(text, n = 2) {
     const ngrams = [];
     for (let i = 0; i <= text.length - n; i++) {
@@ -107,7 +344,7 @@ function calculateSimilarity(text1, text2) {
 // 検索インデックス（初回検索時に構築）
 let searchIndex = null;
 
-// 検索インデックスを構築する関数（互換性はそのまま）
+// 検索インデックスを構築する関数
 function buildSearchIndex() {
     if (searchIndex) return searchIndex; // すでに構築済みならそれを返す
 
@@ -298,4 +535,23 @@ function filterWords() {
     } else if (noResultMsg) {
         noResultMsg.remove();
     }
+    
+    // 検索結果表示後に単語をクリック可能にする
+    setTimeout(makeWordsClickable, 100);
 }
+
+// 初期化時およびスライダー変更時に単語をクリック可能にする
+document.addEventListener('DOMContentLoaded', () => {
+    // スワイパーのスライド変更イベントを監視
+    if (typeof swiper !== 'undefined') {
+        swiper.on('slideChangeTransitionEnd', () => {
+            // 単語リストのスライドが表示された時
+            if (swiper.activeIndex === 2) {
+                setTimeout(makeWordsClickable, 200);
+            }
+        });
+    }
+    
+    // 単語リスト初期表示時
+    setTimeout(makeWordsClickable, 1000);
+});

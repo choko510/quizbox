@@ -3,46 +3,410 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>問題を作成</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/dashboard/dashboard.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="toast.css">
+    <link rel="stylesheet" href="editor.css">
+    <title>問題作成</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 
 <body>
-    <div class="parent">
-        <div class="box container1">
-            <a href="javascript:templatedl();" class="btn">テンプレートをダウンロード</a>
-            <p>.画像から作成</p>
-            <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png" />
-            <p>.txtファイルから読み込み</p>
-            <input type="file" id="txtload" name="txt" accept=".txt" />
-            <p>csvから読み込み</p>
-            <input type="file" id="csvload" name="csv" accept=".csv" />
-            <p>xlsxファイル(Excel)から読み込み</p>
-            <input type="file" id="xlsxload" name="xlsx" accept=".xlsx" />
-            <a href="javascript:copy();" class="btn">クリップボードから読み込み</a>
-            <div class="action-buttons" style="margin-top: 40px;">
-                <a href="javascript:save();" class="disable-btn" id="saveBtn">保存</a>
-                <a href="javascript:release();" class="disable-btn" id="releaseBtn">公開</a>
-            </div>
+    <!-- ヘッダー部分 -->
+    <div class="top">
+        <div class="top-left">
+            <a href="/" class="home-btn">ホーム</a>
+            <h1>問題作成</h1>
         </div>
-
-        <div class="box container2">
-            <p style="font-size: 105%;">読み込んだ問題</p>
-            <p id="total-accs">問題数: 0</p>
-            <div class="action-row">
-                <button id="bulkDelete">一括削除</button>
-                <button id="exportJSON" class="btn-secondary">エクスポート</button>
-                <button id="checkQuality" class="btn-secondary">品質チェック</button>
-                <div id="save-status" style="margin-left: auto; font-size: 0.8em; color: #777;"></div>
-            </div>
-            <!-- ヒントテキストを削除 -->
-            <ul id="fileContent" class="file-content"></ul>
+        <div class="top-right">
+            <a href="/dashboard" class="create-btn">問題管理</a>
         </div>
     </div>
 
+    <div class="dashboard-container">
+        <!-- サイドバー -->
+        <aside class="dashboard-sidebar">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <img src="/usericon.png" alt="ユーザーアイコン">
+                </div>
+                <div class="user-name" id="user-name">ユーザー</div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li data-view="welcome" class="active"><span><i class="bi bi-house-door"></i> スタート</span></li>
+                    <li data-view="create"><span><i class="bi bi-pencil-square"></i> 問題作成</span></li>
+                    <li data-view="template"><span><i class="bi bi-file-earmark-text"></i> テンプレート</span></li>
+                    <li data-view="import"><span><i class="bi bi-upload"></i> インポート</span></li>
+                    <li data-view="settings"><span><i class="bi bi-gear"></i> 設定</span></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- メインコンテンツ部分 -->
+        <main class="dashboard-main">
+            <!-- ウェルカムビュー（初期画面） -->
+            <div class="editor-view active" id="welcome-view">
+                <div class="welcome-container">
+                    <h2>問題作成を始めましょう</h2>
+                    <p class="welcome-description">問題セットの作成方法を選んでください</p>
+                    
+                    <div class="welcome-options">
+                        <div class="welcome-option" id="option-create-new">
+                            <div class="option-icon">
+                                <i class="bi bi-plus-circle"></i>
+                            </div>
+                            <h3>新規作成</h3>
+                            <p>0から問題を作成します</p>
+                            <button class="option-button">選択</button>
+                        </div>
+                        
+                        <div class="welcome-option" id="option-template">
+                            <div class="option-icon">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <h3>テンプレートから作成</h3>
+                            <p>既存のテンプレートを元に作成します</p>
+                            <button class="option-button">選択</button>
+                        </div>
+                        
+                        <div class="welcome-option" id="option-import">
+                            <div class="option-icon">
+                                <i class="bi bi-upload"></i>
+                            </div>
+                            <h3>インポート</h3>
+                            <p>ファイルから問題を読み込みます</p>
+                            <button class="option-button">選択</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 作成ビュー -->
+            <div class="editor-view" id="create-view">
+                <div class="editor-container">
+                    <!-- 左側の問題一覧パネル -->
+                    <div class="problem-list-panel">
+                        <div class="panel-header">
+                            <h2>問題一覧</h2>
+                            <div class="problem-count" id="total-accs">問題数: 0</div>
+                        </div>
+                        
+                        <div class="panel-toolbar">
+                            <button id="addProblem" class="tool-button" title="問題を追加">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                            <button id="duplicateSelected" class="tool-button" title="選択した問題を複製">
+                                <i class="bi bi-files"></i>
+                            </button>
+                            <button id="deleteSelected" class="tool-button danger" title="選択した問題を削除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <div class="search-container">
+                                <input type="text" id="problemSearch" placeholder="検索...">
+                                <i class="bi bi-search"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="problem-list" id="problemList">
+                            <ul id="fileContent" class="file-content sortable-list"></ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側の問題編集パネル -->
+                    <div class="problem-edit-panel">
+                        <div class="panel-header">
+                            <h2>問題編集</h2>
+                            <div class="autosave-status" id="save-status">自動保存: -</div>
+                        </div>
+                        
+                        <div id="noSelection" class="no-selection-message">
+                            <i class="bi bi-arrow-left-circle"></i>
+                            <p>左側のリストから問題を選択するか、新しい問題を追加してください。</p>
+                        </div>
+                        
+                        <div id="problemEditor" class="problem-editor hidden">
+                            <div class="editor-form">
+                                <div class="form-group">
+                                    <label for="answerField">回答 <span class="required">*</span></label>
+                                    <div class="rich-text-toolbar">
+                                        <button type="button" data-action="bold" title="太字"><i class="bi bi-type-bold"></i></button>
+                                        <button type="button" data-action="italic" title="斜体"><i class="bi bi-type-italic"></i></button>
+                                        <button type="button" data-action="underline" title="下線"><i class="bi bi-type-underline"></i></button>
+                                    </div>
+                                    <div id="answerField" class="rich-text-editor" contenteditable="true" data-placeholder="回答を入力してください"></div>
+                                    <div class="character-counter"><span id="answerCount">0</span> 文字</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="questionField">問題 <span class="required">*</span></label>
+                                    <div class="rich-text-toolbar">
+                                        <button type="button" data-action="bold" title="太字"><i class="bi bi-type-bold"></i></button>
+                                        <button type="button" data-action="italic" title="斜体"><i class="bi bi-type-italic"></i></button>
+                                        <button type="button" data-action="underline" title="下線"><i class="bi bi-type-underline"></i></button>
+                                        <button type="button" data-action="image" title="画像を挿入"><i class="bi bi-image"></i></button>
+                                    </div>
+                                    <div id="questionField" class="rich-text-editor" contenteditable="true" data-placeholder="問題を入力してください"></div>
+                                    <div class="character-counter"><span id="questionCount">0</span> 文字</div>
+                                </div>
+                                
+                                <div class="form-group" id="validationFeedback">
+                                    <!-- バリデーションフィードバックはここに表示 -->
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <button id="checkButton" class="action-btn"><i class="bi bi-check-circle"></i> 品質チェック</button>
+                                    <button id="previewButton" class="action-btn"><i class="bi bi-eye"></i> プレビュー</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="editor-actions">
+                    <div class="left-actions">
+                        <button id="bulkDelete" class="action-btn danger-btn">一括削除</button>
+                        <button id="exportJSON" class="action-btn">エクスポート</button>
+                    </div>
+                    <div class="right-actions">
+                        <a href="javascript:save();" class="dashboard-btn primary-btn disable-btn" id="saveBtn">保存</a>
+                        <a href="javascript:release();" class="dashboard-btn publish-btn disable-btn" id="releaseBtn">公開</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- テンプレートビュー -->
+            <div class="editor-view" id="template-view">
+                <div class="templates-container">
+                    <h2>テンプレート</h2>
+                    <p class="description">使用開始する問題テンプレートを選択してください。カスタムテンプレートは保存済みのテンプレートです。</p>
+                    
+                    <div class="template-category">
+                        <h3>基本テンプレート</h3>
+                        <div class="template-grid">
+                            <div class="template-card" data-template="basic">
+                                <div class="template-icon"><i class="bi bi-card-text"></i></div>
+                                <h4>基本問題</h4>
+                                <p>シンプルな回答と質問のペア</p>
+                            </div>
+                            <div class="template-card" data-template="multiple-choice">
+                                <div class="template-icon"><i class="bi bi-list-check"></i></div>
+                                <h4>選択問題</h4>
+                                <p>複数選択肢から選ぶ形式</p>
+                            </div>
+                            <div class="template-card" data-template="true-false">
+                                <div class="template-icon"><i class="bi bi-check2-circle"></i></div>
+                                <h4>○×問題</h4>
+                                <p>正誤を問う形式</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-category">
+                        <h3>カスタムテンプレート</h3>
+                        <div class="template-grid" id="customTemplates">
+                            <!-- カスタムテンプレートがここに動的に追加される -->
+                            <div class="empty-state">
+                                <p><i class="bi bi-info-circle"></i> 保存したカスタムテンプレートはここに表示されます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- インポートビュー -->
+            <div class="editor-view" id="import-view">
+                <div class="import-container">
+                    <h2>データインポート</h2>
+                    <div class="import-options">
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-file-text"></i></div>
+                            <h3>テキストファイルから読み込み</h3>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="txtload" name="txt" accept=".txt" /><br>
+                                <label for="txtload" class="file-label">テキストファイルを選択</label>
+                            </div>
+                        </div>
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-filetype-csv"></i></div>
+                            <h3>CSVから読み込み</h3>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="csvload" name="csv" accept=".csv" /><br>
+                                <label for="csvload" class="file-label">CSVファイルを選択</label>
+                            </div>
+                        </div>
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+                            <h3>Excelファイルから読み込み</h3>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="xlsxload" name="xlsx" accept=".xlsx" /><br>
+                                <label for="xlsxload" class="file-label">Excelファイルを選択</label>
+                            </div>
+                        </div>
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-clipboard"></i></div>
+                            <h3>クリップボードから読み込み</h3>
+                            <p>タブや改行で区切られたテキストをコピーしてインポートできます</p>
+                            <button class="dashboard-btn" onclick="copy()">クリップボードから読み込む</button>
+                        </div>
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-image"></i></div>
+                            <h3>画像から作成</h3>
+                            <p>アップロードした画像からAIが問題を抽出します</p>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png" />
+                                <label for="imageLoad" class="file-label">画像を選択</label>
+                            </div>
+                        </div>
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-cloud-arrow-down"></i></div>
+                            <h3>テンプレートをダウンロード</h3>
+                            <p>各形式のテンプレートファイルをダウンロード</p>
+                            <button class="dashboard-btn" onclick="templatedl()">テンプレートを取得</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 設定ビュー -->
+            <div class="editor-view" id="settings-view">
+                <div class="settings-container">
+                    <h2>エディタ設定</h2>
+                    
+                    <div class="settings-section">
+                        <h3>表示設定</h3>
+                        <div class="settings-options">
+                            <div class="settings-option">
+                                <label for="auto-quality-check">
+                                    問題入力時に自動品質チェック
+                                    <span class="setting-description">入力中に問題の品質を自動的に評価します</span>
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auto-quality-check">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="settings-option">
+                                <label for="show-characters">
+                                    文字数カウンターを表示
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="show-characters" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="settings-option">
+                                <label for="show-preview">
+                                    リアルタイムプレビュー
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="show-preview" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>自動保存設定</h3>
+                        <div class="settings-options">
+                            <div class="settings-option">
+                                <label for="auto-save">
+                                    自動保存を有効にする
+                                </label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auto-save" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="settings-option">
+                                <label for="auto-save-interval">自動保存の間隔</label>
+                                <select id="auto-save-interval" class="settings-select">
+                                    <option value="10000">10秒</option>
+                                    <option value="30000" selected>30秒</option>
+                                    <option value="60000">1分</option>
+                                    <option value="300000">5分</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>テーマ設定</h3>
+                        <div class="theme-options">
+                            <div class="theme-option" data-theme="light">
+                                <div class="theme-preview light-theme"></div>
+                                <span>ライト</span>
+                            </div>
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark-theme"></div>
+                                <span>ダーク</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="saveSettings" class="save-settings-btn">設定を保存</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- プレビューモーダル -->
+    <div class="modal" id="previewModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>問題プレビュー</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-mode-tabs">
+                    <button class="preview-tab active" data-mode="card">カード</button>
+                    <button class="preview-tab" data-mode="test">テスト</button>
+                    <button class="preview-tab" data-mode="code">コード</button>
+                </div>
+                <div class="preview-content">
+                    <div id="previewCard" class="preview-mode active">
+                        <div class="preview-card">
+                            <div class="card-front">
+                                <h3>問題</h3>
+                                <div id="previewQuestion"></div>
+                            </div>
+                            <div class="card-divider"></div>
+                            <div class="card-back">
+                                <h3>回答</h3>
+                                <div id="previewAnswer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="previewTest" class="preview-mode">
+                        <div class="test-mode">
+                            <h3 class="test-question-header">問題:</h3>
+                            <div id="testModeQuestion"></div>
+                            <button class="show-answer-btn">回答を表示</button>
+                            <div class="test-answer hidden">
+                                <h3>回答:</h3>
+                                <div id="testModeAnswer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="previewCode" class="preview-mode">
+                        <pre><code id="previewCodeContent"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 画像プレビュー用コンテナ -->
     <div class="preview-container">
         <div class="preview-content">
             <span class="preview-close">&times;</span>
@@ -51,634 +415,43 @@
         </div>
     </div>
 
-    <div class="modal micromodal-slide" id="downloadlist" aria-hidden="true">
-        <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
-                <header class="modal__header">
-                    <h2 class="modal__title" id="modal-1-title">テンプレートリスト</h2>
-                    <button class="modal__close" aria-label="Close modal" data-micromodal-close>&times;</button>
-                </header>
-                <main class="modal__content" id="modal-1-content" style="text-align: center;">
-                    <a href="/static/make/template.txt" download="template.txt" class="btn">テキストファイル</a>
-                    <a href="/static/make/template.csv" download="template.csv" class="btn">CSVファイル</a>
-                    <a href="/static/make/template.xlsx" download="template.xlsx" class="btn">Excelファイル</a>
-                </main>
-                <footer class="modal__footer">
-                    <button class="modal__btn" data-micromodal-close aria-label="閉じる">閉じる</button>
-                </footer>
+    <!-- テンプレートダウンロードのモーダル -->
+    <div class="modal" id="downloadlist">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>テンプレートリスト</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="template-files">
+                    <a href="/static/make/template/template.txt" download="template.txt" class="template-file">
+                        <i class="bi bi-file-text"></i>
+                        <span>テキストファイル</span>
+                    </a>
+                    <a href="/static/make/template/template.csv" download="template.csv" class="template-file">
+                        <i class="bi bi-filetype-csv"></i>
+                        <span>CSVファイル</span>
+                    </a>
+                    <a href="/static/make/template/template.xlsx" download="template.xlsx" class="template-file">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        <span>Excelファイル</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button">閉じる</button>
             </div>
         </div>
     </div>
 
-    <div id="toast-container"></div>
+    <!-- トースト通知コンテナ -->
+    <div id="toast-container" class="toast-container"></div>
 
+    <!-- 必要なスクリプト -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
-    <link rel="stylesheet" href="../modal.css">
-    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
-    <script>
+    <script src="editor.js"></script>
 
-        MicroModal.init();
-
-        /* ----- テンプレートダウンロード関数 ----- */
-        function templatedl() {
-            MicroModal.show('downloadlist');
-        }
-
-        /* ----- 問題数の更新関数 ----- */
-        function updateTotalCount() {
-            const ul = document.getElementById('fileContent');
-            const lis = ul.querySelectorAll('li');
-
-            // 有効な問題数をカウント（空の問題は除外）
-            let validCount = 0;
-            for (const li of lis) {
-                const ps = li.querySelectorAll('p');
-                if (ps.length >= 2 && ps[0].innerText.trim() !== '' && ps[1].innerText.trim() !== '') {
-                    validCount++;
-                }
-            }
-
-            document.getElementById('total-accs').innerText = '問題数: ' + validCount;
-
-            const saveBtn = document.getElementById('saveBtn');
-            const releaseBtn = document.getElementById('releaseBtn');
-            if (validCount > 0) {
-                saveBtn.classList.remove('disable-btn');
-                saveBtn.classList.add('btn');
-                releaseBtn.classList.remove('disable-btn');
-                releaseBtn.classList.add('btn');
-            } else {
-                saveBtn.classList.add('disable-btn');
-                saveBtn.classList.remove('btn');
-                releaseBtn.classList.add('disable-btn');
-                releaseBtn.classList.remove('btn');
-            }
-        }
-
-        function createEditablePair(answerValue = '', questionValue = '') {
-            const li = document.createElement('li');
-
-            const pAnswer = document.createElement('p');
-            pAnswer.contentEditable = true;
-            pAnswer.innerText = answerValue;
-
-            const pQuestion = document.createElement('p');
-            pQuestion.contentEditable = true;
-            pQuestion.innerText = questionValue;
-
-            if (answerValue === '' && questionValue === '') {
-                pAnswer.setAttribute('data-placeholder', 'answer');
-                pQuestion.setAttribute('data-placeholder', 'question');
-            }
-
-            const delBtn = document.createElement('button');
-            delBtn.innerText = '削除';
-            delBtn.classList.add('delete-btn');
-            delBtn.addEventListener('click', function () {
-                li.remove();
-                updateTotalCount();
-                if (document.getElementById('fileContent').querySelectorAll('li').length === 0) {
-                    document.getElementById('fileContent').appendChild(createEditablePair());
-                }
-            });
-
-            li.appendChild(pAnswer);
-            li.appendChild(pQuestion);
-            li.appendChild(delBtn);
-
-            pAnswer.addEventListener('input', onEditableInput);
-            pQuestion.addEventListener('input', onEditableInput);
-
-            return li;
-        }
-
-        function onEditableInput(e) {
-            const li = e.target.parentElement;
-            const ul = li.parentElement;
-            if (ul.lastElementChild === li) {
-                const pElements = li.querySelectorAll('p');
-                if (pElements.length === 2) {
-                    const text1 = pElements[0].innerText.trim();
-                    const text2 = pElements[1].innerText.trim();
-                    if (text1 !== '' && text2 !== '') {
-                        ul.appendChild(createEditablePair());
-                        updateTotalCount();
-                    }
-                }
-            }
-        }
-
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.classList.add('toast');
-            toast.innerText = message;
-            document.getElementById('toast-container').appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        /* ----- プレビュー関連の関数 ----- */
-        function showPreview(imageUrl) {
-            const container = document.querySelector('.preview-container');
-            const img = container.querySelector('.preview-image');
-            img.src = imageUrl;
-            container.style.display = 'flex';
-        }
-
-        document.querySelector('.preview-close').addEventListener('click', function () {
-            document.querySelector('.preview-container').style.display = 'none';
-        });
-
-        /* ----- 画像アップロード処理 ----- */
-        document.getElementById('imageLoad').addEventListener('change', async function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                // 画像アップロード
-                const uploadResponse = await fetch('/api/upload/image', {
-                    method: 'POST',
-                    body: formData
-                });
-                const uploadData = await uploadResponse.json();
-
-                if (uploadData.status === 'success') {
-                    showToast('画像がアップロードされました');
-
-                    // 画像解析
-                    const processResponse = await fetch('/api/process/image', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ id: uploadData.id })
-                    });
-                    const processData = await processResponse.json();
-
-                    if (processData.status === 'success') {
-                        const content = document.getElementById('fileContent');
-                        content.appendChild(createEditablePair(processData.data, '画像の説明は？'));
-                        content.appendChild(createEditablePair());
-                        updateTotalCount();
-                    }
-
-                    // プレビュー表示
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        showPreview(e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            } catch (error) {
-                showToast('エラーが発生しました: ' + error.message);
-                console.error(error);
-            }
-        });
-
-        /* ----- ファイル読み込み処理 ----- */
-        function handleFileContent(lines) {
-            const content = document.getElementById('fileContent');
-            content.innerHTML = '';
-            lines.forEach(line => {
-                const [answer, question] = line.split(',');
-                if (answer && question) {
-                    content.appendChild(createEditablePair(answer.trim(), question.trim()));
-                }
-            });
-            content.appendChild(createEditablePair());
-            updateTotalCount();
-        }
-
-        document.getElementById('txtload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = e => handleFileContent(e.target.result.split('\n'));
-            reader.readAsText(file);
-        });
-
-        document.getElementById('csvload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = e => handleFileContent(e.target.result.split('\n'));
-            reader.readAsText(file);
-        });
-
-        document.getElementById('xlsxload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const content = document.getElementById('fileContent');
-                content.innerHTML = '';
-
-                for (let i = 1; i < 1000; i++) {
-                    const answer = sheet['A' + i];
-                    const question = sheet['B' + i];
-                    if (answer && question) {
-                        content.appendChild(createEditablePair(answer.v, question.v));
-                    }
-                }
-                content.appendChild(createEditablePair());
-                updateTotalCount();
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        function copy() {
-            navigator.clipboard.readText().then(text => {
-                handleFileContent(text.split('\n'));
-            });
-        }
-
-        /* ----- ドラッグ＆ドロップ処理 ----- */
-        document.addEventListener('dragover', e => e.preventDefault());
-        document.addEventListener('drop', function (e) {
-            e.preventDefault();
-            const file = e.dataTransfer.files[0];
-            const reader = new FileReader();
-            reader.onload = e => handleFileContent(e.target.result.split('\n'));
-            reader.readAsText(file);
-        });
-
-        /* ----- 保存処理 ----- */
-        async function save() {
-            const content = document.getElementById('fileContent');
-            const lis = content.querySelectorAll('li');
-            const mondai = [];
-
-            lis.forEach(li => {
-                const p = li.querySelectorAll('p');
-                if (p.length >= 2) {
-                    const answer = p[0].innerText.trim();
-                    const question = p[1].innerText.trim();
-                    if (answer && question) {
-                        mondai.push(`${answer},${question}`);
-                    }
-                }
-            });
-
-            if (mondai.length === 0) {
-                showToast('保存する問題がありません。');
-                return;
-            }
-
-            const name = prompt('問題セットの名前を入力してください:');
-            if (!name) {
-                showToast('名前が入力されていません。保存をキャンセルしました。');
-                return;
-            }
-
-            const userId = Cookies.get('id');
-            const password = Cookies.get('password');
-
-            if (!userId || !password) {
-                showToast('ログインが必要です。');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/make/mondai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        userid: userId,
-                        password: password,
-                        mondai: mondai
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    showToast('問題が正常に保存されました。');
-                    content.innerHTML = '';
-                    content.appendChild(createEditablePair());
-                    updateTotalCount();
-                } else {
-                    showToast('問題の保存に失敗しました: ' + data.message);
-                }
-            } catch (error) {
-                showToast('エラーが発生しました: ' + error.message);
-                console.error(error);
-            }
-        }
-
-        /* ----- 公開処理 ----- */
-        async function release() {
-            const content = document.getElementById('fileContent');
-            const lis = content.querySelectorAll('li');
-            const mondai = [];
-
-            lis.forEach(li => {
-                const p = li.querySelectorAll('p');
-                if (p.length >= 2) {
-                    const answer = p[0].innerText.trim();
-                    const question = p[1].innerText.trim();
-                    if (answer && question) {
-                        mondai.push(`${answer},${question}`);
-                    }
-                }
-            });
-
-            if (mondai.length === 0) {
-                showToast('公開する問題がありません。');
-                return;
-            }
-
-            const name = prompt('公開する問題セットの名前を入力してください:');
-            if (!name) {
-                showToast('名前が入力されていません。公開をキャンセルしました。');
-                return;
-            }
-
-            const userId = Cookies.get('id');
-            const password = Cookies.get('password');
-
-            if (!userId || !password) {
-                showToast('ログインが必要です。');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/make/mondai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        userid: userId,
-                        password: password,
-                        mondai: mondai
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    showToast('問題が公開されました。');
-                    content.innerHTML = '';
-                    content.appendChild(createEditablePair());
-                    updateTotalCount();
-                } else {
-                    showToast('問題の公開に失敗しました: ' + data.message);
-                }
-            } catch (error) {
-                showToast('エラーが発生しました: ' + error.message);
-                console.error(error);
-            }
-        }
-
-        /* ----- エクスポート機能 ----- */
-        function exportToJSON() {
-            const content = document.getElementById('fileContent');
-            const lis = content.querySelectorAll('li');
-            const mondai = [];
-
-            lis.forEach(li => {
-                const p = li.querySelectorAll('p');
-                if (p.length >= 2) {
-                    const answer = p[0].innerText.trim();
-                    const question = p[1].innerText.trim();
-                    if (answer && question) {
-                        mondai.push({
-                            answer: answer,
-                            question: question
-                        });
-                    }
-                }
-            });
-
-            if (mondai.length === 0) {
-                showToast('エクスポートする問題がありません。');
-                return;
-            }
-
-            const data = JSON.stringify(mondai, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'mondai_' + new Date().toISOString().slice(0, 10) + '.json';
-            a.click();
-
-            URL.revokeObjectURL(url);
-            showToast('問題をエクスポートしました');
-        }
-
-        /* ----- 自動保存機能 ----- */
-        function saveToLocalStorage() {
-            const content = document.getElementById('fileContent');
-            const lis = content.querySelectorAll('li');
-            const mondai = [];
-
-            lis.forEach(li => {
-                const p = li.querySelectorAll('p');
-                if (p.length >= 2) {
-                    const answer = p[0].innerText.trim();
-                    const question = p[1].innerText.trim();
-                    if (answer || question) {  // 片方だけでも保存
-                        mondai.push({
-                            answer: answer,
-                            question: question
-                        });
-                    }
-                }
-            });
-
-            localStorage.setItem('mondai_autosave', JSON.stringify(mondai));
-            document.getElementById('save-status').innerText = '自動保存: ' + new Date().toLocaleTimeString();
-        }
-
-        function restoreFromLocalStorage() {
-            const savedData = localStorage.getItem('mondai_autosave');
-            if (!savedData) return false;
-
-            try {
-                const mondai = JSON.parse(savedData);
-                if (!Array.isArray(mondai) || mondai.length === 0) return false;
-
-                const content = document.getElementById('fileContent');
-                content.innerHTML = '';
-
-                mondai.forEach(item => {
-                    if (item && (item.answer || item.question)) {
-                        content.appendChild(createEditablePair(
-                            item.answer || '',
-                            item.question || ''
-                        ));
-                    }
-                });
-
-                content.appendChild(createEditablePair());
-                updateTotalCount();
-                showToast('前回の編集内容を復元しました');
-                return true;
-            } catch (e) {
-                console.error('自動保存データの復元に失敗:', e);
-                return false;
-            }
-        }
-
-        /* ----- 品質チェック機能 ----- */
-        async function checkQuality() {
-            const content = document.getElementById('fileContent');
-            const lis = content.querySelectorAll('li');
-            const mondai = [];
-
-            // 有効な問題を収集
-            lis.forEach(li => {
-                const p = li.querySelectorAll('p');
-                if (p.length >= 2) {
-                    const answer = p[0].innerText.trim();
-                    const question = p[1].innerText.trim();
-                    if (answer && question) {
-                        mondai.push({
-                            element: li,
-                            text: `問題：${question}\n回答：${answer}`
-                        });
-                    }
-                }
-            });
-
-            if (mondai.length === 0) {
-                showToast('チェックする問題がありません。');
-                return;
-            }
-
-            // 最大5問までチェック（APIの負荷を考慮）
-            const targetMondai = mondai.slice(0, 5);
-            const textArray = targetMondai.map(item => item.text);
-
-            showToast('問題をチェック中...');
-
-            try {
-                // 品質チェックAPIを一括で呼び出す
-                const response = await fetch('/api/process/text', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        text: textArray,
-                        checkType: 'quality'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success' && data.results) {
-                    // 各問題のフィードバックを表示
-                    data.results.forEach(result => {
-                        const item = targetMondai[result.index];
-                        if (!item) return;
-
-                        // すでにフィードバックがあれば削除
-                        const existingFeedback = item.element.querySelector('.feedback-container');
-                        if (existingFeedback) {
-                            existingFeedback.remove();
-                        }
-
-                        // フィードバックの内容を確認
-                        const feedbackText = result.feedback || '';
-
-                        // 問題なしかどうかを判定
-                        const isGood = feedbackText.includes('問題ありません') ||
-                            feedbackText.includes('良好です') ||
-                            feedbackText.includes('適切です') ||
-                            feedbackText.includes('明確です');
-
-                        // フィードバックの表示
-                        const feedbackDiv = document.createElement('div');
-                        feedbackDiv.className = 'feedback-container';
-
-                        if (isGood) {
-                            // 問題なしの場合は緑色のスタイルで簡潔に表示
-                            feedbackDiv.classList.add('good-feedback');
-                            feedbackDiv.innerHTML = '<span class="feedback-status good">✓ 良好</span>';
-                        } else {
-                            // 改善提案がある場合は通常のスタイルで詳細を表示
-                            // マークダウン形式のテキストをシンプルに表示（太字、斜体等の基本的なフォーマットを保持）
-                            const feedback = feedbackText
-                                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                                .replace(/\n/g, '<br>');
-
-                            feedbackDiv.innerHTML = feedback;
-                        }
-
-                        feedbackDiv.style.display = 'block';
-                        item.element.appendChild(feedbackDiv);
-                    });
-                }
-
-                showToast('問題のチェックが完了しました');
-            } catch (error) {
-                console.error('品質チェックエラー:', error);
-                showToast('チェック中にエラーが発生しました');
-            }
-        }
-
-        /* ----- 初期化処理 ----- */
-        document.addEventListener('DOMContentLoaded', function () {
-            const content = document.getElementById('fileContent');
-            content.innerHTML = '';
-
-            // ローカルストレージからの復元を試みる
-            const restored = restoreFromLocalStorage();
-
-            // 復元できなければ新規作成
-            if (!restored) {
-                content.appendChild(createEditablePair());
-                updateTotalCount();
-            }
-
-            // 自動保存の設定
-            const autoSaveInterval = 30000;  // 30秒ごと
-            setInterval(saveToLocalStorage, autoSaveInterval);
-
-            // 入力イベントでも自動保存（イベントの集約）
-            let saveTimeout;
-            content.addEventListener('input', function () {
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(saveToLocalStorage, 1000);
-            });
-
-            // 一括削除ボタンの設定
-            document.getElementById('bulkDelete').addEventListener('click', function () {
-                if (confirm('すべての問題を削除してもよろしいですか？')) {
-                    content.innerHTML = '';
-                    content.appendChild(createEditablePair());
-                    updateTotalCount();
-                    saveToLocalStorage();
-                }
-            });
-
-            // エクスポートボタンの設定
-            document.getElementById('exportJSON').addEventListener('click', exportToJSON);
-
-            // 品質チェックボタンの設定
-            document.getElementById('checkQuality').addEventListener('click', checkQuality);
-
-            // クリップボードコピー機能
-            document.getElementById('fileContent').addEventListener('click', function (e) {
-                const target = e.target;
-                if (!target.isContentEditable && target.tagName === 'P') {
-                    navigator.clipboard.writeText(target.innerText)
-                        .then(() => showToast('コピーしました'));
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/dashboard/dashboard.css">
+    <title>問題ダッシュボード</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+    <div class="top">
+        <div class="top-left">
+            <a href="/" class="home-btn">ホーム</a>
+            <h1>問題管理ダッシュボード</h1>
+        </div>
+        <div class="top-right">
+            <a href="/make" class="create-btn">問題を作る</a>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- サイドバー -->
+        <aside class="dashboard-sidebar">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <img src="/usericon.png" alt="ユーザーアイコン">
+                </div>
+                <div class="user-name" id="user-name">ユーザー</div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" data-view="overview"><span>概要</span></li>
+                    <li data-view="problems"><span>問題一覧</span></li>
+                    <li data-view="statistics"><span>統計</span></li>
+                    <li data-view="settings"><span>設定</span></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- メインコンテンツエリア -->
+        <main class="dashboard-main">
+            <!-- 概要ビュー -->
+            <section class="dashboard-view active" id="overview-view">
+                <div class="overview-header">
+                    <h2>ダッシュボード概要</h2>
+                </div>
+                
+                <div class="widget-container">
+                    <!-- 総問題数ウィジェット -->
+                    <div class="widget" id="total-problems-widget">
+                        <div class="widget-header">
+                            <h3>総問題数</h3>
+                            <div class="widget-controls">
+                                <span class="widget-move">⋮</span>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <div class="stat-large" id="total-problems-count">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 公開問題数ウィジェット -->
+                    <div class="widget" id="public-problems-widget">
+                        <div class="widget-header">
+                            <h3>公開問題数</h3>
+                            <div class="widget-controls">
+                                <span class="widget-move">⋮</span>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <div class="stat-large" id="public-problems-count">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 最近の問題ウィジェット -->
+                    <div class="widget" id="recent-problems-widget">
+                        <div class="widget-header">
+                            <h3>最近作成した問題</h3>
+                            <div class="widget-controls">
+                                <span class="widget-move">⋮</span>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <ul class="recent-problems-list" id="recent-problems-list">
+                                <li class="no-data">問題がありません</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 正答率ウィジェット -->
+                    <div class="widget" id="accuracy-widget">
+                        <div class="widget-header">
+                            <h3>問題別正答率</h3>
+                            <div class="widget-controls">
+                                <span class="widget-move">⋮</span>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <canvas id="accuracy-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 問題一覧ビュー -->
+            <section class="dashboard-view" id="problems-view">
+                <div class="problems-header">
+                    <h2>問題一覧</h2>
+                    <div class="problem-actions">
+                        <input type="text" id="problem-search" placeholder="問題を検索..." class="search-input">
+                        <button id="problem-filter" class="filter-button">フィルター</button>
+                    </div>
+                </div>
+
+                <div class="filter-options" id="filter-options" style="display: none;">
+                    <label>
+                        <input type="checkbox" id="filter-public" checked> 公開
+                    </label>
+                    <label>
+                        <input type="checkbox" id="filter-private" checked> 非公開
+                    </label>
+                    <button id="apply-filters" class="apply-button">適用</button>
+                </div>
+
+                <div class="problems-table-container">
+                    <table class="problems-table" id="problems-table">
+                        <thead>
+                            <tr>
+                                <th>問題名</th>
+                                <th class="sortable" data-sort="problemCount">問題数 <span class="sort-icon">⇅</span></th>
+                                <th>公開状態</th>
+                                <th class="sortable" data-sort="created_at">作成日 <span class="sort-icon">⇅</span></th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="problems-table-body">
+                            <tr class="no-data">
+                                <td colspan="5">問題が見つかりません</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="problem-preview" id="problem-preview" style="display: none;">
+                    <div class="preview-header">
+                        <h3>問題プレビュー</h3>
+                        <button class="close-preview">×</button>
+                    </div>
+                    <div class="preview-content">
+                        <div id="preview-problem-name">問題名: </div>
+                        <div class="problem-items" id="preview-problem-items"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 統計ビュー -->
+            <section class="dashboard-view" id="statistics-view">
+                <h2>使用統計</h2>
+                
+                <div class="stats-container">
+                    <div class="stats-widget">
+                        <h3>問題使用回数</h3>
+                        <canvas id="usage-chart"></canvas>
+                    </div>
+                    
+                    <div class="stats-widget">
+                        <h3>正答率統計</h3>
+                        <canvas id="stats-accuracy-chart"></canvas>
+                    </div>
+                    
+                    <div class="stats-widget full-width">
+                        <h3>問題別詳細統計</h3>
+                        <div class="stats-table-container">
+                            <table class="stats-table" id="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>問題名</th>
+                                        <th>使用回数</th>
+                                        <th>正解数</th>
+                                        <th>不正解数</th>
+                                        <th>正答率</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stats-table-body">
+                                    <tr class="no-data">
+                                        <td colspan="5">データがありません</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 設定ビュー -->
+            <section class="dashboard-view" id="settings-view">
+                <h2>ダッシュボード設定</h2>
+                
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>ウィジェット表示設定</h3>
+                        <div class="settings-options">
+                            <div class="settings-option">
+                                <label for="show-total-problems">総問題数を表示</label>
+                                <input type="checkbox" id="show-total-problems" checked>
+                            </div>
+                            <div class="settings-option">
+                                <label for="show-public-problems">公開問題数を表示</label>
+                                <input type="checkbox" id="show-public-problems" checked>
+                            </div>
+                            <div class="settings-option">
+                                <label for="show-recent-problems">最近の問題を表示</label>
+                                <input type="checkbox" id="show-recent-problems" checked>
+                            </div>
+                            <div class="settings-option">
+                                <label for="show-accuracy">正答率グラフを表示</label>
+                                <input type="checkbox" id="show-accuracy" checked>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>テーマ設定</h3>
+                        <div class="theme-options">
+                            <div class="theme-option active" data-theme="light">
+                                <div class="theme-preview light-theme"></div>
+                                <span>ライト</span>
+                            </div>
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark-theme"></div>
+                                <span>ダーク</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="save-settings-btn" id="save-settings">設定を保存</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 問題編集モーダル -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>問題編集</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-problem-name">問題名</label>
+                    <input type="text" id="edit-problem-name" required>
+                </div>
+                <div class="form-group">
+                    <label>問題リスト</label>
+                    <div id="edit-problem-items" class="edit-problem-items">
+                        <!-- 動的に生成される -->
+                    </div>
+                    <button class="add-problem-item">問題を追加</button>
+                </div>
+                <div class="form-group">
+                    <label for="edit-problem-visibility">公開状態</label>
+                    <select id="edit-problem-visibility">
+                        <option value="public">公開</option>
+                        <option value="private">非公開</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-cancel">キャンセル</button>
+                <button class="modal-save" id="save-edit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 問題複製モーダル -->
+    <div class="modal" id="duplicate-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>問題複製</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="duplicate-problem-name">新しい問題名</label>
+                    <input type="text" id="duplicate-problem-name" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-cancel">キャンセル</button>
+                <button class="modal-save" id="save-duplicate">複製</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認モーダル -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container small-modal">
+            <div class="modal-header">
+                <h2>確認</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">この操作を実行しますか？</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-cancel" id="confirm-cancel">キャンセル</button>
+                <button class="modal-delete" id="confirm-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/dashboard/dashboard.js"></script>
+</body>
+
+</html>
