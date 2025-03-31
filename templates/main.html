@@ -42,13 +42,13 @@
 </head>
 
 <body>
-    <div class="top">
-        <div class="top-left">
-            <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
-            <a href="/make" class="create-btn">問題を作る</a>
-            <a href="/dashboard/" class="create-btn">問題管理</a>
-        </div>
+<div class="top">
+    <div class="top-left">
+        <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
+        <a href="/make" class="create-btn">問題を作る</a>
+        <a href="/dashboard/" class="create-btn">問題管理</a>
     </div>
+</div>
     <div class="main">
         <div class="box1">
 
@@ -94,7 +94,7 @@
         </div>
     </div>
     <link rel="stylesheet" href="mainmodal.css">
-    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
@@ -253,6 +253,7 @@
             </div>
         </div>
     </div>
+
     <script src="score-dashboard.js"></script>
 
     <script>
@@ -278,6 +279,7 @@
                     const data = await response.json();
                     console.log('進捗データ:', data); // デバッグ用
                     const allProgressData = data.all_progress_data || {};
+                    console.log('処理する全進捗データ:', allProgressData);
 
                     // 全問題リンクに対してプログレスバーを追加
                     const categoryDivs = document.querySelectorAll('.category');
@@ -323,21 +325,77 @@
                 total: 100   // 総問題数
             };
 
+            // URLからカテゴリを取得する
+            const href = linkElement.href;
+            const url = new URL(href, window.location.origin);
+            const idParam = url.searchParams.get('id');
+            const category = getCategory(idParam, href);
+            
+            console.log('Checking category:', category, 'for link:', linkElement.textContent);
+
+            // グループデータの確認
             const groupData = allProgressData[group];
-            if (groupData && groupData.categoryData) {
-                const categories = groupData.categoryData;
-                // リンクテキストと各カテゴリ名を部分一致で判別
-                for (const category in categories) {
-                    if (linkElement.textContent.indexOf(category) !== -1) {
-                        const catData = categories[category];
+            if (groupData) {
+                // 直接構造の場合（categoryDataがオブジェクトの一部として存在）
+                if (groupData.categoryData && groupData.categoryData[category]) {
+                    const catData = groupData.categoryData[category];
+                    const extracted = { learned: catData.correct, learning: 0, total: catData.total };
+                    console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
+                    return extracted;
+                } 
+                // categoryDataが直接存在せず、カテゴリがグループのプロパティとして存在する場合
+                else if (groupData[category]) {
+                    const catData = groupData[category];
+                    // 異なるデータ形式に対応
+                    const correct = catData.correct || 0;
+                    const total = catData.total || 100;
+                    const extracted = { learned: correct, learning: 0, total: total };
+                    console.log('Extracted progress data (alt format) for', linkElement.textContent, ':', extracted);
+                    return extracted;
+                }
+                
+                // テキストベースでのマッチング（最後の手段）
+                const categories = groupData.categoryData || {};
+                for (const cat in categories) {
+                    if (linkElement.textContent.toLowerCase().indexOf(cat.toLowerCase()) !== -1) {
+                        const catData = categories[cat];
                         const extracted = { learned: catData.correct, learning: 0, total: catData.total };
-                        console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
+                        console.log('Extracted progress data by text match for', linkElement.textContent, ':', extracted);
                         return extracted;
                     }
                 }
             }
+            
             console.log('No matching category for', linkElement.textContent, '- using default:', defaultData);
             return defaultData;
+        }
+        
+        // URLやリンク情報からカテゴリを判定する関数
+        function getCategory(idParam, href) {
+            // idパラメータがある場合はそれを使用
+            if (idParam) {
+                return idParam;
+            }
+            
+            // URLパスからカテゴリを推測
+            if (href.includes('itpasu/play')) {
+                return "ITパスポート";
+            } else if (href.includes('beta') && (href.includes('proghard') || !idParam)) {
+                return "プログラミング";
+            } else if (href.includes('beta') && href.includes('hardbizinesu')) {
+                return "ビジネス";
+            } else if (href.includes('play') && href.includes('prog')) {
+                return "プログラミング";
+            } else if (href.includes('play') && href.includes('bizinesu')) {
+                return "ビジネス";
+            } else if (href.includes('detabase')) {
+                return "データベース";
+            } else if (href.includes('excel')) {
+                return "エクセル関数";
+            }
+            
+            // デフォルトカテゴリ
+            return href.includes('beta') ? "hard" : "it";
         }
 
         // プログレスバーを作成して挿入する関数

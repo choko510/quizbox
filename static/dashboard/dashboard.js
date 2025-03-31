@@ -827,16 +827,14 @@ async function getStatisticsData() {
     } catch (error) {
         console.error('統計データの取得に失敗しました:', error);
         
-        // エラー時はダミーデータを返す
+        // エラー時は全ての値が0のデータを返す
         return userProblems.map(problem => {
-            const usageCount = Math.floor(Math.random() * 100);
-            const correctCount = Math.floor(Math.random() * usageCount);
             return {
                 name: problem.name,
-                usageCount: usageCount,
-                correctCount: correctCount,
-                incorrectCount: usageCount - correctCount,
-                accuracyRate: usageCount > 0 ? Math.round(correctCount / usageCount * 100) : 0
+                usageCount: 0,
+                correctCount: 0,
+                incorrectCount: 0,
+                accuracyRate: 0
             };
         });
     }

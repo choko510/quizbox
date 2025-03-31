@@ -9,6 +9,46 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.js"></script>
     <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <style>
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            background-color: #fff3f3;
+            border: 1px solid #ffcaca;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .error-message i {
+            font-size: 48px;
+            color: #ff5252;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .error-message p {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .error-message button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .error-message button:hover {
+            background-color: #2a75f3;
+        }
+    </style>
 </head>
 
 <body>
@@ -68,7 +108,6 @@
                     </ul>
                 </div>
                 <div id="score">
-                    <a href="../play" class="hardlink">イージーモード</a>
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
                 </div>
             </div>
@@ -122,7 +161,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../modal.css">
-    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.4.10/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
@@ -155,20 +194,22 @@
 
         let mondai = getParam("id");
         const isItpass = window.location.pathname.includes('/itpasu/');
+        let isCustom = false;
+        let accid = Cookies.get('id');
+        let password = Cookies.get('password');
 
         if (mondai == null) {
-            mondai = isItpass ? "it" : "hard";
-        } else {
-            document.getElementById('score').textContent = `
-                回答数: 0
-                正解数: 0
-                不正解数: 0
-                連続正解数: 0
-                正答率: 0%
-            `;
+            let mondaiuserid = getParam("userid");
+            let mondainame = getParam("name");
+            if (mondaiuserid != null && mondainame != null) {
+                isCustom = true;
+                mondai = mondainame;
+            } else {
+                mondai = isItpass ? "it" : "hard";  //デフォルトの問題
+            }
         }
-
-        const questions = [];
+        const questions = [];  // Initialize questions array
+        
         let answeredQuestions = new Set();
         let maxStreak = 0;
         let performanceHistory = [];
@@ -176,6 +217,7 @@
         let questionStats = new Map();
         let answerTimes = [];
         let studyingQuestions = new Set();
+        
 
         // 解説表示用の関数 (ITパスポート試験用)
         function onDontKnowClick() {
@@ -189,8 +231,44 @@
 
 
         function loadQuestions() {
+            const showErrorMessage = (errorMessage) => {
+                notie.force({
+                    type: 'error',
+                    text: errorMessage,
+                    buttonText: '閉じる',
+                    callback: function () {
+                        // エラーメッセージ表示後に実行する処理（例：トップページへのリダイレクト）
+                        window.location.href = "../";
+                    }
+                });
+                // タイトル領域にもエラーメッセージを表示
+                document.getElementById('question').innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${errorMessage}</p>
+                        <button onclick="window.location.href='../'">トップページへ戻る</button>
+                    </div>
+                `;
+            };
+
+            const checkResponse = (response, source) => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorMsg = `問題ファイルが見つかりませんでした（${source}: ${mondai}）`;
+                        showErrorMessage(errorMsg);
+                        throw new Error(errorMsg);
+                    } else {
+                        const errorMsg = `問題の読み込みに失敗しました（ステータス: ${response.status}）`;
+                        showErrorMessage(errorMsg);
+                        throw new Error(errorMsg);
+                    }
+                }
+                return response;
+            };
+
             if (isItpass) {
                 return fetch("../../mondai/" + mondai + '.json')
+                    .then(response => checkResponse(response, 'ITパスポート'))
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(item => {
@@ -209,13 +287,42 @@
                                 kaisetu: item.kaisetu
                             });
                         });
+                    })
+                    .catch(error => {
+                        console.error('問題ファイルの読み込みに失敗しました:', error);
+                    });
+            } else if(isCustom){
+                return fetch("/api/get/mondai/" + accid + "/" + mondai + '.json')
+                    .then(response => checkResponse(response, 'カスタム問題'))
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(item => {
+                            if (item.mondai == undefined) {
+                                questions.push({
+                                    word: item.word,
+                                    description: item.description,
+                                });
+                            } else {
+                                questions.push({
+                                    word: item.word,
+                                    description: item.description,
+                                    mondai: item.mondai
+                                });
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('カスタム問題の読み込みに失敗しました:', error);
                     });
             } else {
                 return fetch("../deta/" + mondai + '.txt')
+                    .then(response => checkResponse(response, '問題ファイル'))
                     .then(response => response.text())
                     .then(text => {
                         const lines = text.split('\n');
                         lines.forEach(line => {
+                            if (!line.trim()) return; // 空行をスキップ
+                            
                             const [word, description, mondai] = line.split('|');
                             if (mondai == undefined) {
                                 questions.push({
@@ -230,6 +337,9 @@
                                 });
                             }
                         });
+                    })
+                    .catch(error => {
+                        console.error('問題ファイルの読み込みに失敗しました:', error);
                     });
             }
         }
@@ -287,8 +397,6 @@
         let correctCount = 0;
         let wrongCount = 0;
         let renzokuseikai = 0;
-        let accid = Cookies.get('id');
-        let password = Cookies.get('password');
         let start = performance.now();
 
         function showNextQuestion() {
@@ -662,17 +770,24 @@
             const currentURL = location;
             const url = currentURL.protocol + "//" + currentURL.host + "/api/save_progress";
 
-            // 学習進捗データを作成
-            const progressData = {
-                categoryData: categoryData,
-                answeredQuestions: Array.from(answeredQuestions),
-                maxStreak: maxStreak,
-                performanceHistory: performanceHistory,
-                questionStats: Array.from(questionStats.entries()),
-                answerTimes: answerTimes,
-                studyingQuestions: Array.from(studyingQuestions),
-                totalQuestions: questions.length  // 問題の総数を追加
-            };
+            // グループキーを決定（"beta"を含むURLは"hard"、それ以外は"it"）
+            const group = window.location.href.indexOf('beta') !== -1 ? "hard" : "it";
+            console.log('保存するグループキー:', group, 'カテゴリデータ:', categoryData);
+
+            // main.htmlの期待する形式に合わせてデータを構造化
+            const progressData = {};
+            
+            // グループの下にカテゴリデータを配置
+            progressData.categoryData = categoryData;
+            progressData.answeredQuestions = Array.from(answeredQuestions);
+            progressData.maxStreak = maxStreak;
+            progressData.performanceHistory = performanceHistory;
+            progressData.questionStats = Array.from(questionStats.entries());
+            progressData.answerTimes = answerTimes;
+            progressData.studyingQuestions = Array.from(studyingQuestions);
+            progressData.totalQuestions = questions.length;
+
+            console.log('サーバーに保存するデータ構造:', progressData);
 
             fetch(url, {
                 method: 'POST',

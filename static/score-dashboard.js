@@ -64,7 +64,13 @@ function displayScores(correct, bad, total, ritu) {
 }
 
 async function fetchData(id, password) {
-    const response = await fetch(`api/get/${id}/${password}`);
+    const response = await fetch(`api/get/user`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: id, password: password })
+    });
     const data = await response.json();
     return data;
 }
@@ -712,25 +718,59 @@ function updateProgressBar(type, percentage) {
 // 学習アドバイスの生成
 async function generateAdvice() {
     const container = document.getElementById('advice-content');
-    container.innerHTML = '';
+    container.innerHTML = '<p class="loading">アドバイスを生成中...</p>';
     
     // APIから最新のデータを取得
     const id = Cookies.get('id');
     const password = Cookies.get('password');
     
     try {
-        const response = await fetch(`api/get/category_stats/${id}/${password}`);
-        const data = await response.json();
+        // Geminiから生成されたアドバイスを取得
+        const aiAdviceResponse = await fetch(`api/get/advice`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, password })
+        });
         
-        if (data.message === "password is wrong") {
+        const aiAdviceData = await aiAdviceResponse.json();
+        
+        // カテゴリ統計情報を取得
+        const categoryResponse = await fetch(`api/get/category_stats/${id}/${password}`);
+        const categoryData = await categoryResponse.json();
+        
+        // コンテナをクリア
+        container.innerHTML = '';
+        
+        // AIによるアドバイスを表示（最初に目立つように表示）
+        if (aiAdviceData.advice) {
+            const aiAdviceItem = document.createElement('div');
+            aiAdviceItem.className = 'advice-item ai-advice';
+            aiAdviceItem.innerHTML = `
+                <div class="ai-advice-content">
+                    <p>${aiAdviceData.advice}</p>
+                </div>
+            `;
+            container.appendChild(aiAdviceItem);
+            
+            // 区切り線
+            const divider = document.createElement('hr');
+            container.appendChild(divider);
+        }
+        
+        // パスワードエラーの確認
+        if (categoryData.message === "password is wrong") {
             console.error("認証エラー: パスワードが間違っています");
-            container.innerHTML = '<p>認証エラー: パスワードが間違っています</p>';
+            if (!aiAdviceData.advice) { // AIアドバイスがなければエラー表示
+                container.innerHTML = '<p>認証エラー: パスワードが間違っています</p>';
+            }
             return;
         }
         
         // 空のカテゴリーデータをチェック
-        const categoryData = data.categories || {};
-        if (Object.keys(categoryData).length === 0) {
+        const categories = categoryData.categories || {};
+        if (Object.keys(categories).length === 0 && !aiAdviceData.advice) {
             container.innerHTML = '<p>アドバイスを生成するためのデータがありません</p>';
             return;
         }
@@ -739,11 +779,11 @@ async function generateAdvice() {
         let worstCategory = null;
         let worstRate = 100;
         
-        Object.entries(categoryData).forEach(([category, data]) => {
+        Object.entries(categories).forEach(([category, data]) => {
             const { correct, total } = data;
             const rate = total > 0 ? (correct / total) * 100 : 0;
             
-            if (rate < worstRate && total > 0) {
+            if (rate < worstRate && total > 5) { // 最低5問以上解いている場合のみ
                 worstRate = rate;
                 worstCategory = category;
             }
@@ -751,7 +791,7 @@ async function generateAdvice() {
         
         // アドバイスアイテムを追加
         if (worstCategory) {
-            const weakAreas = categoryData[worstCategory].weakAreas;
+            const weakAreas = categories[worstCategory].weakAreas;
             
             const adviceItem1 = document.createElement('div');
             adviceItem1.className = 'advice-item';
@@ -770,29 +810,6 @@ async function generateAdvice() {
                 `;
                 container.appendChild(adviceItem2);
             }
-        }
-        
-        // 学習習慣のアドバイス
-        const adviceItem3 = document.createElement('div');
-        adviceItem3.className = 'advice-item';
-        adviceItem3.innerHTML = `
-            <p><strong>学習習慣のアドバイス:</strong></p>
-            <p>毎日一定時間の学習を習慣化することで、長期的な成績向上につながります。</p>
-            <p>特に間違えた問題は24時間後、7日後、30日後に復習すると記憶の定着率が高まります。</p>
-        `;
-        container.appendChild(adviceItem3);
-        
-        // 目標達成のアドバイス
-        const goals = JSON.parse(localStorage.getItem(USER_GOALS_KEY));
-        if (goals) {
-            const adviceItem4 = document.createElement('div');
-            adviceItem4.className = 'advice-item';
-            adviceItem4.innerHTML = `
-                <p><strong>目標達成のための提案:</strong></p>
-                <p>現在の日次目標（${goals.daily.target}問）を達成するには、朝と夕方に分けて学習するのがおすすめです。</p>
-                <p>正答率目標（${goals.accuracy.target}%）に近づくには、間違えた問題の復習に特に時間を割くことが効果的です。</p>
-            `;
-            container.appendChild(adviceItem4);
         }
     } catch (error) {
         console.error('アドバイスデータの生成に失敗しました:', error);

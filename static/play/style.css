@@ -205,7 +205,7 @@ button:hover {
 }
 
 .searchbox {
-    width: 100%;
+    width: 92%;
     padding: 12px 40px 12px 15px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -229,7 +229,7 @@ button:hover {
 .search-icon {
     position: absolute;
     top: 50%;
-    right: 15px;
+    right: 3%;
     transform: translateY(-50%);
     color: #999;
 }
@@ -238,7 +238,7 @@ ul.custom-list {
     list-style-type: none;
     padding: 0;
     margin: 0;
-    max-height: 77vh;
+    max-height: 82vh;
     overflow-y: auto;
 }
 

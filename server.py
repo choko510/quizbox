@@ -3,12 +3,12 @@ import io
 import json
 import os
 import random
+import re
 from contextlib import asynccontextmanager
 from typing import List, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,7 +18,7 @@ import aiofiles
 import xxhash
 import numpy as np
 import google.generativeai as genai
-import aiohttp
+import wikipedia
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -53,12 +53,23 @@ class Account(Base):
 
 class Mondai(Base):
     __tablename__ = 'mondai'
-    name = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String)  # 問題名（外部キー制約は今回は省略）
     userid = Column(String)
     mondai = Column(String)
     is_public = Column(Integer, default=1)  # 1=公開、0=非公開
     created_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
     updated_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
+
+class MondaiStats(Base):
+    """問題の統計情報を保存するテーブル"""
+    __tablename__ = 'mondai_stats'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    mondai_name = Column(String, index=True, unique=True)  # 問題名（外部キー制約は今回は省略）
+    usage_count = Column(Integer, default=0)  # 総利用回数
+    correct_count = Column(Integer, default=0)  # 正解回数
+    incorrect_count = Column(Integer, default=0)  # 不正解回数
+    last_updated = Column(String, default=lambda: datetime.datetime.now().isoformat())
 
 templates = Jinja2Templates(directory="templates")
 
@@ -70,14 +81,6 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # 非同期 DB 操作用クラス
 class DB:
@@ -171,6 +174,10 @@ class DB:
                 user.correctdata = json.dumps(correctdata)
                 user.baddata = json.dumps(baddata)
                 await session.commit()
+                
+                # 問題の統計データも更新
+                if subject:
+                    await DB.update_mondai_stats(subject, True)
 
     @staticmethod
     async def add_bad(id: str, subject: str = None):
@@ -284,9 +291,9 @@ class DB:
             return None
 
     @staticmethod
-    async def get_mondai(name: str):
+    async def get_mondai(userid:str,name: str):
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(name=name))
+            result = await session.execute(select(Mondai).filter_by(userid=userid, name=name))
             mondai = result.scalar_one_or_none()
             if mondai:
                 return json.loads(mondai.mondai)
@@ -446,7 +453,69 @@ class DB:
                 except json.JSONDecodeError:
                     return {} if problem_set else {}
             return {}
-
+    
+    @staticmethod
+    async def update_mondai_stats(mondai_name: str, is_correct: bool):
+        """
+        問題の統計情報を更新する
+        統計データがなければ新規作成し、あれば更新する
+        """
+        async with async_session() as session:
+            # 既存の統計データを検索
+            result = await session.execute(
+                select(MondaiStats).filter_by(mondai_name=mondai_name)
+            )
+            stats = result.scalar_one_or_none()
+            
+            if not stats:
+                # 統計データがなければ新規作成
+                stats = MondaiStats(
+                    mondai_name=mondai_name,
+                    usage_count=1,
+                    correct_count=1 if is_correct else 0,
+                    incorrect_count=0 if is_correct else 1,
+                    last_updated=datetime.datetime.now().isoformat()
+                )
+                session.add(stats)
+            else:
+                # 既存データを更新
+                stats.usage_count += 1
+                if is_correct:
+                    stats.correct_count += 1
+                else:
+                    stats.incorrect_count += 1
+                stats.last_updated = datetime.datetime.now().isoformat()
+            
+            await session.commit()
+            return True
+            
+    @staticmethod
+    async def get_mondai_stats(mondai_name: str):
+        """
+        問題の統計情報を取得する
+        """
+        async with async_session() as session:
+            result = await session.execute(
+                select(MondaiStats).filter_by(mondai_name=mondai_name)
+            )
+            stats = result.scalar_one_or_none()
+            
+            if not stats:
+                # 統計データがない場合はデフォルト値を返す
+                return {
+                    "usage_count": 0,
+                    "correct_count": 0,
+                    "incorrect_count": 0,
+                    "last_updated": None
+                }
+            
+            return {
+                "usage_count": stats.usage_count,
+                "correct_count": stats.correct_count,
+                "incorrect_count": stats.incorrect_count,
+                "last_updated": stats.last_updated
+            }
+    
 class Data(BaseModel):
     id: str
     password: str
@@ -526,14 +595,28 @@ class ProgressData(BaseModel):
 async def add_correct(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
+    
+    # ユーザーの正解データを更新
     await DB.add_correct(data.id, data.subject)
+    
+    # 問題の統計データも更新（subjectが問題名と同じと仮定）
+    if data.subject:
+        await DB.update_mondai_stats(data.subject, True)
+        
     return {"message": "add_correct successful"}
 
 @app.post("/api/add_bad")
 async def add_bad(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
+    
+    # ユーザーの不正解データを更新
     await DB.add_bad(data.id, data.subject)
+    
+    # 問題の統計データも更新（subjectが問題名と同じと仮定）
+    if data.subject:
+        await DB.update_mondai_stats(data.subject, False)
+        
     return {"message": "add_bad successful"}
 
 @app.post("/api/get_bad")
@@ -549,11 +632,11 @@ async def get_user(data: Data):
         return {"message": "password is wrong"}
     return await DB.get(data.id)
 
-@app.get("/api/get/{id}/{password}")
-async def get_all(id: str, password: str):
-    if await DB.password(id) != password:
+@app.post("/api/get/user")
+async def get_all(data: Data):
+    if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    return await DB.get_all(id)
+    return await DB.get_all(data.id)
 
 @app.get("/api/ranking")
 async def ranking():
@@ -683,6 +766,11 @@ class TextData(BaseModel):
     text: List[str]
     checkType: str = "quality"
 
+class GenerateQuestionsData(BaseModel):
+    text: str
+    type: str = "mixed"
+    count: int = 5
+
 @app.post("/api/process/text")
 async def process_text(data: TextData):
     try:
@@ -790,12 +878,24 @@ async def edit_mondai(data: MondaiData):
     else:
         return {"status": "failed"}
 
-@app.get("/api/get/mondai/{name}")
-async def get_mondai(name: str):
-    mondai = await DB.get_mondai(name)
+@app.get("/api/get/mondai/{userid}/{name}.json")
+async def get_mondai(userid: str, name: str):
+    mondai = await DB.get_mondai(userid, name)
+
     if not mondai:
-        return {"message": "not found"}
-    return mondai
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    results = []
+
+    for mondai_data in mondai:
+        word , description = mondai_data.split(",", 1)
+        mondai_data = {
+            "word": word.strip(),
+            "description": description.strip()
+        }
+        results.append(mondai_data)
+
+    return results
 
 @app.get("/api/get/mondai/userids/{name}")
 async def get_mondai_userids(name: str):
@@ -876,22 +976,24 @@ async def duplicate_problem(data: DuplicateMondaiData):
         return {"status": "failed", "message": str(e)}
 
 @app.post("/api/dashboard/stats")
-async def get_problem_stats(data: MondaiIdData):
+async def get_problem_stats(data: MondaiIdData, request: Request):
     """
     問題の使用統計を取得するAPI
     """
     if await DB.password(data.userid) != data.password:
         return {"message": "password is wrong"}
     
-    # 現在はダミーデータを返す
-    # 実際の統計データはユーザーの回答履歴などから計算する必要がある
+    # 指定された問題の存在確認
+    mondai_data = await DB.get_mondai(request.cookies.get("id"),data.name)
+    if not mondai_data:
+        return {"status": "failed", "message": "Problem not found"}
+    
+    # MondaiStats テーブルから統計情報を取得
+    stats = await DB.get_mondai_stats(data.name)
+    
     return {
         "status": "success",
-        "stats": {
-            "usage_count": random.randint(10, 100),
-            "correct_count": random.randint(5, 50),
-            "incorrect_count": random.randint(5, 50)
-        }
+        "stats": stats
     }
 
 @app.get("/api/mosi/get")
@@ -954,26 +1056,48 @@ async def get_all_progress(data: Data):
 
 async def fetch_wikipedia_info(word: str):
     """
-    Wikipediaから指定された単語の情報を取得する非同期関数
+    Wikipediaから指定された単語の情報を取得し、最もヒット率が高い結果の全文を取得して返す非同期関数。
     """
+    wikipedia.set_lang("ja") 
+
     try:
         # Wikipedia APIを使用して情報を取得
-        url = f"https://ja.wikipedia.org/w/api.php?action=query&list=search&srsearch={word}&format=json"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                data = await response.json()
-                if "query" in data and "search" in data["query"] and len(data["query"]["search"]) > 0:
-                    return data["query"]["search"][0]["snippet"]
-                else:
-                    return None
+        search_results = wikipedia.search(word, results=1)
+        if not search_results:
+            return None
+        
+        page_title = search_results[0]
+        page = wikipedia.page(page_title)
+
+        # ページの内容を取得
+        content = page.content
+
+        # 最初の数文を抽出
+        sentences = content.split("。")
+        summary = "。".join(sentences[:3]) + "。"
+
+        return summary.strip()
+    except wikipedia.exceptions.DisambiguationError as e:
+        # 複数の結果がある場合、最初の結果を選択
+        if e.options:
+            page_title = e.options[0]
+            page = wikipedia.page(page_title)
+            content = page.content
+            sentences = content.split("。")
+            summary = "。".join(sentences[:3]) + "。"
+            return summary.strip()
+        return None
+    except wikipedia.exceptions.PageError:
+        # ページが存在しない場合
+        return None
     except Exception as e:
+        # その他のエラー
         print(f"Error fetching Wikipedia info: {e}")
         return None
 
 class wordData(BaseModel):
     word: str
     mondai: str
-    mondainame: str
 
 @app.post("/api/search/word/")
 async def search_word(data: wordData):
@@ -1001,7 +1125,19 @@ async def search_word(data: wordData):
             }
         else:
             model = genai.GenerativeModel("gemini-2.0-flash-lite")
-            prompt = f"以下の単語の意味を説明してください：\n{word}"
+            prompt = f"""
+            以下の単語「{word}」について詳しく説明してください。
+            
+            以下の情報を含めてください：
+            1. 基本的な定義と意味
+            2. 実際の使用例（例文を2-3つ）
+            3. 関連する単語や類義語（あれば）
+            4. 特定分野での専門的な意味（該当する場合）
+            5. 「{data.mondai}」の文脈に関連した説明
+
+            回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
+            """
+
             response = model.generate_content(prompt)
             return {
                 "word": word,
@@ -1080,6 +1216,95 @@ async def get_category_stats(id: str, password: str):
         print(f"Error in get_category_stats: {e}")
         return {"message": "internal server error"}
 
+@app.post("/api/generate/questions")
+async def generate_questions(data: GenerateQuestionsData):
+    """
+    テキストから問題と回答のペアを生成するエンドポイント
+    """
+    try:
+        # 問題数と種類の制限をチェック
+        count = min(max(data.count, 1), 10)  # 1-10問の間に制限
+        
+        # Geminiモデルの初期化
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        # 問題タイプに応じたプロンプトを作成
+        prompt = generate_question_prompt(data.text, data.type, count)
+        
+        # Geminiに問題生成をリクエスト
+        response = model.generate_content(prompt)
+        
+        # レスポンスをパースして問題と回答のペアを抽出
+        questions = parse_gemini_response(response.text)
+        
+        return JSONResponse(
+            content={"status": "success", "questions": questions},
+            status_code=200
+        )
+    except Exception as e:
+        print(f"Error generating questions: {str(e)}")
+        return JSONResponse(
+            content={"status": "failed", "message": f"Error: {str(e)}"},
+            status_code=500
+        )
+
+def generate_question_prompt(text, type, count):
+    """問題タイプに応じたプロンプトを生成する"""
+    # 問題タイプに応じたプロンプトを返す
+    base_prompt = f"""
+    以下の文章から{count}個の問題と回答を作成してください。
+    問題と回答は明確で、文章の内容に基づいたものにしてください。
+    
+    文章:
+    {text}
+    """
+    
+    type_prompts = {
+        "basic": "基本的な質問と回答のペアを作成してください。",
+        "multiple-choice": "4つの選択肢から選ぶ問題を作成してください。正解の選択肢を明示してください。",
+        "true-false": "○×（真偽）の問題を作成してください。",
+        "mixed": "様々なタイプの問題（基本問題、選択問題、○×問題）をバランス良く混ぜて作成してください。"
+    }
+    
+    format_instruction = """
+    以下の形式でJSONとして出力してください：
+    [
+        {
+            "question": "問題文",
+            "answer": "回答"
+        },
+        ...
+    ]
+    """
+    
+    return base_prompt + "\n" + type_prompts.get(type, type_prompts["mixed"]) + "\n" + format_instruction
+
+def parse_gemini_response(response_text):
+    """GeminiのレスポンスからJSON形式の問題データを抽出する"""
+    try:
+        # JSON部分を抽出（コードブロックの中身を取得）
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response_text)
+        json_str = json_match.group(1) if json_match else response_text
+        
+        # 余分な空白やインデントを取り除く
+        json_str = json_str.strip()
+        
+        questions = json.loads(json_str)
+        
+        # 形式の検証
+        if not isinstance(questions, list):
+            raise ValueError("Response is not a list")
+            
+        for q in questions:
+            if not isinstance(q, dict) or "question" not in q or "answer" not in q:
+                raise ValueError("Invalid question format")
+        
+        return questions
+    except Exception as e:
+        print(f"Error parsing response: {e}")
+        # ダミーの質問を1つ返す（エラーケース）
+        return [{"question": "エラー: 問題の生成に失敗しました", "answer": "エラーが発生しました"}]
+
 @app.post("/api/get/advice")
 async def get_advice(data: Data):
     """
@@ -1092,35 +1317,221 @@ async def get_advice(data: Data):
     all_answers = await DB.get_all_answers(data.id)
     if not all_answers:
         return {"advice": "アドバイスを生成するためのデータがありません"}
+    
+    # 現在の日付から30日前までの日付を計算
+    today = datetime.datetime.now()
+    thirty_days_ago = today - datetime.timedelta(days=30)
+    today_str = today.strftime("%Y年%m月%d日")
+    
+    # 解答データから日付ごとの統計を集計
+    # データベース構造に合わせて、正解・不正解データを取得
+    user_data = await DB.get_all(data.id)
+    if not user_data:
+        return {"advice": "アドバイスを生成するためのデータがありません"}
+    
+    # 日付別の学習統計を取得
+    correct_data = user_data.get("correct", {})
+    bad_data = user_data.get("bad", {})
+    
+    # 直近30日間の日付を生成（YYYY/MM/DD形式）
+    date_format = "%Y/%m/%d"
+    recent_dates = []
+    for i in range(30):
+        date = today - datetime.timedelta(days=i)
+        recent_dates.append(date.strftime(date_format))
+    
+    # 日付ごとの統計情報を構築
+    daily_stats_lines = []
+    study_dates = []  # 学習を行った日付
+    
+    for date_str in recent_dates:
+        if date_str in correct_data or date_str in bad_data:
+            # その日の正解数を集計
+            correct_count = sum(count for subject, count in correct_data.get(date_str, {}).items())
+            # その日の不正解数を集計
+            bad_count = sum(count for subject, count in bad_data.get(date_str, {}).items())
+            # 総取り組み数
+            total_count = correct_count + bad_count
+            
+            if total_count > 0:
+                study_dates.append(date_str)  # 学習日として記録
+                # 日付をYYYY/MM/DD形式からMM月DD日形式に変換
+                try:
+                    date_obj = datetime.datetime.strptime(date_str, date_format)
+                    formatted_date = date_obj.strftime("%m月%d日")
+                    daily_stats_lines.append(f"{formatted_date} 総取り組み数 {total_count} 正解数 {correct_count} 不正解数 {bad_count}")
+                except ValueError:
+                    # 日付形式が異なる場合はそのまま使用
+                    daily_stats_lines.append(f"{date_str} 総取り組み数 {total_count} 正解数 {correct_count} 不正解数 {bad_count}")
+    
+    # カテゴリ別の問題数と週ごとの正答率を集計
+    category_counts = {}
+    category_weekly_accuracy = {}
+    
+    # 直近30日間のデータからカテゴリを集計し、各週ごとの正答率も計算
+    for i, date_str in enumerate(recent_dates):
+        week_num = i // 7  # 0: 最新の週、1: 1週間前、2: 2週間前、3: 3週間前
+        
+        # その日のカテゴリごとの正解・不正解を集計
+        for subject, correct_count in correct_data.get(date_str, {}).items():
+            if subject not in category_counts:
+                category_counts[subject] = 0
+                category_weekly_accuracy[subject] = {0: [0, 0], 1: [0, 0], 2: [0, 0], 3: [0, 0]}  # [正解数, 合計問題数]
+            
+            category_counts[subject] += correct_count
+            # 週ごとの正解数と総問題数を更新
+            category_weekly_accuracy[subject][week_num][0] += correct_count
+            category_weekly_accuracy[subject][week_num][1] += correct_count
+        
+        for subject, bad_count in bad_data.get(date_str, {}).items():
+            if subject not in category_counts:
+                category_counts[subject] = 0
+                category_weekly_accuracy[subject] = {0: [0, 0], 1: [0, 0], 2: [0, 0], 3: [0, 0]}
+            
+            category_counts[subject] += bad_count
+            # 週ごとの総問題数のみ更新（不正解なので正解数は更新しない）
+            category_weekly_accuracy[subject][week_num][1] += bad_count
+    
+    # 学習の継続性を分析
+    study_continuity = {
+        "max_consecutive_days": 0,
+        "current_streak": 0,
+        "study_gaps": []
+    }
+    
+    # 学習日を日付順にソート
+    study_dates.sort()
+    
+    # 連続学習日数と中断期間を計算
+    consecutive_days = 0
+    last_date = None
+    for date_str in study_dates:
+        current_date = datetime.datetime.strptime(date_str, date_format)
+        
+        if last_date:
+            # 前回の学習日との差を計算
+            delta = (current_date - last_date).days
+            
+            if delta == 1:
+                # 連続学習
+                consecutive_days += 1
+            else:
+                # 学習の中断があった
+                if delta > 2:  # 2日以上の中断を記録
+                    study_continuity["study_gaps"].append(delta)
+                
+                # 連続記録をリセット
+                consecutive_days = 1
+        else:
+            consecutive_days = 1
+        
+        # 最大連続学習日数を更新
+        study_continuity["max_consecutive_days"] = max(study_continuity["max_consecutive_days"], consecutive_days)
+        last_date = current_date
+    
+    # 現在の連続学習日数を設定
+    if study_dates and (today - datetime.datetime.strptime(study_dates[-1], date_format)).days <= 1:
+        study_continuity["current_streak"] = consecutive_days
+    
+    # 成長停滞分野を特定
+    stagnant_categories = []
+    for category, weekly_data in category_weekly_accuracy.items():
+        # 最新の週と1週間前の週に十分なデータがある場合のみ分析
+        if weekly_data[0][1] >= 5 and weekly_data[1][1] >= 5:
+            # 各週の正答率を計算
+            current_week_rate = (weekly_data[0][0] / weekly_data[0][1]) * 100 if weekly_data[0][1] > 0 else 0
+            prev_week_rate = (weekly_data[1][0] / weekly_data[1][1]) * 100 if weekly_data[1][1] > 0 else 0
+            
+            # 正答率が改善していない場合は停滞分野として記録
+            if current_week_rate <= prev_week_rate:
+                stagnant_categories.append({
+                    "name": category,
+                    "current_rate": round(current_week_rate, 1),
+                    "prev_rate": round(prev_week_rate, 1),
+                    "change": round(current_week_rate - prev_week_rate, 1)
+                })
+    
+    # 停滞分野を正答率の低い順にソート
+    stagnant_categories.sort(key=lambda x: x["current_rate"])
+    
+    # カテゴリ統計行を生成
+    category_stats_lines = []
+    for category, count in category_counts.items():
+        if count > 0:
+            category_stats_lines.append(f"{category} {count}問")
+    
+    # 統計データがない場合は代替テキストを設定
+    if not daily_stats_lines:
+        daily_stats_text = "データがありません"
+    else:
+        daily_stats_text = "\n        ".join(daily_stats_lines[:10])  # 最新の10日分のデータのみ表示
+    
+    if not category_stats_lines:
+        category_stats_text = "データがありません"
+    else:
+        category_stats_text = "\n        ".join(category_stats_lines)
+    
+    # 学習の継続性に関する情報をテキスト化
+    continuity_text = ""
+    if study_continuity["current_streak"] > 0:
+        continuity_text += f"現在の連続学習日数: {study_continuity['current_streak']}日\n        "
+    if study_continuity["max_consecutive_days"] > 0:
+        continuity_text += f"最長連続学習日数: {study_continuity['max_consecutive_days']}日\n        "
+    if study_continuity["study_gaps"]:
+        avg_gap = sum(study_continuity["study_gaps"]) / len(study_continuity["study_gaps"])
+        continuity_text += f"平均学習中断期間: {round(avg_gap, 1)}日\n        "
+    
+    # 停滞分野に関する情報をテキスト化
+    stagnant_text = ""
+    for i, cat in enumerate(stagnant_categories[:2]):  # 最大2つの停滞分野を表示
+        if i == 0:
+            stagnant_text += f"停滞が見られる分野: {cat['name']} (正答率: {cat['current_rate']}%, 前週比: {cat['change']}%)\n        "
+        else:
+            stagnant_text += f"他の停滞分野: {cat['name']} (正答率: {cat['current_rate']}%)\n        "
 
-    prompt = """
+    # 学習傾向を分析するための追加データ
+    total_answers = len(all_answers)
+    correct_answers = sum(1 for ans in all_answers if ans["result"])
+    if total_answers > 0:
+        overall_accuracy = round((correct_answers / total_answers) * 100, 1)
+    else:
+        overall_accuracy = 0
+
+    prompt = f"""
         #目的
         学習アドバイザーの専門家として、
-        まず、以下の学習データを分析して
+        以下の学習データを分析して
         今後の具体的な学習方法などについてアドバイスをしてください。
 
         #出力条件
-        140字から180字程度
+        280字から340字程度。
+        文章は簡潔に、分かりやすく。
 
         #前提データ
-        今日は2025年3月19日です。
+        今日は{today_str}です。
+        総解答数: {total_answers}問
+        全体的な正答率: {overall_accuracy}%
+
+        #学習継続性
+        {continuity_text}
+        
+        #成長停滞分野
+        {stagnant_text}
 
         #学習データ
         直近の学習動向(10日以内)
-        3月11日 総取り組み数 43 正解数 21 不正解数 22
-        3月13日 総取り組み数 60正解数 25不正解数 35
-        3月15日 総取り組み数 40正解数 30不正解数 10
-        3月16日 総取り組み数 50正解数 25不正解数 25
-        学習カテゴリ(10日以内)
-        ITパスポート 97問
-        ビジネス 1級 48問
-        ビジネス 2級 46問
+        {daily_stats_text}
+        
+        学習カテゴリ(30日以内)
+        {category_stats_text}
     """
 
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content([prompt])
-        advice = response.text
+        advice = response.text.replace("\n", "<br>") 
+        
+        return {"advice": advice}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating advice: {str(e)}")
 

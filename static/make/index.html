@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="editor.css">
     <title>問題作成</title>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 </head>
 
 <body>
@@ -263,6 +263,24 @@
                                 <label for="imageLoad" class="file-label">画像を選択</label>
                             </div>
                         </div>
+                        
+                        <div class="import-option">
+                            <div class="import-icon"><i class="bi bi-robot"></i></div>
+                            <h3>テキストから問題を自動生成</h3>
+                            <p>テキストを入力するとAIが問題を作成します</p>
+                            <textarea id="aiSourceText" class="ai-text-input" placeholder="ここにテキストを入力してください"></textarea>
+                            <div class="option-controls">
+                                <select id="questionType" class="settings-select">
+                                    <option value="mixed">混合（バランス良く）</option>
+                                    <option value="basic">基本問題</option>
+                                    <option value="multiple-choice">選択問題</option>
+                                    <option value="true-false">○×問題</option>
+                                </select>
+                                <input type="number" id="questionCount" value="5" min="1" max="10" class="number-input">
+                                <span class="input-label">問題数</span>
+                            </div>
+                            <button id="generateQuestions" class="dashboard-btn">問題を生成</button>
+                        </div>
                         <div class="import-option">
                             <div class="import-icon"><i class="bi bi-cloud-arrow-down"></i></div>
                             <h3>テンプレートをダウンロード</h3>
@@ -445,11 +463,79 @@
         </div>
     </div>
 
+    <!-- テキストから問題自動生成のモーダル -->
+    <div class="modal" id="textGenerateModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container large-modal">
+            <div class="modal-header">
+                <h2>テキストから問題を自動生成</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="text-generation-form">
+                    <p class="modal-description">テキストを入力してAIが自動的に問題を作成します</p>
+                    <textarea id="aiSourceTextModal" class="modal-text-input" placeholder="ここにテキストを入力してください（教科書の内容や参考書の内容など）"></textarea>
+                    <div class="option-controls modal-controls">
+                        <div class="control-group">
+                            <label for="questionTypeModal">問題タイプ:</label>
+                            <select id="questionTypeModal" class="settings-select">
+                                <option value="mixed">混合（バランス良く）</option>
+                                <option value="multiple-choice">選択問題</option>
+                                <option value="true-false">○×問題</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="questionCountModal">問題数:</label>
+                            <input type="number" id="questionCountModal" value="5" min="1" max="10" class="number-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="generateQuestionsModal" class="modal-button action-btn">問題を生成</button>
+                <button class="modal-cancel">キャンセル</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 画像から問題自動生成のモーダル -->
+    <div class="modal" id="imageGenerateModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>画像から問題を自動生成</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-preview-container">
+                    <img id="uploadedImagePreview" class="uploaded-image-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="アップロードされた画像">
+                </div>
+                <div class="option-controls modal-controls">
+                    <div class="control-group">
+                        <label for="imageQuestionTypeModal">問題タイプ:</label>
+                        <select id="imageQuestionTypeModal" class="settings-select">
+                            <option value="multiple-choice">選択問題</option>
+                            <option value="true-false">○×問題</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="imageQuestionCountModal">問題数:</label>
+                        <input type="number" id="imageQuestionCountModal" value="3" min="1" max="10" class="number-input">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="generateImageQuestionsBtn" class="modal-button action-btn">問題を生成</button>
+                <button class="modal-cancel">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
     <!-- トースト通知コンテナ -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- 必要なスクリプト -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="editor.js"></script>
 
 </body>

@@ -201,6 +201,31 @@ function setupEventListeners() {
     document.getElementById('csvload').addEventListener('change', handleFileUpload);
     document.getElementById('xlsxload').addEventListener('change', handleFileUpload);
     document.getElementById('imageLoad').addEventListener('change', handleImageUpload);
+    
+    // 文章から問題を自動生成するボタン - インラインモードとモーダルモード
+    document.getElementById('generateQuestions').addEventListener('click', () => {
+        // モーダル表示して大きい入力欄で編集
+        openTextGenerateModal();
+    });
+    document.getElementById('generateQuestionsModal').addEventListener('click', generateQuestionsFromModal);
+    
+// 画像からの問題生成ボタン
+    document.getElementById('generateImageQuestionsBtn').addEventListener('click', generateQuestionsFromImage);
+    
+    // 画像アップロードとプレビュー
+    document.getElementById('imageLoad').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // モーダルのプレビュー画像を更新して表示
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('uploadedImagePreview');
+                preview.src = e.target.result;
+                document.getElementById('imageGenerateModal').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 }
 
 /**
@@ -1298,6 +1323,91 @@ async function handleImageUpload(event) {
 }
 
 /**
+ * テキスト生成モーダルを開く
+ */
+function openTextGenerateModal() {
+    // 現在の値をモーダルに反映
+    const text = document.getElementById('aiSourceText').value;
+    const type = document.getElementById('questionType').value;
+    const count = document.getElementById('questionCount').value;
+    
+    document.getElementById('aiSourceTextModal').value = text;
+    document.getElementById('questionTypeModal').value = type;
+    document.getElementById('questionCountModal').value = count;
+    
+    // モーダルを表示
+    document.getElementById('textGenerateModal').classList.add('active');
+}
+
+/**
+ * モーダルから問題を生成
+ */
+async function generateQuestionsFromModal() {
+    const text = document.getElementById('aiSourceTextModal').value.trim();
+    const type = document.getElementById('questionTypeModal').value;
+    const count = parseInt(document.getElementById('questionCountModal').value, 10) || 5;
+    
+    if (!text) {
+        showToast('テキストを入力してください', 'warning');
+        return;
+    }
+    
+    // モーダルを閉じる
+    closeActiveModal();
+    showToast('AIが問題を生成中です...', 'info');
+    
+    try {
+        console.log('送信データ:', { text, type, count });
+        
+        const response = await fetch('/api/generate/questions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text,
+                type: type,
+                count: count
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.questions && data.questions.length > 0) {
+            // 生成された問題をエディタに追加
+            const newProblems = data.questions.map(q => ({
+                answer: q.answer,
+                question: q.question,
+                answerHtml: q.answer,
+                questionHtml: q.question,
+                created: new Date().toISOString()
+            }));
+            
+            // 現在の問題リストに追加
+            problems = [...problems, ...newProblems];
+            
+            updateProblemList();
+            selectProblem(problems.length - newProblems.length);
+            
+            // 自動保存
+            if (editorSettings.autoSave) {
+                saveProblemsToLocalStorage();
+            }
+            
+            showToast(`${data.questions.length}問の問題を生成しました`, 'success');
+            
+            // 作成ビューに切り替え
+            switchView('create');
+        } else {
+            showToast('問題の生成に失敗しました: ' + (data.message || ''), 'error');
+        }
+    } catch (error) {
+        console.error('生成エラー:', error);
+        showToast('サーバーとの通信に失敗しました', 'error');
+    }
+}
+
+/**
  * クリップボードから読み込む
  */
 function copy() {
@@ -1416,4 +1526,122 @@ function save() {
  */
 function release() {
     releaseProblems();
+}
+
+/**
+ * 画像から問題を自動生成する
+ */
+async function generateQuestionsFromImage() {
+    // モーダルを閉じる
+    closeActiveModal();
+    
+    // 画像のID取得
+    const imgSrc = document.getElementById('uploadedImagePreview').src;
+    if (!imgSrc || imgSrc.includes('data:image/gif;base64,R0lGOD')) {
+        showToast('画像が選択されていません', 'warning');
+        return;
+    }
+    
+    const type = document.getElementById('imageQuestionTypeModal').value;
+    const count = parseInt(document.getElementById('imageQuestionCountModal').value, 10) || 3;
+    
+    try {
+        // プレビュー画像を処理
+        showToast('画像を解析して問題を生成しています...', 'info');
+        
+        // Base64画像データを処理
+        const base64Data = imgSrc.split(',')[1];
+        const blob = base64ToBlob(base64Data, 'image/jpeg');
+        const formData = new FormData();
+        formData.append('file', blob);
+        
+        // 画像アップロード
+        const uploadResponse = await fetch('/api/upload/image', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const uploadData = await uploadResponse.json();
+        
+        if (uploadData.status === 'success') {
+            // 画像分析
+            const processResponse = await fetch('/api/process/image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: uploadData.id })
+            });
+            
+            const processData = await processResponse.json();
+            
+            if (processData.status === 'success') {
+                // 分析結果のテキストを基に問題生成
+                const response = await fetch('/api/generate/questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: processData.data,
+                        type: type,
+                        count: count
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.questions && data.questions.length > 0) {
+                    // 生成された問題をエディタに追加
+                    const newProblems = data.questions.map(q => ({
+                        answer: q.answer,
+                        question: q.question,
+                        answerHtml: q.answer,
+                        questionHtml: q.question,
+                        created: new Date().toISOString()
+                    }));
+                    
+                    // 現在の問題リストに追加
+                    problems = [...problems, ...newProblems];
+                    
+                    updateProblemList();
+                    selectProblem(problems.length - newProblems.length);
+                    
+                    // 自動保存
+                    if (editorSettings.autoSave) {
+                        saveProblemsToLocalStorage();
+                    }
+                    
+                    showToast(`${data.questions.length}問の問題を生成しました`, 'success');
+                    
+                    // 作成ビューに切り替え
+                    switchView('create');
+                } else {
+                    showToast('問題の生成に失敗しました', 'error');
+                }
+            } else {
+                showToast('画像の解析に失敗しました', 'error');
+            }
+        } else {
+            showToast('画像のアップロードに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('画像からの問題生成エラー:', error);
+        showToast('問題の生成中にエラーが発生しました', 'error');
+    }
+}
+
+/**
+ * Base64データをBlobに変換
+ */
+function base64ToBlob(base64, mimeType) {
+    const byteString = atob(base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    
+    return new Blob([ab], { type: mimeType });
 }
