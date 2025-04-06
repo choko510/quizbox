@@ -286,8 +286,9 @@
                     categoryDivs.forEach(category => {
                         const links = category.querySelectorAll('a');
                         links.forEach(link => {
-                            // マッピング：hrefに"beta"が含まれていれば"hard"、そうでなければ"it"として進捗データを取得
-                            const progressKey = link.href.indexOf('beta') !== -1 ? 'hard' : 'it';
+                            // リンクからプログレスキーを取得
+                            const progressKey = getProgressKey(link.href, link.textContent);
+                            console.log('Using progress key:', progressKey, 'for link:', link.textContent);
 
                             // 進捗データの抽出 (linkElement を第三引数として渡す)
                             const progressData = extractProgressData(allProgressData, progressKey, link);
@@ -316,7 +317,41 @@
             return pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'default';
         }
 
-        // 進捗データをAPI形式から使いやすい形式に変換する関数（リンクのテキストからカテゴリを判別）
+        // URLとリンクテキストからプログレスキー(prog, for, bizinensu等)を判定する関数
+        function getProgressKey(href, linkText) {
+            // IDがURLパラメータで直接指定されている場合
+            const url = new URL(href, window.location.origin);
+            const idParam = url.searchParams.get('id');
+            
+            if (idParam) {
+                // IDパラメータが直接APIのキーと一致する場合
+                if (['prog', 'for', 'bizinesu'].includes(idParam)) {
+                    return idParam;
+                }
+                
+                // その他の特殊なIDケース
+                if (idParam.includes('prog')) return 'prog';
+                if (idParam.includes('biz')) return 'bizinesu';
+            }
+            
+            // URLやリンクテキストからキーを推測
+            if (href.includes('bizinesu') || linkText.includes('ビジネス')) {
+                return 'bizinesu';
+            } else if (href.includes('prog') || linkText.includes('プログラミング')) {
+                return 'prog';
+            } else if (href.includes('for')) {
+                return 'for';
+            } else if (href.includes('itpasu') || linkText.includes('ITパスポート')) {
+                // APIデータがどのキーにITパスポートの情報を格納しているか確認
+                // 仮にprogに格納されていると仮定
+                return 'prog';
+            }
+            
+            // デフォルト値
+            return 'prog'; // 適切なデフォルト値に変更する必要があるかも
+        }
+
+        // 進捗データをAPI形式から使いやすい形式に変換する関数
         function extractProgressData(allProgressData, group, linkElement) {
             // デフォルト値
             const defaultData = {
@@ -325,17 +360,24 @@
                 total: 100   // 総問題数
             };
 
+            // グループが存在しない場合はデフォルト値を返す
+            if (!allProgressData[group]) {
+                console.log('Group not found in data:', group);
+                return defaultData;
+            }
+
             // URLからカテゴリを取得する
             const href = linkElement.href;
             const url = new URL(href, window.location.origin);
             const idParam = url.searchParams.get('id');
             const category = getCategory(idParam, href);
             
-            console.log('Checking category:', category, 'for link:', linkElement.textContent);
+            console.log('Checking category:', category, 'for link:', linkElement.textContent, 'in group:', group);
 
-            // グループデータの確認
+            // グループデータの取得
             const groupData = allProgressData[group];
-            if (groupData) {
+            
+            try {
                 // 直接構造の場合（categoryDataがオブジェクトの一部として存在）
                 if (groupData.categoryData && groupData.categoryData[category]) {
                     const catData = groupData.categoryData[category];
@@ -343,8 +385,25 @@
                     console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
                     return extracted;
                 } 
+                
+                // テキストマッチングを試みる (リンクテキストとカテゴリ名の一致)
+                if (groupData.categoryData) {
+                    // カテゴリデータから一致するものを探す
+                    for (const cat in groupData.categoryData) {
+                        // リンクテキストにカテゴリ名が含まれている、またはその逆の場合
+                        if (linkElement.textContent.toLowerCase().includes(cat.toLowerCase()) ||
+                            cat.toLowerCase().includes(linkElement.textContent.toLowerCase())) {
+                            
+                            const catData = groupData.categoryData[cat];
+                            const extracted = { learned: catData.correct, learning: 0, total: catData.total };
+                            console.log('Extracted progress data by text match for', linkElement.textContent, 'using category', cat, ':', extracted);
+                            return extracted;
+                        }
+                    }
+                }
+                
                 // categoryDataが直接存在せず、カテゴリがグループのプロパティとして存在する場合
-                else if (groupData[category]) {
+                if (groupData[category]) {
                     const catData = groupData[category];
                     // 異なるデータ形式に対応
                     const correct = catData.correct || 0;
@@ -354,19 +413,27 @@
                     return extracted;
                 }
                 
-                // テキストベースでのマッチング（最後の手段）
-                const categories = groupData.categoryData || {};
-                for (const cat in categories) {
-                    if (linkElement.textContent.toLowerCase().indexOf(cat.toLowerCase()) !== -1) {
-                        const catData = categories[cat];
-                        const extracted = { learned: catData.correct, learning: 0, total: catData.total };
-                        console.log('Extracted progress data by text match for', linkElement.textContent, ':', extracted);
-                        return extracted;
-                    }
+                // 学習中の問題数を取得 (studyingQuestionsから)
+                const studying = groupData.studyingQuestions ? groupData.studyingQuestions.length : 0;
+                
+                // totalQuestionsが存在する場合、それを使用
+                if (groupData.totalQuestions) {
+                    const correct = groupData.questionStats ? 
+                        groupData.questionStats.filter(q => q[1].correctAnswers > 0).length : 0;
+                    
+                    const extracted = { 
+                        learned: correct, 
+                        learning: studying, 
+                        total: groupData.totalQuestions 
+                    };
+                    console.log('Extracted progress data using totalQuestions for', linkElement.textContent, ':', extracted);
+                    return extracted;
                 }
+            } catch (error) {
+                console.error('Error extracting progress data:', error);
             }
             
-            console.log('No matching category for', linkElement.textContent, '- using default:', defaultData);
+            console.log('No matching category for', linkElement.textContent, 'in group', group, '- using default:', defaultData);
             return defaultData;
         }
         

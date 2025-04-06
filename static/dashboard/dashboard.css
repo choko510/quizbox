@@ -719,7 +719,10 @@ body {
 }
 
 /* レスポンシブデザイン */
-@media (max-width: 992px) {
+@media (max-width: 1025px) {
+  .dashboard-sidebar {
+    width: 180px ;
+  }
   .stats-container {
     grid-template-columns: 1fr;
   }

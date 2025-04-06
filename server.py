@@ -797,7 +797,7 @@ async def process_text(data: TextData):
                     {problem_text}
                 """
                 try:
-                    response = model.generate_content(prompt)
+                    response = await model.generate_content_async(prompt)
                     results.append({
                         "feedback": response.text,
                         "index": i,
@@ -1076,7 +1076,11 @@ async def fetch_wikipedia_info(word: str):
         sentences = content.split("。")
         summary = "。".join(sentences[:3]) + "。"
 
-        return summary.strip()
+        data = summary.strip()
+        if word in data:
+            return data
+        else:
+            return None
     except wikipedia.exceptions.DisambiguationError as e:
         # 複数の結果がある場合、最初の結果を選択
         if e.options:
@@ -1085,7 +1089,11 @@ async def fetch_wikipedia_info(word: str):
             content = page.content
             sentences = content.split("。")
             summary = "。".join(sentences[:3]) + "。"
-            return summary.strip()
+            data = summary.strip()
+            if word in data:
+                return data
+            else:
+                return None
         return None
     except wikipedia.exceptions.PageError:
         # ページが存在しない場合
@@ -1528,7 +1536,7 @@ async def get_advice(data: Data):
 
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content([prompt])
+        response = await model.generate_content_async([prompt])
         advice = response.text.replace("\n", "<br>") 
         
         return {"advice": advice}
