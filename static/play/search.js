@@ -123,8 +123,14 @@ function showDictionaryModal(word, definition) {
     }
     
     // モーダルの内容を更新
-    document.getElementById('dictionary-modal-title').textContent = word;
-    document.getElementById('dictionary-modal-definition').textContent = definition;
+    const modalTitle = document.getElementById('dictionary-modal-title');
+    const modalDefinition = document.getElementById('dictionary-modal-definition');
+    modalTitle.textContent = word;
+    if (typeof marked !== 'undefined') {
+        modalDefinition.innerHTML = marked.parse(definition);
+    } else {
+        modalDefinition.textContent = definition;
+    }
     
     // モーダルを表示（MicroModalが初期化されていることを確認）
     if (typeof MicroModal !== 'undefined') {

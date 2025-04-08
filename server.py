@@ -18,7 +18,6 @@ import aiofiles
 import xxhash
 import numpy as np
 import google.generativeai as genai
-import wikipedia
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -70,6 +69,7 @@ class MondaiStats(Base):
     correct_count = Column(Integer, default=0)  # 正解回数
     incorrect_count = Column(Integer, default=0)  # 不正解回数
     last_updated = Column(String, default=lambda: datetime.datetime.now().isoformat())
+    
 
 templates = Jinja2Templates(directory="templates")
 
@@ -1054,55 +1054,6 @@ async def get_all_progress(data: Data):
     all_progress_data = await DB.get_progress_data(data.id)
     return {"all_progress_data": all_progress_data}
 
-async def fetch_wikipedia_info(word: str):
-    """
-    Wikipediaから指定された単語の情報を取得し、最もヒット率が高い結果の全文を取得して返す非同期関数。
-    """
-    wikipedia.set_lang("ja") 
-
-    try:
-        # Wikipedia APIを使用して情報を取得
-        search_results = wikipedia.search(word, results=1)
-        if not search_results:
-            return None
-        
-        page_title = search_results[0]
-        page = wikipedia.page(page_title)
-
-        # ページの内容を取得
-        content = page.content
-
-        # 最初の数文を抽出
-        sentences = content.split("。")
-        summary = "。".join(sentences[:3]) + "。"
-
-        data = summary.strip()
-        if word in data:
-            return data
-        else:
-            return None
-    except wikipedia.exceptions.DisambiguationError as e:
-        # 複数の結果がある場合、最初の結果を選択
-        if e.options:
-            page_title = e.options[0]
-            page = wikipedia.page(page_title)
-            content = page.content
-            sentences = content.split("。")
-            summary = "。".join(sentences[:3]) + "。"
-            data = summary.strip()
-            if word in data:
-                return data
-            else:
-                return None
-        return None
-    except wikipedia.exceptions.PageError:
-        # ページが存在しない場合
-        return None
-    except Exception as e:
-        # その他のエラー
-        print(f"Error fetching Wikipedia info: {e}")
-        return None
-
 class wordData(BaseModel):
     word: str
     mondai: str
@@ -1123,37 +1074,29 @@ async def search_word(data: wordData):
         }
     
     try:
-
-        wiki_response = await fetch_wikipedia_info(word)
-        if wiki_response:
-            return {
-                "word": word,
-                "definition": wiki_response,
-                "success": True
-            }
-        else:
-            model = genai.GenerativeModel("gemini-2.0-flash-lite")
-            prompt = f"""
-            以下の単語「{word}」について詳しく説明してください。
-            
-            以下の情報を含めてください：
-            1. 基本的な定義と意味
-            2. 実際の使用例（例文を2-3つ）
-            3. 関連する単語や類義語（あれば）
-            4. 特定分野での専門的な意味（該当する場合）
-            5. 「{data.mondai}」の文脈に関連した説明
-
-            回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
-            """
-
-            response = model.generate_content(prompt)
-            return {
-                "word": word,
-                "definition": response.text,
-                "success": True
-            }
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        prompt = f"""
+        以下の単語「{word}」について詳しく説明してください。
         
+        以下の情報を含めてください：
+        1. 基本的な定義と意味
+        2. 実際の使用例（例文を2-3つ）
+        3. 関連する単語や類義語（あれば）
+        4. 特定分野での専門的な意味（該当する場合）
+        5. 「{data.mondai}」の文脈に関連した説明
+
+        回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
+        また、HTMLタグは使用せず、マークダウン形式で回答してください。
+        """
+
+        response = model.generate_content(prompt)
+        return {
+            "word": word,
+            "definition": response.text,
+            "success": True
+        }
     except Exception as e:
+        print(f"Error fetching definition: {e}")
         return {
             "word": word,
             "definition": "定義を取得できませんでした。",
