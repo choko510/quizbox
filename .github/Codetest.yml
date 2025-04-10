@@ -1,0 +1,67 @@
+name: "Code test"
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  analyze:
+    name: Analyze Code with CodeQL & FastAPI
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      matrix:
+        language: ['python']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create .env file
+        run: |
+          echo 'GEMINI_APIKEY="APIKEY"' > .env
+
+      - name: Check for FastAPI in dependencies
+        id: check_fastapi
+        run: |
+          if pip freeze | grep -q 'fastapi'; then
+            echo "FastAPI found, proceeding with test."
+            echo "USE_FASTAPI=true" >> $GITHUB_ENV
+          else
+            echo "FastAPI not found, skipping test."
+            echo "USE_FASTAPI=false" >> $GITHUB_ENV
+          fi
+
+      - name: Start FastAPI server (if present)
+        if: env.USE_FASTAPI == 'true'
+        run: |
+          python main.py --host 0.0.0.0 --port 8080 &  # argparse を使ってホストとポートを指定
+          sleep 5  # サーバーが起動するまで待機
+
+      - name: Test FastAPI /docs endpoint
+        if: env.USE_FASTAPI == 'true'
+        run: |
+          curl --fail http://127.0.0.1:8080/docs || (echo "FastAPI /docs check failed!" && exit 1)
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'python'
+
+      - name: Code test
+        uses: github/codeql-action/analyze@v3
