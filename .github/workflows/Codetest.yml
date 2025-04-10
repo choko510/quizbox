@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # 安定したバージョンを指定
+          python-version: '3.11'
 
       # 依存関係のインストール
       - name: Install dependencies
@@ -59,7 +59,7 @@ jobs:
         if: env.USE_FASTAPI == 'true'
         run: |
           python main.py --host 0.0.0.0 --port 8080 &  # argparse を使ってホストとポートを指定
-          until curl --fail http://127.0.0.1:8080/docs; do
+          until curl --fail http://0.0.0.0:8080/docs; do
             echo "Waiting for FastAPI to start..."
             sleep 1
           done
@@ -68,7 +68,7 @@ jobs:
       - name: Test FastAPI /docs endpoint
         if: env.USE_FASTAPI == 'true'
         run: |
-          curl --fail http://127.0.0.1:8080/docs || (echo "FastAPI /docs check failed!" && exit 1)
+          curl --fail http://0.0.0.0:8080/docs || (echo "FastAPI /docs check failed!" && exit 1)
 
       # CodeQLの初期化
       - name: Initialize CodeQL
