@@ -26,15 +26,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
 
-      - name: Create .env file
+      - name: Create .env file if it does not exist
         run: |
-          echo 'GEMINI_APIKEY="APIKEY"' > .env
+          if [ ! -f .env ]; then
+            echo 'GEMINI_APIKEY="APIKEY"' > .env
+          fi
 
       - name: Check for FastAPI in dependencies
         id: check_fastapi
@@ -50,8 +52,11 @@ jobs:
       - name: Start FastAPI server (if present)
         if: env.USE_FASTAPI == 'true'
         run: |
-          python main.py --host 0.0.0.0 --port 8080 &  # argparse を使ってホストとポートを指定
-          sleep 5  # サーバーが起動するまで待機
+          python main.py --host 0.0.0.0 --port 8080 &
+          until curl --fail http://127.0.0.1:8080/docs; do
+            echo "Waiting for FastAPI to start..."
+            sleep 1
+          done
 
       - name: Test FastAPI /docs endpoint
         if: env.USE_FASTAPI == 'true'
