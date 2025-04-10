@@ -451,6 +451,91 @@ strong {
     color: #2563eb;
 }
 
+/* 手書きモード用のスタイル */
+
+.canvas-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+#handwriting-canvas {
+    display: block;
+    touch-action: none;
+    background-color: white;
+    cursor: crosshair;
+}
+
+.handwriting-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.handwriting-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#clear-canvas {
+    background-color: #ff7043;
+    color: white;
+    font-size: 13px;
+    padding: 5px 12px;
+}
+
+#submit-answer {
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+}
+
+.handwriting-btn:hover {
+    opacity: 0.9;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.handwriting-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 設定モーダル用のスタイル */
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.settings-option {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.settings-option input[type="radio"] {
+    margin-right: 10px;
+}
+
+.settings-option label {
+    cursor: pointer;
+}
+
 @media screen and (max-height: 600px) {
     body {
         background-color: #fbfbfb;

@@ -100,12 +100,21 @@
                     <div class="title">
                         <div id="question"></div>
                     </div>
-                    <ul class="sp">
+                    <ul class="sp" id="choice-answers">
                         <li><button id="answer1"></button></li>
                         <li><button id="answer2"></button></li>
                         <li><button id="answer3"></button></li>
                         <li><button id="answer4"></button></li>
                     </ul>
+                    <div id="handwriting-area" style="display: none;" class="no-swiping">
+                        <div class="canvas-container no-swiping">
+                            <canvas id="handwriting-canvas" width="400" height="200" class="no-swiping"></canvas>
+                        </div>
+                        <div class="handwriting-controls no-swiping">
+                            <button id="clear-canvas" class="handwriting-btn">クリア</button>
+                            <button id="submit-answer" class="handwriting-btn">回答する</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="score">
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
@@ -150,7 +159,17 @@
                     <h2 id="settings-modal-title">設定</h2>
                 </header>
                 <main class="modal__content" id="settings-modal-content">
-                    <p>ここに設定内容を記述します。</p>
+                    <div class="settings-section">
+                        <h3>回答モード</h3>
+                        <div class="settings-option">
+                            <input type="radio" id="choice-mode" name="answer-mode" value="choice" checked>
+                            <label for="choice-mode">4択モード</label>
+                        </div>
+                        <div class="settings-option">
+                            <input type="radio" id="handwriting-mode" name="answer-mode" value="handwriting" checked>
+                            <label for="handwriting-mode">手書きモード(Beta)</label>
+                        </div>
+                    </div>
                 </main>
                 <footer class="modal__footer" style="text-align: center;">
                     <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">閉じる</button>
@@ -168,6 +187,7 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <link rel="stylesheet" href="./word-dictionary.css">
     <script src="./search.js"></script>
+    <script src="./write.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const swiper = new Swiper(".swiper-container", {

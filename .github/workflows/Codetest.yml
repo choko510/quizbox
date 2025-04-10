@@ -20,24 +20,29 @@ jobs:
         language: ['python']
 
     steps:
+      # リポジトリのコードをチェックアウト
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Python環境のセットアップ
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.9'  # 安定したバージョンを指定
 
+      # 依存関係のインストール
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
 
+      # .env ファイルを作成（存在しない場合のみ）
       - name: Create .env file if it does not exist
         run: |
           if [ ! -f .env ]; then
             echo 'GEMINI_APIKEY="APIKEY"' > .env
           fi
 
+      # FastAPIが依存関係にあるかチェック
       - name: Check for FastAPI in dependencies
         id: check_fastapi
         run: |
@@ -49,24 +54,28 @@ jobs:
             echo "USE_FASTAPI=false" >> $GITHUB_ENV
           fi
 
+      # FastAPIサーバーを起動（依存している場合）
       - name: Start FastAPI server (if present)
         if: env.USE_FASTAPI == 'true'
         run: |
-          python main.py --host 0.0.0.0 --port 8080 &
+          python main.py --host 0.0.0.0 --port 8080 &  # argparse を使ってホストとポートを指定
           until curl --fail http://127.0.0.1:8080/docs; do
             echo "Waiting for FastAPI to start..."
             sleep 1
           done
 
+      # FastAPIの /docs エンドポイントをテスト
       - name: Test FastAPI /docs endpoint
         if: env.USE_FASTAPI == 'true'
         run: |
           curl --fail http://127.0.0.1:8080/docs || (echo "FastAPI /docs check failed!" && exit 1)
 
+      # CodeQLの初期化
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: 'python'
 
+      # CodeQLによるコード解析
       - name: Code test
         uses: github/codeql-action/analyze@v3
