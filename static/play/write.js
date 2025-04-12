@@ -121,6 +121,52 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('submit-answer').addEventListener('click', submitAnswer);
     }
 
+    function analyzeText(text) {
+        // 英語の判定
+        const hasUppercase = /[A-Z]/.test(text);
+        const hasLowercase = /[a-z]/.test(text);
+
+        let char = "";
+        if (hasUppercase) {
+            char += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 英語（大文字のみ）
+        }
+
+        if (hasLowercase) {
+            char += "abcdefghijklmnopqrstuvwxyz"; // 英語（小文字のみ）
+        }
+
+        // 日本語の判定
+        const hasHiragana = /[ぁ-ん]/.test(text); // ひらがな
+        const hasKatakana = /[ァ-ン]/.test(text); // カタカナ
+        const hasKanji = /[一-龯]/.test(text);     // 漢字
+
+        const count = [hasHiragana, hasKatakana, hasKanji].filter(Boolean).length;
+
+        if (count > 1) {
+            char += "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン漢字"; // 日本語（混在）
+        }
+
+        if (hasHiragana && !hasKatakana && !hasKanji) {
+            char += "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ"; // 日本語（ひらがなのみ）
+        }
+
+        if (hasKatakana && !hasHiragana && !hasKanji) {
+            char += "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"; // 日本語（カタカナのみ）
+        }
+
+        if (hasKanji && !hasHiragana && !hasKatakana) {
+            char += "一二三四五六七八九十百千万円年日月火水木金土人子女男女本東西南北山川海空雨雪花星学校会社車電車病院図書館大小高低新古多少上下前後左右中外内白黒赤青黄色";//日本語（漢字のみ）
+        }
+
+        // 数字の判定
+        const hasNumber = /[0-9]/.test(text);
+        if (hasNumber) {
+            char += "0123456789"; // 数字
+        }
+
+        return char;
+    }
+
     // 手書き文字認識と回答送信
     async function submitAnswer() {
         // 回答ボタンの無効化（多重送信防止）
@@ -152,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 認識の精度向上のためにパラメータを設定
             await worker.setParameters({
                 tessedit_pageseg_mode: 7, // SINGLE_LINE モード (PSM.SINGLE_LINE の代わりに数値使用)
-                tessedit_char_whitelist: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽァィゥェォッャュョー',
+                tessedit_char_whitelist: analyzeText(questions[currentIndex].word),
             });
             
             const result = await worker.recognize(imageData);
@@ -204,8 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const similarity = calculateSimilarity(recognizedText, correctAnswer);
         console.log(`類似度: ${similarity} (認識: "${recognizedText}", 正解: "${correctAnswer}")`);
         
-        // 類似度が高ければ正解とみなす（閾値は調整可能）
-        if (similarity > 0.6 || recognizedText.includes(correctAnswer) || correctAnswer.includes(recognizedText)) {
+        if (similarity > 0.6 || 
+            (recognizedText.length >= 3 && recognizedText.includes(correctAnswer)) || 
+            (recognizedText.length >= 3 && correctAnswer.includes(recognizedText) && recognizedText.length > correctAnswer.length * 0.5)) {
             // 正解の処理
             onCorrectAnswer();
         } else {
