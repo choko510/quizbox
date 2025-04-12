@@ -14,7 +14,7 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
-
+    z-index: 1000;
 }
 
 .top-left {
@@ -110,6 +110,77 @@ body {
     padding: 0 5px;
 }
 
+.category-book {
+    width: 92%;
+    margin: 20px 10px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.category-book p {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #3498db;
+    color: #2c3e50;
+}
+
+.category-book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.category-book a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    text-align: center;
+}
+
+.category-book a:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background-color: #f0f2f5;
+}
+
+.category-book img.book {
+    width: 100%;
+    max-width: 120px;
+    height: 180px;
+    margin-top: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    object-fit: cover;
+    object-position: center;
+}
+
+.category-book a:hover img.book {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+@media screen and (max-width: 767px) {
+    .category-book-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .category-book img.book {
+        max-width: 100px;
+        height: 140px; /* スマホ用に高さを調整 */
+    }
+}
+
 .category p {
     font-size: 18px;
     font-weight: bold;
@@ -137,6 +208,7 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
 
 /* Modal improvements */
 .modal__container {
