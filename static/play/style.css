@@ -177,7 +177,7 @@ button:hover {
 
 .tangolist {
     position: absolute;
-    top: 20px;
+    top: 5px;
     width: 90%;
     margin: 0 auto;
     left: 5%;
@@ -202,36 +202,78 @@ button:hover {
 .search-container {
     position: relative;
     margin-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    display: block !important; /* 最初から必ず表示 */
 }
 
 .searchbox {
     width: 92%;
-    padding: 12px 40px 12px 15px;
-    border: 1px solid #ddd;
+    padding: 14px 45px 14px 15px;
+    border: 2px solid #e0e0e0;
     border-radius: 8px;
     color: #333;
-    font-size: 1em;
+    font-size: 1.1em;
     line-height: 1.5;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
 }
 
 .searchbox:focus {
     border-color: #007bff;
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
     outline: none;
+    background-color: #fff;
 }
 
 .searchbox::placeholder {
-    color: #999;
+    color: #888;
+    font-style: italic;
 }
 
 .search-icon {
     position: absolute;
-    top: 50%;
-    right: 3%;
-    transform: translateY(-50%);
-    color: #999;
+    top: 27px; /* 固定位置に設定 */
+    right: 25px;
+    color: #007bff;
+    font-size: 1.2em;
+    transition: all 0.2s ease;
+}
+
+.searchbox:focus + .search-icon {
+    color: #0056b3;
+}
+
+/* フィルターオプションのスタイル */
+.filter-options {
+    margin: 10px 0;
+}
+
+#answerFilter {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
+    background-color: #f8f9fa;
+    font-size: 1em;
+    color: #333;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+}
+
+#answerFilter:focus {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+    outline: none;
+}
+
+#answerFilter option {
+    padding: 8px;
+    background-color: #fff;
 }
 
 ul.custom-list {

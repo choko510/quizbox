@@ -470,42 +470,10 @@ function filterWords() {
     if (!searchbox) return;
     const searchword = searchbox.value.toLowerCase().trim();
 
-    // フィルターUI要素の取得または作成
-    let filterSelect = document.getElementById('answerFilter');
-    if (!filterSelect) {
-        const searchboxParent = searchbox.parentElement;
-        const filterDiv = document.createElement('div');
-        filterDiv.className = 'filter-options';
-        filterDiv.style.margin = '10px 0';
-
-        filterSelect = document.createElement('select');
-        filterSelect.id = 'answerFilter';
-        filterSelect.style.padding = '8px 10px';
-        filterSelect.style.borderRadius = '3px';
-        filterSelect.style.border = '1px solid #969da3';
-        filterSelect.style.marginRight = '10px';
-        filterSelect.style.width = '45%';
-
-        const options = [
-            { value: 'all', text: 'すべての問題' },
-            { value: 'unanswered', text: '未回答の問題' },
-            { value: 'correct', text: '正解した問題' },
-            { value: 'incorrect', text: '間違えた問題' }
-        ];
-
-        options.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            filterSelect.appendChild(option);
-        });
-
-        filterDiv.appendChild(filterSelect);
-        searchboxParent.insertBefore(filterDiv, searchbox.nextSibling);
-
-        filterSelect.addEventListener('change', filterWords);
-    }
-
+    // フィルターUI要素の取得（HTMLで定義済み）
+    const filterSelect = document.getElementById('answerFilter');
+    if (!filterSelect) return;
+    
     const filterValue = filterSelect.value; // フィルター値
 
     // ローマ字→ひらがな変換
@@ -625,11 +593,17 @@ document.addEventListener('DOMContentLoaded', () => {
         swiper.on('slideChangeTransitionEnd', () => {
             // 単語リストのスライドが表示された時
             if (swiper.activeIndex === 2) {
-                setTimeout(makeWordsClickable, 200);
+                setTimeout(() => {
+                    makeWordsClickable();
+                    filterWords(); // フィルターも初期表示する
+                }, 200);
             }
         });
     }
     
-    // 単語リスト初期表示時
-    setTimeout(makeWordsClickable, 1000);
+    // 単語リスト初期表示時（ページ読み込み後すぐにフィルターを表示）
+    setTimeout(() => {
+        makeWordsClickable();
+        filterWords(); // 検索フィルターをデフォルトで表示
+    }, 1000);
 });

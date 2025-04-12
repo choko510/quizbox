@@ -127,6 +127,14 @@
                     <div class="search-container">
                         <input type="text" class="searchbox" placeholder="検索" oninput="filterWords()">
                         <i class="fas fa-search search-icon"></i>
+                        <div class="filter-options">
+                            <select id="answerFilter" onchange="filterWords()">
+                                <option value="all">すべての問題</option>
+                                <option value="unanswered">未回答の問題</option>
+                                <option value="correct">正解した問題</option>
+                                <option value="incorrect">間違えた問題</option>
+                            </select>
+                        </div>
                     </div>
                     <ul id="wordList" class="custom-list"></ul>
                 </div>
@@ -160,6 +168,9 @@
                 </header>
                 <main class="modal__content" id="settings-modal-content">
                     <div class="settings-section">
+                        <h3>出題方法</h3>
+                        <input type="checkbox" name="replace-mondai" id="replace-mondai">
+                        <label for="replace-mondai">問題文と回答文を入れ換える</label>
                         <h3>回答モード</h3>
                         <div class="settings-option">
                             <input type="radio" id="choice-mode" name="answer-mode" value="choice" checked>
@@ -388,25 +399,46 @@
         function populateWordList() {
             const wordList = document.getElementById('wordList');
             wordList.innerHTML = ''; // リストをクリア
+            
+            // 問題文と回答文を入れ換えるかどうかのフラグ
+            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            
             questions.forEach(question => {
                 const li = document.createElement('li');
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'tangotitle';
-                titleDiv.innerHTML = isItpass ? question.description : question.word;
-
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'content';
-                contentDiv.classList.add('no-swiping');
-                contentDiv.innerHTML = isItpass ? question.kaisetu : question.description;
-
-                if (isItpass || titleDiv.textContent.endsWith("か。") ||
-                    titleDiv.textContent.endsWith("答えよ。") ||
-                    titleDiv.textContent.endsWith("答えなさい。")) {
-                    li.appendChild(contentDiv);
+                
+                // 反転設定に基づいて表示内容を決定
+                if (isReversed) {
+                    // 問題文と回答文を入れ換える場合
+                    titleDiv.innerHTML = isItpass ? question.kaisetu : question.description;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'content';
+                    contentDiv.classList.add('no-swiping');
+                    contentDiv.innerHTML = isItpass ? question.description : question.word;
+                    
+                    // 順序も入れ替える
                     li.appendChild(titleDiv);
+                    li.appendChild(contentDiv);
                 } else {
-                    li.appendChild(titleDiv);
-                    li.appendChild(contentDiv);
+                    // 通常の順序
+                    titleDiv.innerHTML = isItpass ? question.description : question.word;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'content';
+                    contentDiv.classList.add('no-swiping');
+                    contentDiv.innerHTML = isItpass ? question.kaisetu : question.description;
+                    
+                    if (isItpass || titleDiv.textContent.endsWith("か。") ||
+                        titleDiv.textContent.endsWith("答えよ。") ||
+                        titleDiv.textContent.endsWith("答えなさい。")) {
+                        li.appendChild(contentDiv);
+                        li.appendChild(titleDiv);
+                    } else {
+                        li.appendChild(titleDiv);
+                        li.appendChild(contentDiv);
+                    }
                 }
 
                 wordList.appendChild(li);
@@ -423,8 +455,19 @@
         function showNextQuestion() {
             const question = questions[currentIndex];
             title = document.getElementById('question');
-            textlength = question.description.length;
-            title.innerHTML = question.description;
+            
+            // 問題表示部分の処理
+            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            
+            if (isReversed) {
+                // 問題文として回答を表示する
+                title.innerHTML = question.word;
+                textlength = question.word.length;
+            } else {
+                // 通常の表示
+                title.innerHTML = question.description;
+                textlength = question.description.length;
+            }
             screenWidth = window.innerWidth;
             screenHeight = window.innerHeight;
 
@@ -454,29 +497,72 @@
                 }
             }
 
-            const answers = [question.word];
-
-            if (isItpass || question.mondai) {
-                const mondaiOptions = isItpass ? question.mondai : question.mondai;
-                // 重複しないように選択肢をanswersに追加
-                while (answers.length < 4) {
-                    const randomIndex = Math.floor(Math.random() * mondaiOptions.length);
-                    const selectedOption = mondaiOptions[randomIndex];
-                    if (!answers.includes(selectedOption)) {
-                        answers.push(selectedOption);
+            // 選択肢の設定
+            
+            let correctAnswer = question.word;
+            let options = [];
+            
+            // 反転時は正解と不正解の選択肢をそれぞれ入れ替える
+            if (isReversed) {
+                // 反転設定時は、説明文(description)が回答となる
+                correctAnswer = question.description;
+                
+                if (isItpass || question.mondai) {
+                    // ITパスポートの場合は特別処理
+                    options = [question.description]; // 説明文を正解とする
+                    
+                    // 重複しないよう他の問題の説明文を選択肢として追加
+                    let count = 0;
+                    while (options.length < 4 && count < 20) { // 無限ループ回避
+                        count++;
+                        const randomIndex = Math.floor(Math.random() * questions.length);
+                        if (randomIndex !== currentIndex && !options.includes(questions[randomIndex].description)) {
+                            options.push(questions[randomIndex].description);
+                        }
+                    }
+                } else {
+                    // 通常問題の場合は、他の問題の説明を選択肢に
+                    options = [question.description]; // 現在の問題の説明を正解とする
+                    
+                    // 他の問題の説明を不正解の選択肢として追加
+                    let count = 0;
+                    while (options.length < 4 && count < 20) { // 無限ループ回避
+                        count++;
+                        const randomIndex = Math.floor(Math.random() * questions.length);
+                        if (randomIndex !== currentIndex && !options.includes(questions[randomIndex].description)) {
+                            options.push(questions[randomIndex].description);
+                        }
                     }
                 }
             } else {
-                while (answers.length < 4) {
-                    const randomIndex = Math.floor(Math.random() * questions.length);
-                    if (!answers.includes(questions[randomIndex].word)) {
-                        answers.push(questions[randomIndex].word);
+                // 通常の表示（入れ替えなし）
+                options = [question.word]; // 正解は問題の単語
+                
+                if (isItpass || question.mondai) {
+                    const mondaiOptions = isItpass ? question.mondai : question.mondai;
+                    // 重複しないように選択肢をanswersに追加
+                    while (options.length < 4) {
+                        const randomIndex = Math.floor(Math.random() * mondaiOptions.length);
+                        const selectedOption = mondaiOptions[randomIndex];
+                        if (!options.includes(selectedOption)) {
+                            options.push(selectedOption);
+                        }
+                    }
+                } else {
+                    while (options.length < 4) {
+                        const randomIndex = Math.floor(Math.random() * questions.length);
+                        if (!options.includes(questions[randomIndex].word)) {
+                            options.push(questions[randomIndex].word);
+                        }
                     }
                 }
             }
-
-            answers.sort(() => Math.random() - 0.5);
-            answers.forEach((answer, index) => {
+            
+            // 選択肢をシャッフル
+            options.sort(() => Math.random() - 0.5);
+            
+            // 選択肢を各ボタンに設定
+            options.forEach((answer, index) => {
                 document.getElementById('answer' + (index + 1)).textContent = answer;
             });
 
@@ -598,7 +684,10 @@
             answeredQuestions.add(currentIndex);
             totalCount++;
 
-            if (e.target.textContent === questions[currentIndex].word) {
+            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
+            
+            if (e.target.textContent === correctAnswer) {
                 correctCount++;
                 renzokuseikai++;
                 if (renzokuseikai > maxStreak) {
@@ -622,9 +711,21 @@
                 renzokuseikai = 0;
                 stats.isWrong = true;
                 studyingQuestions.add(currentIndex);
+                // 入れ替えモードに応じてエラーメッセージの内容を調整
+                let question = questions[currentIndex];
+                let questionText, answerText;
+                
+                if (isReversed) {
+                    questionText = question.word;
+                    answerText = question.description;
+                } else {
+                    questionText = question.description;
+                    answerText = question.word;
+                }
+                
                 notie.force({
                     type: 'error',
-                    text: '<div class="popup">' + questions[currentIndex].description + '<br><br>正しい回答:' + questions[currentIndex].word + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                    text: '<div class="popup">' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                     buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                     callback: function () {
                         displayScore();
@@ -926,6 +1027,47 @@
         document.getElementById('settings-btn').addEventListener('click', function () {
             MicroModal.show('settings-modal');
         });
+        
+        // 問題文と回答文を入れ換える機能
+        const replaceMondaiCheckbox = document.getElementById('replace-mondai');
+        
+        // ローカルストレージから設定を読み込む
+        replaceMondaiCheckbox.checked = localStorage.getItem('replace_mondai') === 'true';
+        
+        // チェックボックスの変更イベント
+        replaceMondaiCheckbox.addEventListener('change', function() {
+            localStorage.setItem('replace_mondai', this.checked);
+            
+            // 現在の画面に合わせて更新
+            populateWordList(); // 単語リスト再表示
+            
+            if (swiper.activeIndex === 1) {
+                // 問題画面表示中なら問題も更新
+                showNextQuestion();
+                notie.alert({ 
+                    type: 'success', 
+                    text: '問題文と回答文を入れ替えました', 
+                    time: 1.5 
+                });
+            }
+            
+            swiper.update(); // スワイパー更新
+            
+            document.getElementById('settings-modal').dispatchEvent(
+                new CustomEvent('modal-closed')
+            );
+        });
+        
+        // モーダル表示時にinitialSlideを2から1に変更して問題表示を優先
+        if (localStorage.getItem('first_visit') !== 'true') {
+            // 初回訪問時のみ単語リストを表示
+            localStorage.setItem('first_visit', 'true');
+        } else {
+            // 2回目以降は問題画面を表示
+            setTimeout(() => {
+                swiper.slideTo(1); // 問題画面へ
+            }, 200);
+        }
     </script>
 </body>
 
