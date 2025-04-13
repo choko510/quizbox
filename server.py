@@ -567,6 +567,10 @@ async def itpasplay(request: Request):
 async def redirect_to_itpasu(path: str):
     return RedirectResponse(url=f"/play/{path}", status_code=302)
 
+@app.get("/itpasu/")
+async def redirect_to_top():
+    return RedirectResponse(url="/", status_code=302)
+
 # APIエンドポイント
 @app.post("/api/registration")
 async def registration(data: Data):

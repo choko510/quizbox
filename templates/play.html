@@ -192,14 +192,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../modal.css">
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <link rel="stylesheet" href="./word-dictionary.css">
     <script src="./search.js"></script>
     <script src="./write.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script>
         const swiper = new Swiper(".swiper-container", {
             direction: "horizontal",
@@ -397,52 +397,30 @@
         });
 
         function populateWordList() {
-            const wordList = document.getElementById('wordList');
-            wordList.innerHTML = ''; // リストをクリア
-            
-            // 問題文と回答文を入れ換えるかどうかのフラグ
+            let listHTML = ''; // HTML文字列を構築
             const isReversed = localStorage.getItem('replace_mondai') === 'true';
-            
+
             questions.forEach(question => {
-                const li = document.createElement('li');
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'tangotitle';
-                
-                // 反転設定に基づいて表示内容を決定
+                let titleHTML, contentHTML;
+                const titleClass = 'tangotitle';
+                const contentClass = 'content no-swiping';
+
                 if (isReversed) {
-                    // 問題文と回答文を入れ換える場合
-                    titleDiv.innerHTML = isItpass ? question.kaisetu : question.description;
-                    
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'content';
-                    contentDiv.classList.add('no-swiping');
-                    contentDiv.innerHTML = isItpass ? question.description : question.word;
-                    
-                    // 順序も入れ替える
-                    li.appendChild(titleDiv);
-                    li.appendChild(contentDiv);
+                    titleHTML = isItpass ? question.kaisetu : question.description;
+                    contentHTML = isItpass ? question.description : question.word;
+                    listHTML += `<li><div class="${titleClass}">${titleHTML}</div><div class="${contentClass}">${contentHTML}</div></li>`;
                 } else {
-                    // 通常の順序
-                    titleDiv.innerHTML = isItpass ? question.description : question.word;
-                    
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'content';
-                    contentDiv.classList.add('no-swiping');
-                    contentDiv.innerHTML = isItpass ? question.kaisetu : question.description;
-                    
-                    if (isItpass || titleDiv.textContent.endsWith("か。") ||
-                        titleDiv.textContent.endsWith("答えよ。") ||
-                        titleDiv.textContent.endsWith("答えなさい。")) {
-                        li.appendChild(contentDiv);
-                        li.appendChild(titleDiv);
+                    titleHTML = isItpass ? question.description : question.word;
+                    contentHTML = isItpass ? question.kaisetu : question.description;
+                    if (isItpass || titleHTML.endsWith("か。") || titleHTML.endsWith("答えよ。") || titleHTML.endsWith("答えなさい。")) {
+                        listHTML += `<li><div class="${contentClass}">${contentHTML}</div><div class="${titleClass}">${titleHTML}</div></li>`;
                     } else {
-                        li.appendChild(titleDiv);
-                        li.appendChild(contentDiv);
+                        listHTML += `<li><div class="${titleClass}">${titleHTML}</div><div class="${contentClass}">${contentHTML}</div></li>`;
                     }
                 }
-
-                wordList.appendChild(li);
             });
+
+            document.getElementById('wordList').innerHTML = listHTML;
         }
 
         let currentIndex;
@@ -1058,16 +1036,6 @@
             );
         });
         
-        // モーダル表示時にinitialSlideを2から1に変更して問題表示を優先
-        if (localStorage.getItem('first_visit') !== 'true') {
-            // 初回訪問時のみ単語リストを表示
-            localStorage.setItem('first_visit', 'true');
-        } else {
-            // 2回目以降は問題画面を表示
-            setTimeout(() => {
-                swiper.slideTo(1); // 問題画面へ
-            }, 200);
-        }
     </script>
 </body>
 
