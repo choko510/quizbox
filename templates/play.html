@@ -171,11 +171,23 @@
                         <h3>出題方法</h3>
                         <input type="checkbox" name="replace-mondai" id="replace-mondai">
                         <label for="replace-mondai">問題文と回答文を入れ換える</label>
+                        
+                        <h3>出題順序</h3>
+                        <div class="settings-option">
+                            <input type="radio" id="random-mode" name="question-mode" value="random" checked>
+                            <label for="random-mode">ランダムに出題</label>
+                        </div>
+                        <div class="settings-option">
+                            <input type="radio" id="sequential-mode" name="question-mode" value="sequential">
+                            <label for="sequential-mode">1問目から順に出題</label>
+                        </div>
+
                         <h3>回答モード</h3>
                         <div class="settings-option">
                             <input type="radio" id="choice-mode" name="answer-mode" value="choice" checked>
                             <label for="choice-mode">4択モード</label>
                         </div>
+                        
                         <div class="settings-option">
                             <input type="radio" id="handwriting-mode" name="answer-mode" value="handwriting" checked>
                             <label for="handwriting-mode">手書きモード(Beta)</label>
@@ -378,7 +390,9 @@
 
         loadQuestions().then(() => {
             document.getElementById('total-questions').textContent = questions.length;
-            currentIndex = Math.floor(Math.random() * questions.length);
+            
+            // 問題の選択方法をモードに応じて設定
+            selectQuestionMode();
 
             // もしログインしていれば、サーバーから学習進捗データを読み込む
             if (accid && password) {
@@ -386,6 +400,7 @@
             }
 
             showNextQuestion();
+            updateProgressDisplay(); // 進捗表示を更新
             initializeChart();
             populateWordList();
 
@@ -676,7 +691,7 @@
                     studyingQuestions.delete(currentIndex);
                 }
                 notie.alert({ type: 1, text: '正解', time: 1 });
-                displayScore();
+                updateProgressDisplay();
                 updateStats();
                 nextIndex();
                 showNextQuestion();
@@ -706,7 +721,7 @@
                     text: '<div class="popup">' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                     buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                     callback: function () {
-                        displayScore();
+                        updateProgressDisplay();
                         updateStats();
                         showNextQuestion();
                         sendScore("add_bad", accid, password);
@@ -722,11 +737,61 @@
             }
         }
 
-        function nextIndex() {
-            let lastIndex = currentIndex;
-            do {
+        // 問題出題モードに基づいて問題選択方法を設定する関数
+        function selectQuestionMode() {
+            const isSequential = localStorage.getItem('question_mode') === 'sequential';
+            
+            if (isSequential) {
+                // 保存されている進捗があれば復元、なければ0から開始
+                currentIndex = parseInt(localStorage.getItem('current_question_index_' + mondai) || '0');
+                if (currentIndex >= questions.length) currentIndex = 0; // インデックスが範囲外なら最初から
+            } else {
+                // ランダムモード（現状の動作）
                 currentIndex = Math.floor(Math.random() * questions.length);
-            } while (currentIndex === lastIndex);
+            }
+        }
+
+        function nextIndex() {
+            const isSequential = localStorage.getItem('question_mode') === 'sequential';
+            let lastIndex = currentIndex;
+            
+            if (isSequential) {
+                // 順番モードでは次の問題へ
+                currentIndex = (currentIndex + 1) % questions.length;
+                // 進捗を保存
+                localStorage.setItem('current_question_index_' + mondai, currentIndex.toString());
+            } else {
+                // ランダムモード（現状の動作）
+                do {
+                    currentIndex = Math.floor(Math.random() * questions.length);
+                } while (currentIndex === lastIndex);
+            }
+        }
+
+        // 進捗表示を更新する関数
+        function updateProgressDisplay() {
+            const isSequential = localStorage.getItem('question_mode') === 'sequential';
+            
+            if (isSequential) {
+                // 順番モードでは問題番号も表示
+                document.getElementById('score').innerHTML = `
+                    問題 ${currentIndex + 1}/${questions.length}<br>
+                    回答数: ${totalCount}
+                    正解数: ${correctCount}
+                    不正解数: ${wrongCount}
+                    連続正解数: ${renzokuseikai}
+                    正答率: ${calculateAccuracy().toFixed(1)}%
+                `;
+            } else {
+                // 現状の表示維持
+                document.getElementById('score').textContent = `
+                    回答数: ${totalCount}
+                    正解数: ${correctCount}
+                    不正解数: ${wrongCount}
+                    連続正解数: ${renzokuseikai}
+                    正答率: ${calculateAccuracy().toFixed(1)}%
+                `;
+            }
         }
 
         function displayScore() {
@@ -886,6 +951,12 @@
             progressData.answerTimes = answerTimes;
             progressData.studyingQuestions = Array.from(studyingQuestions);
             progressData.totalQuestions = questions.length;
+            
+            // 順番出題モードの情報を保存
+            if (localStorage.getItem('question_mode') === 'sequential') {
+                progressData.currentQuestionIndex = currentIndex;
+                progressData.questionMode = 'sequential';
+            }
 
             console.log('サーバーに保存するデータ構造:', progressData);
 
@@ -988,8 +1059,22 @@
                 studyingQuestions = new Set(progressData.studyingQuestions);
             }
 
+            // 順番出題モードの情報を復元
+            if (progressData.questionMode === 'sequential') {
+                localStorage.setItem('question_mode', 'sequential');
+                document.getElementById('sequential-mode').checked = true;
+                document.getElementById('random-mode').checked = false;
+                
+                if (progressData.currentQuestionIndex !== undefined) {
+                    // 現在の問題インデックスを保存
+                    localStorage.setItem('current_question_index_' + mondai, progressData.currentQuestionIndex);
+                    currentIndex = progressData.currentQuestionIndex;
+                }
+            }
+
             // 統計情報を更新
             updateStats();
+            updateProgressDisplay();
         }
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);
@@ -1034,6 +1119,41 @@
             document.getElementById('settings-modal').dispatchEvent(
                 new CustomEvent('modal-closed')
             );
+        });
+        
+        // 出題モード選択のイベントリスナー
+        document.getElementById('random-mode').addEventListener('change', function() {
+            if (this.checked) {
+                localStorage.setItem('question_mode', 'random');
+                selectQuestionMode();
+                showNextQuestion();
+                updateProgressDisplay();
+                notie.alert({ 
+                    type: 'info', 
+                    text: 'ランダム出題モードに切り替えました', 
+                    time: 1.5 
+                });
+            }
+        });
+
+        document.getElementById('sequential-mode').addEventListener('change', function() {
+            if (this.checked) {
+                localStorage.setItem('question_mode', 'sequential');
+                selectQuestionMode();
+                showNextQuestion();
+                updateProgressDisplay();
+                notie.alert({ 
+                    type: 'info', 
+                    text: '順番出題モードに切り替えました', 
+                    time: 1.5 
+                });
+            }
+        });
+
+        // ページ読み込み時に設定を反映
+        document.addEventListener('DOMContentLoaded', function() {
+            const mode = localStorage.getItem('question_mode') || 'random';
+            document.getElementById(mode + '-mode').checked = true;
         });
         
     </script>
