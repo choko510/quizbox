@@ -41,13 +41,15 @@
 </head>
 
 <body>
-<div class="top">
-    <div class="top-left">
-        <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
-        <a href="/make" class="create-btn">問題を作る</a>
-        <a href="/dashboard/" class="create-btn">問題管理</a>
+    
+    <div class="top">
+        <div class="top-left">
+            <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
+            <a href="/make" class="create-btn">問題を作る</a>
+            <a href="/dashboard/" class="create-btn">問題管理</a>
+        </div>
     </div>
-</div>
+
     <div class="main">
         <div class="box1">
 
@@ -73,6 +75,10 @@
                         <img src="/img/book/target1900.webp" class="book" alt="ターゲット 1900">
                     </a>
                 </div>
+            </div>
+            <div class="category">
+                <p>授業</p>
+                <a href="play/?id=target1200701750">ターゲット1200 701-750</a>
             </div>
             <div class="category">
                 <p>ITパスポート</p>
@@ -342,13 +348,13 @@
             // IDがURLパラメータで直接指定されている場合
             const url = new URL(href, window.location.origin);
             const idParam = url.searchParams.get('id');
-            
+
             if (idParam) {
                 // IDパラメータが直接APIのキーと一致する場合
                 if (['prog', 'for', 'bizinesu'].includes(idParam)) {
                     return idParam;
                 }
-                
+
                 // その他の特殊なIDケース
                 if (idParam.includes('prog')) return 'prog';
                 if (idParam.includes('biz')) return 'bizinesu';
@@ -366,7 +372,7 @@
                 // 仮にprogに格納されていると仮定
                 return 'prog';
             }
-            
+
             // デフォルト値
             return 'prog'; // 適切なデフォルト値に変更する必要があるかも
         }
@@ -391,12 +397,12 @@
             const url = new URL(href, window.location.origin);
             const idParam = url.searchParams.get('id');
             const category = getCategory(idParam, href);
-            
+
             console.log('Checking category:', category, 'for link:', linkElement.textContent, 'in group:', group);
 
             // グループデータの取得
             const groupData = allProgressData[group];
-            
+
             try {
                 // 直接構造の場合（categoryDataがオブジェクトの一部として存在）
                 if (groupData.categoryData && groupData.categoryData[category]) {
@@ -404,8 +410,8 @@
                     const extracted = { learned: catData.correct, learning: 0, total: catData.total };
                     console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
                     return extracted;
-                } 
-                
+                }
+
                 // テキストマッチングを試みる (リンクテキストとカテゴリ名の一致)
                 if (groupData.categoryData) {
                     // カテゴリデータから一致するものを探す
@@ -413,7 +419,7 @@
                         // リンクテキストにカテゴリ名が含まれている、またはその逆の場合
                         if (linkElement.textContent.toLowerCase().includes(cat.toLowerCase()) ||
                             cat.toLowerCase().includes(linkElement.textContent.toLowerCase())) {
-                            
+
                             const catData = groupData.categoryData[cat];
                             const extracted = { learned: catData.correct, learning: 0, total: catData.total };
                             console.log('Extracted progress data by text match for', linkElement.textContent, 'using category', cat, ':', extracted);
@@ -421,7 +427,7 @@
                         }
                     }
                 }
-                
+
                 // categoryDataが直接存在せず、カテゴリがグループのプロパティとして存在する場合
                 if (groupData[category]) {
                     const catData = groupData[category];
@@ -432,19 +438,19 @@
                     console.log('Extracted progress data (alt format) for', linkElement.textContent, ':', extracted);
                     return extracted;
                 }
-                
+
                 // 学習中の問題数を取得 (studyingQuestionsから)
                 const studying = groupData.studyingQuestions ? groupData.studyingQuestions.length : 0;
-                
+
                 // totalQuestionsが存在する場合、それを使用
                 if (groupData.totalQuestions) {
-                    const correct = groupData.questionStats ? 
+                    const correct = groupData.questionStats ?
                         groupData.questionStats.filter(q => q[1].correctAnswers > 0).length : 0;
-                    
-                    const extracted = { 
-                        learned: correct, 
-                        learning: studying, 
-                        total: groupData.totalQuestions 
+
+                    const extracted = {
+                        learned: correct,
+                        learning: studying,
+                        total: groupData.totalQuestions
                     };
                     console.log('Extracted progress data using totalQuestions for', linkElement.textContent, ':', extracted);
                     return extracted;
@@ -452,18 +458,18 @@
             } catch (error) {
                 console.error('Error extracting progress data:', error);
             }
-            
+
             console.log('No matching category for', linkElement.textContent, 'in group', group, '- using default:', defaultData);
             return defaultData;
         }
-        
+
         // URLやリンク情報からカテゴリを判定する関数
         function getCategory(idParam, href) {
             // idパラメータがある場合はそれを使用
             if (idParam) {
                 return idParam;
             }
-            
+
             // URLパスからカテゴリを推測
             if (href.includes('itpasu/play')) {
                 return "ITパスポート";
@@ -480,7 +486,7 @@
             } else if (href.includes('excel')) {
                 return "エクセル関数";
             }
-            
+
             // デフォルトカテゴリ
             return href.includes('beta') ? "hard" : "it";
         }
