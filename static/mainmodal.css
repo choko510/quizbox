@@ -198,81 +198,6 @@
     position: relative;
 }
 
-/* カテゴリー別成績 */
-.category-performance {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.category-item {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.category-name {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.category-score {
-    font-size: 1.2rem;
-    color: #333;
-}
-
-/* 目標設定エリア */
-.goal-setting {
-    background: #f0f7ff;
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
-}
-
-.goal-setting h3 {
-    margin-top: 0;
-    color: #1565c0;
-}
-
-.goal-input {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-}
-
-.goal-input label {
-    width: 150px;
-    font-weight: 500;
-}
-
-.goal-input input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-right: 10px;
-}
-
-.goal-progress {
-    margin: 15px 0;
-}
-
-.progress-bar {
-    height: 10px;
-    background: #e0e0e0;
-    border-radius: 5px;
-    overflow: hidden;
-    margin: 5px 0;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4a6cf7, #6a8eff);
-    border-radius: 5px;
-    transition: width 0.3s ease;
-}
-
 /* 学習アドバイスエリア */
 .learning-advice {
     background: #f1f8e9;
@@ -294,56 +219,291 @@
     border-left: 3px solid #8bc34a;
 }
 
-/* 苦手分野可視化 */
-.weak-areas {
-    margin: 20px 0;
-}
-
-.heatmap {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
-}
-
-.heatmap-item {
+/* ランキング表示 */
+.ranking-container {
+    max-height: 60vh; /* 高さを制限してスクロール可能に */
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 6px;
     padding: 10px;
+    background-color: #fdfdfd;
+}
+
+#ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#ranking-list li {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+#ranking-list li:last-child {
+    border-bottom: none;
+}
+
+#ranking-list .rank {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #4a6cf7;
+    min-width: 30px; /* 順位表示幅 */
     text-align: center;
-    border-radius: 5px;
-    transition: transform 0.2s ease;
+    margin-right: 15px;
 }
 
-.heatmap-item:hover {
-    transform: scale(1.05);
+#ranking-list .userid {
+    flex-grow: 1;
+    font-weight: 500;
+    color: #333;
+    margin-right: 10px;
+    /* 長いIDが折り返されるように */
+    word-break: break-all;
 }
 
-/* レベル0-20% */
-.level-1 {
-    background-color: #ffebee;
-    color: #c62828;
+#ranking-list .score {
+    font-size: 0.9rem;
+    color: #555;
+    min-width: 100px; /* スコア表示幅 */
+    text-align: right;
 }
 
-/* レベル21-40% */
-.level-2 {
-    background-color: #ffcdd2;
-    color: #c62828;
-}
-
-/* レベル41-60% */
-.level-3 {
-    background-color: #fff9c4;
-    color: #f57f17;
-}
-
-/* レベル61-80% */
-.level-4 {
-    background-color: #c8e6c9;
+#ranking-list .score .correct {
     color: #2e7d32;
+    font-weight: 600;
 }
 
-/* レベル81-100% */
-.level-5 {
-    background-color: #a5d6a7;
-    color: #1b5e20;
+#ranking-list .score .bad {
+    color: #c62828;
+}
+
+/* ローディング・エラー表示 (history.css と共通化も検討可) */
+#ranking-list li.loading,
+#ranking-list li.error {
+    justify-content: center;
+    color: #888;
+    font-style: italic;
+    font-weight: normal;
+}
+#ranking-list li.error {
+    color: #c62828;
+    font-weight: bold;
+}
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ranking-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ranking-filter select {
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #333;
+    background-color: white;
+}
+
+.refresh-btn {
+    background-color: #f2f2f2;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.refresh-btn i {
+    color: #555;
+}
+
+.refresh-btn.loading i {
+    animation: spin 1s infinite linear;
+}
+
+.modern-ranking-list {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.ranking-item:hover {
+    background-color: #f9f9f9;
+}
+
+.ranking-item:last-child {
+    border-bottom: none;
+}
+
+.ranking-position {
+    font-size: 1.2rem;
+    font-weight: bold;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: white;
+}
+
+.position-1 {
+    background: linear-gradient(135deg, #ffd700, #f9a825);
+    box-shadow: 0 2px 8px rgba(249, 168, 37, 0.3);
+}
+
+.position-2 {
+    background: linear-gradient(135deg, #c0c0c0, #9e9e9e);
+    box-shadow: 0 2px 8px rgba(158, 158, 158, 0.3);
+}
+
+.position-3 {
+    background: linear-gradient(135deg, #cd7f32, #8d6e63);
+    box-shadow: 0 2px 8px rgba(141, 110, 99, 0.3);
+}
+
+.position-default {
+    background: linear-gradient(135deg, #4a6cf7, #3a5ce6);
+    box-shadow: 0 2px 4px rgba(74, 108, 247, 0.3);
+}
+
+.ranking-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.ranking-user {
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ranking-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+}
+
+.stat-item i {
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+
+.stat-item.correct i {
+    color: #4caf50;
+}
+
+.stat-item.incorrect i {
+    color: #f44336;
+}
+
+.stat-item.accuracy i {
+    color: #2196f3;
+}
+
+.progress-bar-container {
+    height: 4px;
+    background-color: #f0f0f0;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    transition: width 0.3s ease;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    z-index: 2;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+/* レスポンシブ対応 */
+@media screen and (max-width: 600px) {
+    .ranking-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ranking-controls {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .ranking-filter {
+        flex-grow: 1;
+    }
+
+    .ranking-filter select {
+        width: 100%;
+    }
+
+    .ranking-stats {
+        flex-direction: column;
+        gap: 4px;
+    }
 }
 
 /* シェア機能 */
@@ -473,10 +633,6 @@
 
     .score-card__value {
         font-size: 1.5rem;
-    }
-
-    .category-performance {
-        grid-template-columns: 1fr 1fr;
     }
 
     .tab {

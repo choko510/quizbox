@@ -204,7 +204,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../modal.css">
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
@@ -738,26 +738,21 @@
         }
 
         // 問題出題モードに基づいて問題選択方法を設定する関数
-function selectQuestionMode() {
-            // デフォルトで順番モードにする（ランダムモードに明示的に設定されていた場合を除く）
-            const isRandom = localStorage.getItem('question_mode') === 'random';
-            
-            if (isRandom) {
-                // ランダムモード
-                currentIndex = Math.floor(Math.random() * questions.length);
-            } else {
-                // 順番モード（デフォルト）
-                localStorage.setItem('question_mode', 'sequential');
-                document.getElementById('sequential-mode').checked = true;
-                document.getElementById('random-mode').checked = false;
+        function selectQuestionMode() {
+            const isSequential = (localStorage.getItem('question_mode_' + mondai) ?? 'sequential') === 'sequential';
+            if (isSequential) {
                 // 保存されている進捗があれば復元、なければ0から開始
                 currentIndex = parseInt(localStorage.getItem('current_question_index_' + mondai) || '0');
                 if (currentIndex >= questions.length) currentIndex = 0; // インデックスが範囲外なら最初から
+            } else {
+                // ランダムモード（現状の動作）
+                currentIndex = Math.floor(Math.random() * questions.length);
             }
         }
 
-function nextIndex() {
-            const isSequential = localStorage.getItem('question_mode') === 'sequential';
+        function nextIndex() {
+            const isSequential = (localStorage.getItem('question_mode_' + mondai) ?? 'sequential') === 'sequential';
+            
             let lastIndex = currentIndex;
             
             if (isSequential) {
@@ -765,24 +760,6 @@ function nextIndex() {
                 currentIndex = (currentIndex + 1) % questions.length;
                 // 進捗を保存
                 localStorage.setItem('current_question_index_' + mondai, currentIndex.toString());
-                
-                // すべての問題を回答済みかチェック
-                if (answeredQuestions.size >= questions.length) {
-                    // すべての問題を解き終わったらランダムモードに切り替え
-                    localStorage.setItem('question_mode', 'random');
-                    document.getElementById('random-mode').checked = true;
-                    document.getElementById('sequential-mode').checked = false;
-                    notie.alert({ 
-                        type: 'success', 
-                        text: 'すべての問題を解き終わりました！ランダム出題モードに切り替えます', 
-                        time: 3 
-                    });
-                    
-                    // ランダムモードで次の問題を選択
-                    do {
-                        currentIndex = Math.floor(Math.random() * questions.length);
-                    } while (currentIndex === lastIndex);
-                }
             } else {
                 // ランダムモード（現状の動作）
                 do {
@@ -793,7 +770,7 @@ function nextIndex() {
 
         // 進捗表示を更新する関数
         function updateProgressDisplay() {
-            const isSequential = localStorage.getItem('question_mode') === 'sequential';
+            const isSequential = (localStorage.getItem('question_mode_' + mondai) ?? 'sequential') === 'sequential';
             
             if (isSequential) {
                 // 順番モードでは問題番号も表示
@@ -976,7 +953,7 @@ function nextIndex() {
             progressData.totalQuestions = questions.length;
             
             // 順番出題モードの情報を保存
-            if (localStorage.getItem('question_mode') === 'sequential') {
+            if (localStorage.getItem('question_mode_'+mondai) === 'sequential') {
                 progressData.currentQuestionIndex = currentIndex;
                 progressData.questionMode = 'sequential';
             }
@@ -1084,7 +1061,7 @@ function nextIndex() {
 
             // 順番出題モードの情報を復元
             if (progressData.questionMode === 'sequential') {
-                localStorage.setItem('question_mode', 'sequential');
+                localStorage.setItem('question_mode_' + mondai, 'sequential');
                 document.getElementById('sequential-mode').checked = true;
                 document.getElementById('random-mode').checked = false;
                 
@@ -1147,7 +1124,7 @@ function nextIndex() {
         // 出題モード選択のイベントリスナー
         document.getElementById('random-mode').addEventListener('change', function() {
             if (this.checked) {
-                localStorage.setItem('question_mode', 'random');
+                localStorage.setItem('question_mode_' + mondai, 'random');
                 selectQuestionMode();
                 showNextQuestion();
                 updateProgressDisplay();
@@ -1161,7 +1138,7 @@ function nextIndex() {
 
         document.getElementById('sequential-mode').addEventListener('change', function() {
             if (this.checked) {
-                localStorage.setItem('question_mode', 'sequential');
+                localStorage.setItem('question_mode_' + mondai, 'sequential');
                 selectQuestionMode();
                 showNextQuestion();
                 updateProgressDisplay();
@@ -1175,17 +1152,8 @@ function nextIndex() {
 
         // ページ読み込み時に設定を反映
         document.addEventListener('DOMContentLoaded', function() {
-            // 明示的にrandomが設定されていない限りsequentialをデフォルトにする
-            const mode = localStorage.getItem('question_mode') === 'random' ? 'random' : 'sequential';
+            const mode = localStorage.getItem('question_mode_'+mondai) || 'sequential';
             document.getElementById(mode + '-mode').checked = true;
-            
-            // 全ての問題が回答済みかチェック
-            if (answeredQuestions.size >= questions.length && mode === 'sequential') {
-                // 全問題解答済みの場合、ランダムモードに切り替え
-                localStorage.setItem('question_mode', 'random');
-                document.getElementById('random-mode').checked = true;
-                document.getElementById('sequential-mode').checked = false;
-            }
         });
         
     </script>

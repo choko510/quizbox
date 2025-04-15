@@ -158,9 +158,7 @@
                     <!-- タブナビゲーション -->
                     <div class="tabs">
                         <div class="tab active" data-tab="dashboard">ダッシュボード</div>
-                        <div class="tab" data-tab="trends">学習トレンド</div>
-                        <div class="tab" data-tab="categories">カテゴリー別</div>
-                        <div class="tab" data-tab="goals">目標設定</div>
+                        <div class="tab" data-tab="ranking">ランキング</div>
                         <div class="tab" data-tab="advice">学習アドバイス</div>
                     </div>
 
@@ -190,73 +188,17 @@
                         </div>
                     </div>
 
-                    <!-- 学習トレンドタブ -->
-                    <div id="trends" class="tab-content">
-                        <div class="chart-container">
-                            <canvas id="trendsChart"></canvas>
+                    <!-- ランキングタブ-->
+                    <div id="ranking" class="tab-content">
+                        <div class="ranking-header">
+                            <h3>ランキング</h3>
                         </div>
-                        <div class="growth-stats">
-                            <h3>あなたの成長統計</h3>
-                            <div id="growth-rate">
-                                <p>前週比: <span id="weekly-growth">計算中...</span></p>
-                                <p>前月比: <span id="monthly-growth">計算中...</span></p>
-                                <p>ピーク時期: <span id="peak-period">計算中...</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- カテゴリー別タブ -->
-                    <div id="categories" class="tab-content">
-                        <div class="chart-container">
-                            <canvas id="categoryChart"></canvas>
-                        </div>
-
-                        <h3>カテゴリー別成績</h3>
-                        <div class="category-performance" id="category-performance">
-                            <!-- カテゴリー別成績はJavaScriptで動的に生成 -->
-                        </div>
-
-                        <div class="weak-areas">
-                            <h3>苦手分野</h3>
-                            <div class="heatmap" id="weak-areas-heatmap">
-                                <!-- ヒートマップはJavaScriptで動的に生成 -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 目標設定タブ -->
-                    <div id="goals" class="tab-content">
-                        <div class="goal-setting">
-                            <h3>学習目標を設定</h3>
-                            <div class="goal-input">
-                                <label for="daily-goal">日次目標(問題数):</label>
-                                <input type="number" id="daily-goal" min="1" value="10">
-                                <button class="modal__btn modal__btn-primary" onclick="saveGoal('daily')">保存</button>
-                            </div>
-                            <div class="goal-input">
-                                <label for="weekly-goal">週間目標(問題数):</label>
-                                <input type="number" id="weekly-goal" min="1" value="50">
-                                <button class="modal__btn modal__btn-primary" onclick="saveGoal('weekly')">保存</button>
-                            </div>
-                            <div class="goal-input">
-                                <label for="accuracy-goal">正答率目標(%):</label>
-                                <input type="number" id="accuracy-goal" min="1" max="100" value="80">
-                                <button class="modal__btn modal__btn-primary" onclick="saveGoal('accuracy')">保存</button>
-                            </div>
-
-                            <div class="goal-progress">
-                                <h3>目標達成状況</h3>
-                                <p>日次目標の進捗:</p>
-                                <div class="progress-bar">
-                                    <div id="daily-progress" class="progress-bar-fill" style="width: 0%"></div>
-                                </div>
-                                <p>週間目標の進捗:</p>
-                                <div class="progress-bar">
-                                    <div id="weekly-progress" class="progress-bar-fill" style="width: 0%"></div>
-                                </div>
-                                <p>正答率の目標達成:</p>
-                                <div class="progress-bar">
-                                    <div id="accuracy-progress" class="progress-bar-fill" style="width: 0%"></div>
+                        <div class="ranking-container">
+                            <div id="ranking-list" class="modern-ranking-list">
+                                <!-- ランキングはJavaScriptで動的に生成 -->
+                                <div class="loading-overlay">
+                                    <div class="spinner"></div>
+                                    <p>ランキングを読み込み中...</p>
                                 </div>
                             </div>
                         </div>

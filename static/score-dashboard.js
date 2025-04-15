@@ -1,10 +1,23 @@
 
 // スコアダッシュボードの機能を管理するJavaScriptファイル
+
+// グローバルスコープで要素を取得（DOMContentLoaded前でも参照可能にするため）
+const adviceContent = document.getElementById('advice-content');
+const rankingList = document.getElementById('ranking-list'); // ランキングリスト要素
+
 document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
     MicroModal.init({
         onShow: function(modal) {
             console.log("モーダルを表示しました", modal.id);
+            
+            // ランキングモーダル表示時にランキングデータを自動取得
+            if (modal.id === 'modal-1') {
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab && activeTab.getAttribute('data-tab') === 'ranking') {
+                    fetchAndDisplayRanking();
+                }
+            }
         },
         onClose: function(modal) {
             console.log("モーダルを閉じました", modal.id);
@@ -16,15 +29,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // タブ切り替え機能
     setupTabs();
 
-    // 目標設定の初期化
-    initGoals();
-    
     // アプリケーションの初期化完了
     console.log('アプリケーションの初期化が完了しました');
 });
-
-// ユーザーデータ保存用のキー
-const USER_GOALS_KEY = 'user_goals';
 
 // APIからスコアデータを取得
 async function fetchScores(id, password) {
@@ -81,27 +88,26 @@ function setupTabs() {
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             // 現在アクティブなタブとコンテンツを非アクティブに
-            document.querySelector('.tab.active').classList.remove('active');
-            document.querySelector('.tab-content.active').classList.remove('active');
+            const activeTab = document.querySelector('.tab.active');
+            const activeContent = document.querySelector('.tab-content.active');
+            
+            if (activeTab) activeTab.classList.remove('active');
+            if (activeContent) activeContent.classList.remove('active');
             
             // クリックされたタブとそれに対応するコンテンツをアクティブに
             tab.classList.add('active');
             const tabContentId = tab.getAttribute('data-tab');
-            document.getElementById(tabContentId).classList.add('active');
+            const contentElement = document.getElementById(tabContentId); // 要素を取得
+            if (contentElement) { // 要素が存在するか確認
+                contentElement.classList.add('active');
+            } else {
+                console.error(`Content element with ID "${tabContentId}" not found.`); // エラーログ
+            }
 
             // タブによって追加のアクションを実行
             switch(tabContentId) {
-                case 'trends':
-                    drawTrendsChart();
-                    calculateGrowth();
-                    break;
-                case 'categories':
-                    drawCategoryChart();
-                    generateCategoryPerformance();
-                    generateWeakAreasHeatmap();
-                    break;
-                case 'goals':
-                    updateGoalProgress();
+                case 'ranking': // ランキングタブの場合
+                    fetchAndDisplayRanking(); // ランキングデータを取得・表示
                     break;
                 case 'advice':
                     generateAdvice();
@@ -228,492 +234,8 @@ async function drawMainChart() {
                 }
             }
         }
-    });
-}
-
-// 学習トレンドのグラフ描画
-async function drawTrendsChart() {
-    const ctx = document.getElementById('trendsChart').getContext('2d');
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    const data = await fetchData(id, password);
-
-    if (!data || !data.correct) {
-        console.error('データが取得できませんでした');
-        return;
-    }
-
-    // ラベル(日付)とデータ(値)を抽出
-    const labels = Object.keys(data.correct);
-    const correctData = Object.values(data.correct);
-    const badData = Object.values(data.bad);
-
-    // 正答率を計算
-    const accuracyData = [];
-    for (let i = 0; i < correctData.length; i++) {
-        const total = correctData[i] + badData[i];
-        accuracyData.push(total > 0 ? (correctData[i] / total) * 100 : 0);
-    }
-
-    // 移動平均を計算（7日間）
-    const movingAverage = calculateMovingAverage(accuracyData, 7);
-
-    // 既存のチャートがある場合は破棄
-    if (window.trendsChart instanceof Chart) {
-        window.trendsChart.destroy();
-    }
-
-    window.trendsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: '正答率',
-                    data: accuracyData,
-                    borderColor: '#ef6c00',
-                    backgroundColor: 'rgba(239, 108, 0, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: '7日間平均',
-                    data: movingAverage,
-                    borderColor: '#6a1b9a',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'day'
-                    }
-                },
-                y: {
-                    min: 0,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: '正答率 (%)'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// 移動平均を計算
-function calculateMovingAverage(data, window) {
-    const result = [];
-    for (let i = 0; i < data.length; i++) {
-        if (i < window - 1) {
-            result.push(null); // 十分なデータがない場合はnull
-        } else {
-            let sum = 0;
-            for (let j = 0; j < window; j++) {
-                sum += data[i - j];
-            }
-            result.push(sum / window);
-        }
-    }
-    return result;
-}
-
-// 成長率計算と表示
-async function calculateGrowth() {
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    const data = await fetchData(id, password);
-
-    if (!data || !data.correct) {
-        document.getElementById('weekly-growth').textContent = 'データなし';
-        document.getElementById('monthly-growth').textContent = 'データなし';
-        document.getElementById('peak-period').textContent = 'データなし';
-        return;
-    }
-
-    const dates = Object.keys(data.correct).sort();
-    const correctData = dates.map(date => data.correct[date]);
-    const badData = dates.map(date => data.bad[date]);
-
-    // 週間成長率
-    let weeklyGrowth = '計算中...';
-    if (dates.length >= 14) {
-        const currentWeek = calculateAverageScore(correctData.slice(-7), badData.slice(-7));
-        const previousWeek = calculateAverageScore(correctData.slice(-14, -7), badData.slice(-14, -7));
-        
-        if (previousWeek > 0) {
-            const growth = ((currentWeek - previousWeek) / previousWeek) * 100;
-            const sign = growth >= 0 ? '+' : '';
-            weeklyGrowth = sign + growth.toFixed(1) + '%';
-        } else {
-            weeklyGrowth = '比較データなし';
-        }
-    } else {
-        weeklyGrowth = '十分なデータがありません';
-    }
-
-    // 月間成長率
-    let monthlyGrowth = '計算中...';
-    if (dates.length >= 60) { // 約2ヶ月分
-        const currentMonth = calculateAverageScore(correctData.slice(-30), badData.slice(-30));
-        const previousMonth = calculateAverageScore(correctData.slice(-60, -30), badData.slice(-60, -30));
-        
-        if (previousMonth > 0) {
-            const growth = ((currentMonth - previousMonth) / previousMonth) * 100;
-            const sign = growth >= 0 ? '+' : '';
-            monthlyGrowth = sign + growth.toFixed(1) + '%';
-        } else {
-            monthlyGrowth = '比較データなし';
-        }
-    } else {
-        monthlyGrowth = '十分なデータがありません';
-    }
-
-    // ピーク時期
-    let peakPeriod = '計算中...';
-    if (dates.length > 0) {
-        let maxScore = 0;
-        let maxIndex = 0;
-        
-        for (let i = 0; i < dates.length; i++) {
-            const total = correctData[i] + badData[i];
-            const score = total > 0 ? (correctData[i] / total) * 100 : 0;
-            
-            if (score > maxScore) {
-                maxScore = score;
-                maxIndex = i;
-            }
-        }
-        
-        const peakDate = new Date(dates[maxIndex]);
-        peakPeriod = `${peakDate.getMonth() + 1}月${peakDate.getDate()}日 (${maxScore.toFixed(1)}%)`;
-    } else {
-        peakPeriod = 'データがありません';
-    }
-
-    document.getElementById('weekly-growth').textContent = weeklyGrowth;
-    document.getElementById('monthly-growth').textContent = monthlyGrowth;
-    document.getElementById('peak-period').textContent = peakPeriod;
-}
-
-// 平均スコア計算（正答率）
-function calculateAverageScore(correctData, badData) {
-    let totalCorrect = 0;
-    let totalBad = 0;
-    
-    for (let i = 0; i < correctData.length; i++) {
-        totalCorrect += correctData[i];
-        totalBad += badData[i];
-    }
-    
-    const total = totalCorrect + totalBad;
-    return total > 0 ? (totalCorrect / total) * 100 : 0;
-}
-
-// カテゴリー別のグラフを描画
-async function drawCategoryChart() {
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    
-    // APIから最新のデータを取得
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    let categories = [];
-    let correctRates = [];
-    
-    try {
-        const response = await fetch(`api/get/category_stats/${id}/${password}`);
-        const data = await response.json();
-        
-        if (data.message === "password is wrong") {
-            console.error("認証エラー: パスワードが間違っています");
-            return;
-        }
-        
-        // 空のカテゴリーデータをチェック
-        const categoryData = data.categories || {};
-        if (Object.keys(categoryData).length === 0) {
-            console.log('カテゴリーデータがありません');
-            return;
-        }
-        
-        categories = Object.keys(categoryData);
-        correctRates = categories.map(category => {
-            const { correct, total } = categoryData[category];
-            return total > 0 ? (correct / total) * 100 : 0;
-        });
-    } catch (error) {
-        console.error('カテゴリーデータの取得に失敗しました:', error);
-        return;
-    }
-    
-    // 既存のチャートがある場合は破棄
-    if (window.categoryChart instanceof Chart) {
-        window.categoryChart.destroy();
-    }
-    
-    // レーダーチャートの描画
-    window.categoryChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: categories,
-            datasets: [{
-                label: '正答率',
-                data: correctRates,
-                backgroundColor: 'rgba(74, 108, 247, 0.2)',
-                borderColor: '#4a6cf7',
-                pointBackgroundColor: '#4a6cf7',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#4a6cf7'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    angleLines: {
-                        display: true
-                    },
-                    suggestedMin: 0,
-                    suggestedMax: 100,
-                    ticks: {
-                        stepSize: 20
-                    }
-                }
-            }
-        }
-    });
-}
-
-// カテゴリー別成績の表示
-async function generateCategoryPerformance() {
-    const container = document.getElementById('category-performance');
-    container.innerHTML = '';
-    
-    // APIから最新のデータを取得
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    
-    try {
-        const response = await fetch(`api/get/category_stats/${id}/${password}`);
-        const data = await response.json();
-        
-        if (data.message === "password is wrong") {
-            console.error("認証エラー: パスワードが間違っています");
-            container.innerHTML = '<p>認証エラー: パスワードが間違っています</p>';
-            return;
-        }
-        
-        // 空のカテゴリーデータをチェック
-        const categoryData = data.categories || {};
-        if (Object.keys(categoryData).length === 0) {
-            container.innerHTML = '<p>カテゴリーデータがありません</p>';
-            return;
-        }
-        
-        // 各カテゴリーの成績を表示
-        Object.entries(categoryData).forEach(([category, data]) => {
-            const { correct, total } = data;
-            const rate = total > 0 ? (correct / total) * 100 : 0;
-            
-            const categoryItem = document.createElement('div');
-            categoryItem.className = 'category-item';
-            categoryItem.innerHTML = `
-                <div class="category-name">${category}</div>
-                <div class="category-score">${rate.toFixed(1)}%</div>
-                <div>${correct}/${total}問</div>
-            `;
-            
-            container.appendChild(categoryItem);
-        });
-    } catch (error) {
-        console.error('カテゴリーデータの取得に失敗しました:', error);
-        container.innerHTML = '<p>データの取得に失敗しました</p>';
-    }
-}
-
-// 苦手分野のヒートマップを生成
-async function generateWeakAreasHeatmap() {
-    const container = document.getElementById('weak-areas-heatmap');
-    container.innerHTML = '';
-    
-    // APIから最新のデータを取得
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    
-    try {
-        const response = await fetch(`api/get/category_stats/${id}/${password}`);
-        const data = await response.json();
-        
-        if (data.message === "password is wrong") {
-            console.error("認証エラー: パスワードが間違っています");
-            container.innerHTML = '<p>認証エラー: パスワードが間違っています</p>';
-            return;
-        }
-        
-        // 空のカテゴリーデータをチェック
-        const categoryData = data.categories || {};
-        if (Object.keys(categoryData).length === 0) {
-            container.innerHTML = '<p>カテゴリーデータがありません</p>';
-            return;
-        }
-        
-        // 各カテゴリーの正答率を計算し、レベルを決定
-        Object.entries(categoryData).sort((a, b) => {
-            const rateA = a[1].total > 0 ? (a[1].correct / a[1].total) * 100 : 0;
-            const rateB = b[1].total > 0 ? (b[1].correct / b[1].total) * 100 : 0;
-            return rateA - rateB; // 正答率が低い順にソート
-        }).forEach(([category, data]) => {
-            const { correct, total } = data;
-            const rate = total > 0 ? (correct / total) * 100 : 0;
-            
-            // 正答率に基づいてレベルを決定（レベル1が最も低い）
-            let level;
-            if (rate < 20) level = 1;
-            else if (rate < 40) level = 2;
-            else if (rate < 60) level = 3;
-            else if (rate < 80) level = 4;
-            else level = 5;
-            
-            const heatmapItem = document.createElement('div');
-            heatmapItem.className = `heatmap-item level-${level}`;
-            heatmapItem.innerHTML = `
-                <div>${category}</div>
-                <div><strong>${rate.toFixed(1)}%</strong></div>
-            `;
-            
-            container.appendChild(heatmapItem);
-        });
-    } catch (error) {
-        console.error('カテゴリーデータの取得に失敗しました:', error);
-        container.innerHTML = '<p>データの取得に失敗しました</p>';
-    }
-}
-
-// 目標設定の初期化
-function initGoals() {
-    // ローカルストレージから目標を取得、または初期値を設定
-    let goals = JSON.parse(localStorage.getItem(USER_GOALS_KEY)) || {
-        daily: { target: 10, current: 0 },
-        weekly: { target: 50, current: 0 },
-        accuracy: { target: 80, current: 0 }
-    };
-    
-    // 入力フィールドに現在の目標値をセット
-    document.getElementById('daily-goal').value = goals.daily.target;
-    document.getElementById('weekly-goal').value = goals.weekly.target;
-    document.getElementById('accuracy-goal').value = goals.accuracy.target;
-    
-    // 現在の進捗状況を更新
-    updateGoalProgress();
-}
-
-// 目標設定保存
-function saveGoal(type) {
-    // ローカルストレージから現在の目標を取得
-    let goals = JSON.parse(localStorage.getItem(USER_GOALS_KEY)) || {
-        daily: { target: 10, current: 0 },
-        weekly: { target: 50, current: 0 },
-        accuracy: { target: 80, current: 0 }
-    };
-    
-    // 新しい目標値を取得
-    const value = parseInt(document.getElementById(`${type}-goal`).value);
-    
-    // 数値チェック
-    if (isNaN(value) || value <= 0 || (type === 'accuracy' && value > 100)) {
-        alert('有効な数値を入力してください');
-        return;
-    }
-    
-    // 目標を更新
-    goals[type].target = value;
-    
-    // ローカルストレージに保存
-    localStorage.setItem(USER_GOALS_KEY, JSON.stringify(goals));
-    
-    // 進捗バーを更新
-    updateGoalProgress();
-    
-    // 保存成功メッセージ
-    alert(`${type === 'daily' ? '日次' : type === 'weekly' ? '週間' : '正答率'}目標を保存しました`);
-}
-
-// 目標達成進捗の更新
-async function updateGoalProgress() {
-    // ローカルストレージから目標を取得
-    let goals = JSON.parse(localStorage.getItem(USER_GOALS_KEY)) || {
-        daily: { target: 10, current: 0 },
-        weekly: { target: 50, current: 0 },
-        accuracy: { target: 80, current: 0 }
-    };
-    
-    // APIからスコアデータを取得
-    const id = Cookies.get('id');
-    const password = Cookies.get('password');
-    const scores = await fetchScores(id, password);
-    const allData = await fetchData(id, password);
-    
-    if (scores && allData) {
-        // 今日の解答数を計算
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-        const todayCorrect = allData.correct[todayStr] || 0;
-        const todayBad = allData.bad[todayStr] || 0;
-        const todayTotal = todayCorrect + todayBad;
-        
-        goals.daily.current = todayTotal;
-        
-        // 週間の解答数を計算
-        let weeklyTotal = 0;
-        for (let i = 0; i < 7; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-            
-            weeklyTotal += (allData.correct[dateStr] || 0) + (allData.bad[dateStr] || 0);
-        }
-        goals.weekly.current = weeklyTotal;
-        
-        // 正答率
-        const total = scores.correct + scores.bad;
-        goals.accuracy.current = total > 0 ? (scores.correct / total) * 100 : 0;
-    }
-    
-    // 進捗バーを更新
-    updateProgressBar('daily', (goals.daily.current / goals.daily.target) * 100);
-    updateProgressBar('weekly', (goals.weekly.current / goals.weekly.target) * 100);
-    updateProgressBar('accuracy', (goals.accuracy.current / goals.accuracy.target) * 100);
-    
-    // ローカルストレージに保存
-    localStorage.setItem(USER_GOALS_KEY, JSON.stringify(goals));
-}
-
-// 進捗バーの更新
-function updateProgressBar(type, percentage) {
-    percentage = Math.min(100, percentage); // 100%を超えないように
-    document.getElementById(`${type}-progress`).style.width = `${percentage}%`;
-}
+    }); // drawMainChart の new Chart 呼び出しを閉じる
+} // drawMainChart 関数を閉じる
 
 // 学習アドバイスの生成
 async function generateAdvice() {
@@ -817,6 +339,136 @@ async function generateAdvice() {
     }
 }
 
+// ランキングデータを取得して表示する関数
+async function fetchAndDisplayRanking(period = 'all') {
+    // ランキングリスト要素がなければ処理中断
+    if (!rankingList) {
+        console.error("Ranking list element not found.");
+        return;
+    }
+
+    // ローディング表示
+    const loadingOverlay = rankingList.querySelector('.loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+    } else {
+        rankingList.innerHTML = `
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <p>ランキングを読み込み中...</p>
+            </div>
+        `;
+    }
+
+    // リフレッシュボタンの状態を更新
+    const refreshBtn = document.getElementById('ranking-refresh');
+    if (refreshBtn) {
+        refreshBtn.classList.add('loading');
+        refreshBtn.disabled = true;
+    }
+
+    try {
+        // 期間パラメータを追加
+        const url = period !== 'all' ? `/api/ranking?period=${period}` : '/api/ranking';
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`サーバーエラー: ${response.status}`);
+        }
+
+        const rankingData = await response.json();
+
+        if (!rankingData || rankingData.length === 0) {
+            rankingList.innerHTML = '<div class="ranking-empty">ランキングデータはありません</div>';
+            return;
+        }
+
+        // HTML生成
+        let html = '';
+        rankingData.forEach((user, index) => {
+            const position = index + 1;
+            const total = user.correct + user.bad;
+            const accuracyRate = total > 0 ? Math.round((user.correct / total) * 100) : 0;
+            
+            // 順位に応じたポジションクラスを設定
+            let positionClass = 'position-default';
+            if (position === 1) positionClass = 'position-1';
+            else if (position === 2) positionClass = 'position-2';
+            else if (position === 3) positionClass = 'position-3';
+            
+            html += `
+                <div class="ranking-item">
+                    <div class="ranking-position ${positionClass}">${position}</div>
+                    <div class="ranking-info">
+                        <div class="ranking-user">${user.userid}</div>
+                        <div class="ranking-stats">
+                            <div class="stat-item total">
+                                <b>合計 ${total}問</b>
+                            </div>
+                            <div class="stat-item correct">
+                                <i class="fas fa-check-circle"></i> ${user.correct}問正解
+                            </div>
+                            <div class="stat-item incorrect">
+                                <i class="fas fa-times-circle"></i> ${user.bad}問不正解
+                            </div>
+                            <div class="stat-item accuracy">
+                                <i class="fas fa-bullseye"></i> 正答率 ${accuracyRate}%
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-fill" style="width: ${accuracyRate}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // コンテンツを更新
+        rankingList.innerHTML = html;
+
+        // ロード完了後のイベントリスナーを設定
+        setupRankingEventListeners();
+
+    } catch (error) {
+        console.error('ランキングの取得に失敗しました:', error);
+        rankingList.innerHTML = `
+            <div class="ranking-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>ランキングの取得に失敗しました: ${error.message}</p>
+            </div>
+        `;
+    } finally {
+        // リフレッシュボタンの状態を戻す
+        if (refreshBtn) {
+            refreshBtn.classList.remove('loading');
+            refreshBtn.disabled = false;
+        }
+    }
+}
+
+// ランキング関連のイベントリスナーを設定
+function setupRankingEventListeners() {
+    // 期間フィルターの変更イベント
+    const periodFilter = document.getElementById('ranking-period');
+    if (periodFilter && !periodFilter.hasEventListener) {
+        periodFilter.addEventListener('change', function() {
+            fetchAndDisplayRanking(this.value);
+        });
+        periodFilter.hasEventListener = true;
+    }
+    
+    // リフレッシュボタンのクリックイベント
+    const refreshBtn = document.getElementById('ranking-refresh');
+    if (refreshBtn && !refreshBtn.hasEventListener) {
+        refreshBtn.addEventListener('click', function() {
+            const periodFilter = document.getElementById('ranking-period');
+            const period = periodFilter ? periodFilter.value : 'all';
+            fetchAndDisplayRanking(period);
+        });
+        refreshBtn.hasEventListener = true;
+    }
+}
+
+
 // グローバルに必要な関数を公開
 window.iconmodal = iconmodal;
-window.saveGoal = saveGoal;
