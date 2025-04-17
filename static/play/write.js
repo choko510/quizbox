@@ -127,6 +127,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasLowercase = /[a-z]/.test(text);
 
         let char = "";
+        let type = "eng"; // デフォルトは英語
+
         if (hasUppercase) {
             char += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 英語（大文字のみ）
         }
@@ -140,22 +142,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasKatakana = /[ァ-ン]/.test(text); // カタカナ
         const hasKanji = /[一-龯]/.test(text);     // 漢字
 
-        const count = [hasHiragana, hasKatakana, hasKanji].filter(Boolean).length;
-
-        if (count > 1) {
-            char += "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン漢字"; // 日本語（混在）
-        }
-
         if (hasHiragana && !hasKatakana && !hasKanji) {
-            char += "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ"; // 日本語（ひらがなのみ）
-        }
-
-        if (hasKatakana && !hasHiragana && !hasKanji) {
-            char += "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"; // 日本語（カタカナのみ）
-        }
-
-        if (hasKanji && !hasHiragana && !hasKatakana) {
-            char += "一二三四五六七八九十百千万円年日月火水木金土人子女男女本東西南北山川海空雨雪花星学校会社車電車病院図書館大小高低新古多少上下前後左右中外内白黒赤青黄色";//日本語（漢字のみ）
+            type = "jpn";
+            char = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ";
+        } else if (hasKatakana && !hasHiragana && !hasKanji) {
+            type = "jpn";
+            char = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
+        } else if (hasHiragana || hasKatakana || hasKanji) {
+            type = "jpn";
+            char = "ALL"; 
         }
 
         // 数字の判定
@@ -164,7 +159,13 @@ document.addEventListener('DOMContentLoaded', function() {
             char += "0123456789"; // 数字
         }
 
-        return char;
+        // 記号の判定
+        const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(text);
+        if (hasSymbol) {
+            char += "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"; // 記号
+        }
+
+        return [type, char];
     }
 
     // 手書き文字認識と回答送信
@@ -192,14 +193,21 @@ document.addEventListener('DOMContentLoaded', function() {
             // キャンバスの内容を画像データに変換
             const imageData = canvas.toDataURL('image/png');
             
-            // シンプルなワーカー作成
-            const worker = await Tesseract.createWorker('jpn');
+            const char = analyzeText(questions[currentIndex].word);
             
-            // 認識の精度向上のためにパラメータを設定
-            await worker.setParameters({
-                tessedit_pageseg_mode: 7, // SINGLE_LINE モード (PSM.SINGLE_LINE の代わりに数値使用)
-                tessedit_char_whitelist: analyzeText(questions[currentIndex].word),
-            });
+            let worker;
+            if (char[0] === "ALL") {
+                worker = await Tesseract.createWorker('jpn');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: 7
+                });
+            } else if (char[0] === "eng") {
+                worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: 7, 
+                    tessedit_char_whitelist: char[1],
+                });
+            }
             
             const result = await worker.recognize(imageData);
             const recognizedText = result.data.text.trim();

@@ -144,6 +144,44 @@
                     })
                 });
             })();
+        } else {
+            // 既存ユーザーの場合、自動ログインを試みる
+            const id = Cookies.get('id');
+            const password = Cookies.get('password');
+            (async () => {
+                try {
+                    const response = await fetch('api/get', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: id,
+                            password: password
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.message === "password is wrong") {
+                        // パスワードが間違っている場合、新しいアカウントを作成
+                        const newId = Math.random().toString(36).substring(2);
+                        const newPassword = Math.random().toString(36).substring(2);
+                        Cookies.set('id', newId, { expires: 30 });
+                        Cookies.set('password', newPassword, { expires: 30 });
+                        await fetch('api/registration', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                id: newId,
+                                password: newPassword
+                            })
+                        });
+                    }
+                } catch (error) {
+                    console.error('自動ログインエラー:', error);
+                }
+            })();
         }
     </script>
 
@@ -158,6 +196,7 @@
                     <!-- タブナビゲーション -->
                     <div class="tabs">
                         <div class="tab active" data-tab="dashboard">ダッシュボード</div>
+                        <div class="tab" data-tab="account">アカウント管理</div>
                         <div class="tab" data-tab="ranking">ランキング</div>
                         <div class="tab" data-tab="advice">学習アドバイス</div>
                     </div>
@@ -210,6 +249,41 @@
                             <h3>学習アドバイス for Gemini</h3>
                             <div id="advice-content">
                                 <!-- アドバイスはJavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- アカウント管理タブ -->
+                    <div id="account" class="tab-content">
+                        <div class="account-management">
+                            <h3>アカウント管理</h3>
+
+                            <!-- ユーザー名変更フォーム -->
+                            <div class="account-section">
+                                <h4>ユーザー名変更</h4>
+                                <form id="change-name-form">
+                                    <input type="text" id="new-name" placeholder="新しいユーザー名" required>
+                                    <button type="submit">変更</button>
+                                </form>
+                            </div>
+
+                            <!-- パスワード変更フォーム -->
+                            <div class="account-section">
+                                <h4>パスワード変更</h4>
+                                <form id="change-password-form">
+                                    <input type="password" id="new-password" placeholder="新しいパスワード" required>
+                                    <button type="submit">変更</button>
+                                </form>
+                            </div>
+                            
+                            <!-- ログインフォーム -->
+                            <div class="account-section">
+                                <h4>ログイン</h4>
+                                <form id="login-form">
+                                    <input type="text" id="login-id" placeholder="ユーザーID" required>
+                                    <input type="password" id="login-password" placeholder="パスワード" required>
+                                    <button type="submit">ログイン</button>
+                                </form>
                             </div>
                         </div>
                     </div>

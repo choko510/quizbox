@@ -5,6 +5,98 @@
 const adviceContent = document.getElementById('advice-content');
 const rankingList = document.getElementById('ranking-list'); // ランキングリスト要素
 
+// アカウント管理機能
+async function handleLogin(event) {
+    event.preventDefault();
+    const id = document.getElementById('login-id').value;
+    const password = document.getElementById('login-password').value;
+    
+    try {
+        const response = await fetch('api/get', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, password })
+        });
+        
+        const data = await response.json();
+        if (data.message === "password is wrong") {
+            alert("ログインに失敗しました");
+            return;
+        }
+        
+        // クッキーを更新
+        Cookies.set('id', id, { expires: 30 });
+        Cookies.set('password', password, { expires: 30 });
+        alert("ログイン成功");
+        MicroModal.close('modal-1');
+    } catch (error) {
+        console.error('ログインエラー:', error);
+        alert("ログイン処理中にエラーが発生しました");
+    }
+}
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+    const newPassword = document.getElementById('new-password').value;
+    const id = Cookies.get('id');
+    const currentPassword = Cookies.get('password');
+    
+    try {
+        const response = await fetch(`api/change/password/${newPassword}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, password: currentPassword })
+        });
+        
+        const data = await response.json();
+        if (data.message === "password is wrong") {
+            alert("認証に失敗しました。再度ログインしてください");
+            return;
+        }
+        
+        Cookies.set('password', newPassword, { expires: 30 });
+        alert("パスワードを変更しました");
+        document.getElementById('change-password-form').reset();
+    } catch (error) {
+        console.error('パスワード変更エラー:', error);
+        alert("パスワード変更中にエラーが発生しました");
+    }
+}
+
+async function handleNameChange(event) {
+    event.preventDefault();
+    const newName = document.getElementById('new-name').value;
+    const id = Cookies.get('id');
+    const password = Cookies.get('password');
+    
+    try {
+        const response = await fetch(`api/change/name/${newName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, password })
+        });
+        
+        const data = await response.json();
+        if (data.message === "password is wrong") {
+            alert("認証に失敗しました");
+            return;
+        }
+        
+        Cookies.set('id', newName, { expires: 30 });
+        alert("ユーザー名を変更しました");
+        document.getElementById('change-name-form').reset();
+    } catch (error) {
+        console.error('ユーザー名変更エラー:', error);
+        alert("ユーザー名変更中にエラーが発生しました");
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
     MicroModal.init({
@@ -28,6 +120,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // タブ切り替え機能
     setupTabs();
+
+    // フォームイベントリスナーの設定
+    const loginForm = document.getElementById('login-form');
+    const passwordForm = document.getElementById('change-password-form');
+    const nameForm = document.getElementById('change-name-form');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', handlePasswordChange);
+    }
+    if (nameForm) {
+        nameForm.addEventListener('submit', handleNameChange);
+    }
 
     // アプリケーションの初期化完了
     console.log('アプリケーションの初期化が完了しました');
@@ -152,90 +259,130 @@ async function drawMainChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
     const id = Cookies.get('id');
     const password = Cookies.get('password');
-    const data = await fetchData(id, password);
+    
+    try {
+        const data = await fetchData(id, password);
 
-    if (!data || !data.correct) {
-        console.error('データが取得できませんでした');
-        return;
-    }
+        // データ検証
+        if (!data || typeof data.correct !== 'object' || typeof data.bad !== 'object') {
+            console.error('無効なデータ形式です');
+            displayChartError(ctx, 'データがありません');
+            return;
+        }
 
-    // ラベル(日付)とデータ(値)を抽出
-    const labels = Object.keys(data.correct);
-    const correctData = Object.values(data.correct);
-    const badData = Object.values(data.bad);
+        // 日付データを取得しソート
+        const dates = Object.keys(data.correct).sort((a, b) => {
+            return new Date(a) - new Date(b);
+        });
 
-    // 正答率とトータルを計算する
-    const totalData = correctData.map((correct, index) => correct + badData[index]);
-    const accuracyData = correctData.map((correct, index) => 
-        totalData[index] > 0 ? correct / totalData[index] * 100 : 0
-    );
+        if (dates.length === 0) {
+            displayChartError(ctx, '表示するデータがありません');
+            return;
+        }
 
-    // 既存のチャートがある場合は破棄
-    if (window.mainChart instanceof Chart) {
-        window.mainChart.destroy();
-    }
+        // データを日付順に整理
+        const labels = dates.map(date => moment(date).format('YYYY/MM/DD'));
+        const correctData = dates.map(date => data.correct[date] || 0);
+        const badData = dates.map(date => data.bad[date] || 0);
 
-    window.mainChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'トータル',
-                    data: totalData,
-                    borderColor: '#1565c0',
-                    backgroundColor: 'rgba(21, 101, 192, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: '正解数',
-                    data: correctData,
-                    borderColor: '#2e7d32',
-                    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: '不正解数',
-                    data: badData,
-                    borderColor: '#c62828',
-                    backgroundColor: 'rgba(198, 40, 40, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                }
+        // トータルを計算
+        const totalData = correctData.map((correct, index) => correct + badData[index]);
+
+        // 既存のチャートがある場合は破棄
+        if (window.mainChart instanceof Chart) {
+            window.mainChart.destroy();
+        }
+
+        window.mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'トータル',
+                        data: totalData,
+                        borderColor: '#1565c0',
+                        backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '正解数',
+                        data: correctData,
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '不正解数',
+                        data: badData,
+                        borderColor: '#c62828',
+                        backgroundColor: 'rgba(198, 40, 40, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
             },
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'day'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: '問題数'
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            tooltipFormat: 'YYYY/MM/DD',
+                            displayFormats: {
+                                day: 'MM/DD'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '問題数'
+                        }
                     }
                 }
             }
-        }
-    }); // drawMainChart の new Chart 呼び出しを閉じる
-} // drawMainChart 関数を閉じる
+        });
+    } catch (error) {
+        console.error('グラフ描画エラー:', error);
+        displayChartError(ctx, 'グラフの表示に失敗しました');
+    }
+}
+
+// グラフエラー表示
+function displayChartError(ctx, message) {
+    if (window.mainChart instanceof Chart) {
+        window.mainChart.destroy();
+    }
+    
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
+}
 
 // 学習アドバイスの生成
 async function generateAdvice() {

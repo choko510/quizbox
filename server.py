@@ -82,7 +82,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# 非同期 DB 操作用クラス
 class DB:
     @staticmethod
     async def _update_data(user, subject: str, is_correct: bool):
@@ -201,13 +200,11 @@ class DB:
                 except json.JSONDecodeError:
                     baddata = {}
 
-                # 日付がなければ初期化
                 if nowtime not in correctdata or not isinstance(correctdata[nowtime], dict):
                     correctdata[nowtime] = {}
                 if nowtime not in baddata or not isinstance(baddata[nowtime], dict):
                     baddata[nowtime] = {}
 
-                # 科目別のカウントを更新
                 subject_key = subject if subject else 'other'
                 if subject_key not in baddata[nowtime]:
                     baddata[nowtime][subject_key] = 0
@@ -377,7 +374,6 @@ class DB:
             result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
             mondai = result.scalar_one_or_none()
             if mondai:
-                # 現在の状態を逆にする (1→0, 0→1)
                 mondai.is_public = 1 if mondai.is_public == 0 else 0
                 mondai.updated_at = datetime.datetime.now().isoformat()
                 await session.commit()
@@ -537,7 +533,7 @@ async def root(request: Request):
                 <p>作成した問題</p>
             """
             for mondai in usermondai:
-                html += f"<a href='/play/?userid={userid}&name={mondai}'>{mondai}</a>"
+                html += f'<a href="/play/?userid={userid}&name={mondai}">{mondai}</a>'
 
             html += "</div>"
         else:

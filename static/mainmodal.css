@@ -619,6 +619,50 @@
     will-change: transform;
 }
 
+/* アカウント管理スタイル */
+.account-management {
+    padding: 20px;
+}
+
+.account-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.account-section h4 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.account-section input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.account-section button {
+    background-color: #4a6cf7;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.account-section button:hover {
+    background-color: #3a5ce6;
+}
+
 /* スマートフォン対応 */
 @media screen and (max-width: 600px) {
     .modal__container {
