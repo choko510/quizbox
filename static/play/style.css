@@ -650,6 +650,47 @@ strong {
     cursor: pointer;
 }
 
+/* エラー処理 */
+
+.error-message {
+    text-align: center;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    background-color: #fff3f3;
+    border: 1px solid #ffcaca;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error-message i {
+    font-size: 48px;
+    color: #ff5252;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.error-message p {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.error-message button {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.error-message button:hover {
+    background-color: #2a75f3;
+}
+
 @media screen and (max-height: 600px) {
     body {
         background-color: #fbfbfb;

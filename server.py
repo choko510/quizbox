@@ -20,6 +20,7 @@ import numpy as np
 import google.generativeai as genai
 from gtts import gTTS
 from io import BytesIO
+import aiohttp
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -545,6 +546,40 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
+async def reqAI(pronpt, model="gemini-2.0-flash"):
+    try:
+        model = genai.GenerativeModel(model)
+        response = await model.generate_content_async(pronpt)
+        return response.text
+    except Exception as geminierror:
+        api_key = os.getenv("OPENROUTER_APIKEY")
+        if not api_key or api_key == "":
+            raise Exception(f"Primary AI request failed: {geminierror}. Additionally, OPENROUTER_APIKEY is not set.")
+        
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+        }
+        payload = {
+            "model": "deepseek/deepseek-chat-v3-0324:free",
+            "messages": [{"role": "user", "content": pronpt}],
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=payload) as response:
+                    # Check if the response status is OK
+                    if response.status != 200:
+                        text = await response.text()
+                        raise Exception(f"HTTP {response.status}: {text}")
+                    try:
+                        result = await response.json()
+                    except Exception as json_error:
+                        raise Exception(json_error)
+                    return result
+        except Exception as e:
+            raise Exception(e)
+
 @app.get("/play/")
 async def play(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
@@ -776,8 +811,6 @@ class GenerateQuestionsData(BaseModel):
 @app.post("/api/process/text")
 async def process_text(data: TextData):
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        
         results = []
         if data.checkType == "quality":
             # 最大10問まで処理する
@@ -799,9 +832,9 @@ async def process_text(data: TextData):
                     {problem_text}
                 """
                 try:
-                    response = await model.generate_content_async(prompt)
+                    response = await reqAI(prompt)
                     results.append({
-                        "feedback": response.text,
+                        "feedback": response,
                         "index": i,
                         "status": "success"
                     })
@@ -815,8 +848,8 @@ async def process_text(data: TextData):
                     })
         elif data.checkType == "summary":
             prompt = f"以下のテキストを要約してください：\n{' '.join(data.text)}"
-            response = model.generate_content(prompt)
-            results.append({"feedback": response.text, "index": 0, "status": "success"})
+            response = await reqAI(prompt)
+            results.append({"feedback": response, "index": 0, "status": "success"})
         else:
             # 未知のcheckTypeに対する処理
             return JSONResponse(
@@ -1076,7 +1109,6 @@ async def search_word(data: wordData):
         }
     
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
         prompt = f"""
         以下の単語「{word}」について詳しく説明してください。
         
@@ -1091,10 +1123,10 @@ async def search_word(data: wordData):
         また、HTMLタグは使用せず、マークダウン形式で回答してください。
         """
 
-        response = model.generate_content(prompt)
+        response = await reqAI(prompt,"gemini-2.0-flash-lite")
         return {
             "word": word,
-            "definition": response.text,
+            "definition": response,
             "success": True
         }
     except Exception as e:
@@ -1114,8 +1146,10 @@ async def gen_speak(word: str):
     if os.path.exists(filename):
         return FileResponse(filename)
     
+    lang = "ja" if re.search(r'[\u3040-\u309F\u30A0-\u30FF]', word) else "en"
+    
     try:
-        tts = gTTS(text=word, lang='en', slow=True)
+        tts = gTTS(text=word, lang=lang, slow=True)
         
         audio_bytes = BytesIO()
         tts.write_to_fp(audio_bytes)
@@ -1209,17 +1243,14 @@ async def generate_questions(data: GenerateQuestionsData):
         # 問題数と種類の制限をチェック
         count = min(max(data.count, 1), 10)  # 1-10問の間に制限
         
-        # Geminiモデルの初期化
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        
         # 問題タイプに応じたプロンプトを作成
         prompt = generate_question_prompt(data.text, data.type, count)
         
         # Geminiに問題生成をリクエスト
-        response = model.generate_content(prompt)
+        response = await reqAI(prompt)
         
         # レスポンスをパースして問題と回答のペアを抽出
-        questions = parse_gemini_response(response.text)
+        questions = parse_gemini_response(response)
         
         return JSONResponse(
             content={"status": "success", "questions": questions},
