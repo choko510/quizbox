@@ -1,0 +1,1068 @@
+/* --- 基本スタイル --- */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Noto Sans Japanese', sans-serif;
+    background-color: #ebedf1;
+    /* 旧スタイルに合わせる */
+}
+
+/* --- Swiper --- */
+.swiper-container {
+    width: 100%;
+    height: 100%;
+}
+
+.swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    /* 旧スタイルに合わせる (基準) */
+    /* スライド個別の背景色は削除し、bodyの背景を利用 */
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #007bff;
+    transition: opacity 0.2s;
+}
+
+.swiper-button-disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* --- 共通ボタン (旧スタイルに近づける調整は個別ボタンで行う) --- */
+.back {
+    /* 以前のコードから微調整 */
+    color: #000;
+    box-sizing: border-box;
+    position: absolute;
+    top: 8px;
+    /* 少し調整 */
+    left: 8px;
+    display: flex;
+    /* 中央寄せのため */
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    /* サイズ調整 */
+    height: 36px;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    /* 円形 */
+    z-index: 10000;
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    /* 影調整 */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.back::after {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    width: 12px;
+    /* アイコンサイズ調整 */
+    height: 12px;
+    border-bottom: 2px solid #333;
+    border-left: 2px solid #333;
+    transform: rotate(45deg);
+    /* left/top は不要 (flexで中央寄せ) */
+}
+
+.back:hover {
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.settings-icon {
+    /* 以前のコードから微調整 */
+    position: absolute;
+    bottom: 12px;
+    /* 少し調整 */
+    right: 12px;
+    font-size: 20px;
+    color: #555;
+    z-index: 10000;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    width: 42px;
+    /* サイズ調整 */
+    height: 42px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.settings-icon:hover {
+    color: #000;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Slide 1: 統計情報 (旧スタイルに近づける) --- */
+.slide1 {
+    /* background は削除 (bodyの背景色を使う) */
+    overflow-y: auto;
+    padding: 20px 0;
+    box-sizing: border-box;
+    align-items: flex-start;
+}
+
+.resultbox {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto;
+    gap: 24px;
+    /* 旧スタイルに合わせる */
+    width: 92%;
+    /* 旧スタイルに合わせる */
+    max-width: 950px;
+    /* 最大幅調整 */
+    margin: 25px auto;
+    /* 上下のマージン調整 */
+}
+
+.resultbox>div {
+    background-color: #fff;
+    border-radius: 12px;
+    /* 少し丸く */
+    padding: 24px;
+    /* 旧スタイルに合わせる */
+    font-size: 1.1em;
+    /* サイズを少し上げる */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+    /* 影調整 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.resultbox1 {
+    grid-area: 1 / 1 / 2 / 2;
+}
+
+.resultbox2 {
+    grid-area: 1 / 2 / 2 / 3;
+}
+
+.resultbox4 {
+    grid-area: 2 / 1 / 3 / 3;
+}
+
+.progress-title,
+.stats-title {
+    font-size: 1.5em;
+    /* 旧スタイルに近づける */
+    font-weight: 600;
+    /* 少し細く */
+    margin-bottom: 20px;
+    /* 旧スタイルに近づける */
+    color: #1a73e8;
+    /* 旧スタイルの色 */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: none;
+    /* 区切り線削除 */
+    padding-bottom: 0;
+}
+
+.progress-title i,
+.stats-title i {
+    margin-right: 10px;
+    /* 少し調整 */
+    color: #1a73e8;
+    /* 旧スタイルの色 */
+    font-size: 1.0em;
+    /* アイコンサイズ調整 */
+}
+
+.stats-title i.fa-lightbulb {
+    color: #ffc107;
+}
+
+/* ヒントアイコン色維持 */
+
+#progress-stats div,
+#performance-stats div {
+    margin: 12px 0;
+    /* 旧スタイルに近づける */
+    font-size: 1.05em;
+    /* 少し上げる */
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+#progress-stats div i,
+#performance-stats div i {
+    margin-right: 10px;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    color: #1a73e8;
+    /* 旧スタイルの色 */
+    background-color: rgba(26, 115, 232, 0.1);
+    /* 旧スタイルの背景 */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    /* アイコンサイズ */
+    flex-shrink: 0;
+}
+
+/* 個別アイコン色は削除し、基本色を使う */
+/* #performance-stats div i.fa-lightbulb { ... } などは削除 */
+
+
+.progress-bar-container {
+    width: 100%;
+    height: 12px;
+    /* 少し太く */
+    background-color: #e9ecef;
+    border-radius: 6px;
+    margin-top: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* 影を少し追加 */
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1a73e8, #00bfff);
+    /* 旧スタイルのグラデーション */
+    border-radius: 6px;
+    transition: width 0.7s ease-out;
+    /* アニメーション調整 */
+}
+
+#performance-chart {
+    width: 100% !important;
+    height: 220px !important;
+    /* 高さを調整 */
+    margin-top: 15px;
+    /* 間隔調整 */
+}
+
+.resultbox4 {
+    position: relative;
+}
+
+.resultbox4::before {
+    content: '成績の推移';
+    position: absolute;
+    top: 18px;
+    /* 位置調整 */
+    left: 24px;
+    font-weight: 600;
+    font-size: 1.1em;
+    /* 旧スタイルに近づける */
+    color: #1a73e8;
+    /* 旧スタイルの色 */
+}
+
+/* --- Slide 2: リスニング問題 (穴埋め形式) --- */
+.slide2 {
+    overflow: hidden;
+    /* 背景色は body と同じ #ebedf1 */
+}
+
+.main {
+    width: 90%;
+    max-width: 700px;
+    /* 最大幅を少し広げる */
+    height: auto;
+    /* 高さは可変 */
+    padding: 30px;
+    /* パディングを少し増やす */
+    text-align: center;
+    border-radius: 8px;
+    /* 角丸調整 */
+    background-color: #fbfbfb;
+    /* 旧スタイルの背景色 */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    /* 影を少し調整 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: -5vh;
+    /* 少し上に配置して旧レイアウトに近づける */
+}
+
+.title {
+    margin-bottom: 25px;
+    /* 間隔を広げる */
+    width: 80%;
+    /* 旧スタイルに近づける */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#instruction {
+    font-size: 1.2em;
+    /* 少し大きく */
+    color: #333;
+    /* 旧スタイルの色 */
+    margin-bottom: 20px;
+    /* 間隔を広げる */
+}
+
+/* テンプレート文表示エリア */
+.template-sentence {
+    font-size: 1.5em;
+    /* 旧 question のサイズ感に */
+    line-height: 1.8;
+    color: #333;
+    margin: 25px 0;
+    /* 間隔を広げる */
+    padding: 15px;
+    background-color: #fff;
+    /* 背景色変更 */
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    min-height: 70px;
+    /* 高さを確保 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.6em;
+}
+
+/* 穴埋め入力欄 */
+.template-sentence input[type="text"] {
+    font-size: 1em;
+    /* 親要素基準 */
+    line-height: 1.5;
+    border: none;
+    border-bottom: 2px solid #007bff;
+    background-color: transparent;
+    text-align: center;
+    outline: none;
+    padding: 0.2em 0.5em;
+    /* パディング調整 */
+    width: 140px;
+    /* 幅を広げる */
+    font-family: inherit;
+    vertical-align: baseline;
+    display: inline-block;
+    box-sizing: border-box;
+    color: #0056b3;
+    font-weight: 500;
+    transition: border-color 0.2s;
+}
+
+.template-sentence input[type="text"]:focus {
+    border-bottom-color: #0056b3;
+}
+
+.template-sentence input[type="text"]::placeholder {
+    color: #bbb;
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
+.template-sentence input[type="text"]:disabled {
+    border-bottom-style: dotted;
+    /* dashed から dotted へ */
+    cursor: default;
+    opacity: 0.7;
+}
+
+.template-sentence input[type="text"].correct {
+    border-bottom-color: #28a745;
+    color: #28a745;
+}
+
+.template-sentence input[type="text"].incorrect {
+    border-bottom-color: #dc3545;
+    color: #dc3545;
+}
+
+.audio-btn {
+    padding: 0.8em 1.8em;
+    /* 旧 button に近づける */
+    font-size: 1.05em;
+    /* 少し上げる */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    /* 旧 button に合わせる */
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 5px 12px rgba(0, 123, 255, 0.18);
+    /* 影を少し強く */
+    margin-top: 20px;
+}
+
+.audio-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+    box-shadow: 0 7px 14px rgba(0, 86, 179, 0.22);
+}
+
+.audio-btn:disabled {
+    /* 変更なし */
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.audio-btn i {
+    margin-right: 7px;
+}
+
+/* 回答・ヒントエリア */
+#answer-hint-area {
+    margin-top: 25px;
+    /* 間隔を広げる */
+    width: 100%;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    /* 間隔を広げる */
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.hint-btn {
+    padding: 0.7em 1.5em;
+    /* パディング調整 */
+    font-size: 1.0em;
+    /* サイズ調整 */
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #e0a800;
+    /* 枠線追加 */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 5px 12px rgba(255, 193, 7, 0.18);
+}
+
+.hint-btn:hover:not(:disabled) {
+    background-color: #e0a800;
+    box-shadow: 0 7px 14px rgba(224, 168, 0, 0.22);
+}
+
+.hint-btn:disabled {
+    /* 変更なし */
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.hint-btn i {
+    margin-right: 6px;
+}
+
+.submit-btn {
+    padding: 0.7em 1.8em;
+    /* パディング調整 */
+    font-size: 1.0em;
+    /* サイズ調整 */
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 5px 12px rgba(40, 167, 69, 0.18);
+}
+
+.submit-btn:hover:not(:disabled) {
+    background-color: #218838;
+    box-shadow: 0 7px 14px rgba(33, 136, 56, 0.22);
+}
+
+.submit-btn:disabled {
+    /* 変更なし */
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ヒント表示エリア */
+.hint-display {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #e2e3e5;
+    color: #383d41;
+    border-radius: 4px;
+    font-size: 1.0em;
+    /* 少し大きく */
+    border: 1px solid #d6d8db;
+    display: inline-block;
+}
+
+/* 正誤フィードバック */
+#feedback-area {
+    margin-top: 20px;
+    /* 間隔を広げる */
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 1.05em;
+    /* 少し大きく */
+}
+
+/* 色は維持 */
+#feedback-area.correct {
+    background-color: #d1e7dd;
+    border: 1px solid #badbcc;
+    color: #0f5132;
+}
+
+#feedback-area.incorrect {
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+}
+
+#feedback-text {
+    margin: 0 0 10px 0;
+}
+
+#feedback-text strong {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.07);
+    padding: 3px 7px;
+    /* パディング調整 */
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+#next-question-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    /* パディング調整 */
+    font-size: 1.0em;
+    /* 少し大きく */
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#next-question-btn:hover {
+    background-color: #5a6268;
+}
+
+/* スコア表示 */
+#score {
+    font-size: 1.1em;
+    /* 旧スタイルに近づける (140%は大きすぎるので調整) */
+    position: absolute;
+    bottom: 5px;
+    /* 位置調整 */
+    left: 10px;
+    color: #495057;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 5px 10px;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+/* --- Slide 3: リスニング履歴 --- */
+.slide3 {
+    display: block;
+    overflow-y: auto;
+    padding: 25px;
+    /* パディング調整 */
+    box-sizing: border-box;
+    background-color: #ebedf1;
+    /* 背景色 */
+}
+
+.historylist {
+    width: 90%;
+    /* 旧スタイルに合わせる */
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.historylist h1 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    /* 旧スタイルに合わせる */
+    color: #007bff;
+    /* 旧スタイルの色 */
+    font-size: 1.6em;
+    /* サイズ調整 */
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 12px;
+}
+
+.historylist h1 i {
+    margin-right: 10px;
+    color: #007bff;
+}
+
+/* 検索とフィルター */
+.search-container {
+    position: relative;
+    margin-bottom: 20px;
+    /* 旧スタイルに合わせる */
+    background-color: #ffffff;
+    border-radius: 8px;
+    /* 少し丸く */
+    padding: 15px;
+    /* パディング調整 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+    /* 影調整 */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.searchbox {
+    flex-grow: 1;
+    padding: 12px 40px 12px 15px;
+    /* パディング調整 */
+    border: 1px solid #ccc;
+    /* 枠線調整 */
+    border-radius: 6px;
+    font-size: 1.0em;
+    /* サイズ調整 */
+    line-height: 1.5;
+}
+
+.searchbox:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.search-icon {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 1.1em;
+}
+
+#historyFilter {
+    padding: 11px 12px;
+    /* パディング調整 */
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    font-size: 1.0em;
+    cursor: pointer;
+    min-width: 170px;
+}
+
+/* 履歴リスト */
+ul.custom-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul.custom-list li {
+    margin-bottom: 18px;
+    /* 旧スタイルに近づける */
+    border-radius: 8px;
+    /* 旧スタイルに近づける */
+    padding: 18px;
+    /* 旧スタイルに近づける */
+    background-color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    /* 旧スタイルに近づける */
+    border-left: 4px solid;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+/* 色は維持 */
+ul.custom-list li.correct {
+    border-left-color: #198754;
+}
+
+ul.custom-list li.incorrect {
+    border-left-color: #dc3545;
+}
+
+ul.custom-list li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    /* 旧スタイルに近づける */
+}
+
+/* 履歴アイテムの内容 (微調整) */
+.history-item-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.history-text {
+    flex-grow: 1;
+}
+
+.history-sentence {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #212529;
+    line-height: 1.6;
+    word-break: break-word;
+    font-size: 1.05em;
+}
+
+.history-answer {
+    font-size: 0.95em;
+    color: #495057;
+    margin-bottom: 5px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.history-answer span {
+    font-style: italic;
+    margin-right: 5px;
+}
+
+.history-answer i {
+    font-size: 0.9em;
+    margin-left: 4px;
+}
+
+.history-answer.correct i {
+    color: #198754;
+}
+
+.history-answer.incorrect i {
+    color: #dc3545;
+}
+
+.history-meta {
+    font-size: 0.85em;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.history-meta .hint-indicator {
+    color: #ffc107;
+    font-size: 1.1em;
+}
+
+.history-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.history-play-btn {
+    background: none;
+    border: none;
+    color: #0d6efd;
+    font-size: 1.4em;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+.history-play-btn:hover {
+    color: #0a58ca;
+}
+
+
+/* --- 設定モーダル (微調整) --- */
+/* 基本的なスタイルは維持しつつ、フォントサイズなどを少し調整 */
+#settings-modal-title {
+    font-size: 1.3rem;
+}
+
+.modal__content {
+    padding: 1.8rem;
+}
+
+.settings-section h3 {
+    font-size: 1.15em;
+}
+
+.settings-option label {
+    font-size: 1.0em;
+}
+
+.setting-btn {
+    font-size: 0.95em;
+}
+
+.modal__btn {
+    font-size: 0.95em;
+}
+
+
+/* --- Notie (変更なし) --- */
+/* .notie-container ... */
+
+/* --- エラーメッセージ表示 (変更なし) --- */
+/* .error-message ... */
+
+/* --- レスポンシブ対応 (微調整) --- */
+@media screen and (max-width: 768px) {
+
+    /* 統計ボックス */
+    .resultbox {
+        grid-template-columns: 1fr;
+        width: 95%;
+        gap: 18px;
+    }
+
+    .resultbox>div {
+        padding: 18px;
+        font-size: 1.0em;
+    }
+
+    .progress-title,
+    .stats-title {
+        font-size: 1.3em;
+    }
+
+    #progress-stats div,
+    #performance-stats div {
+        font-size: 0.95em;
+        margin: 8px 0;
+    }
+
+    /* 問題画面 */
+    .main {
+        width: 95%;
+        padding: 25px;
+        margin-top: 0;
+    }
+
+    #instruction {
+        font-size: 1.1em;
+    }
+
+    .template-sentence {
+        font-size: 1.3em;
+    }
+
+    .template-sentence input[type="text"] {
+        width: 110px;
+    }
+
+    .audio-btn {
+        font-size: 1.0em;
+        padding: 0.7em 1.5em;
+    }
+
+    .hint-btn,
+    .submit-btn {
+        font-size: 0.95em;
+        padding: 0.6em 1.3em;
+    }
+
+    /* 履歴画面 */
+    .search-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #historyFilter {
+        width: 100%;
+    }
+
+    .history-item-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .history-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    body {
+        overflow-y: auto;
+    }
+
+    .swiper-container {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* 戻る/設定ボタン */
+    .back {
+        top: 8px;
+        left: 8px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .settings-icon {
+        bottom: 8px;
+        right: 8px;
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+
+    /* 統計 */
+    .resultbox {
+        gap: 15px;
+        margin: 15px auto;
+    }
+
+    .resultbox>div {
+        padding: 15px;
+    }
+
+    .progress-title,
+    .stats-title {
+        font-size: 1.2em;
+        margin-bottom: 12px;
+    }
+
+    #progress-stats div,
+    #performance-stats div {
+        font-size: 0.9em;
+        margin: 7px 0;
+    }
+
+    #progress-stats div i,
+    #performance-stats div i {
+        width: 22px;
+        height: 22px;
+    }
+
+    .progress-bar-container {
+        height: 10px;
+    }
+
+    #performance-chart {
+        height: 180px !important;
+    }
+
+    .resultbox4::before {
+        font-size: 1.0em;
+    }
+
+    /* 問題画面 */
+    .main {
+        padding: 20px;
+    }
+
+    #instruction {
+        font-size: 1.0em;
+        margin-bottom: 15px;
+    }
+
+    .template-sentence {
+        font-size: 1.15em;
+        margin: 15px 0;
+        min-height: 60px;
+    }
+
+    .template-sentence input[type="text"] {
+        width: 90px;
+        font-size: 0.95em;
+    }
+
+    .audio-btn {
+        font-size: 0.9em;
+        padding: 0.7em 1.4em;
+        margin-top: 15px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .hint-btn,
+    .submit-btn {
+        font-size: 0.95em;
+        padding: 0.7em 1.5em;
+        width: 85%;
+    }
+
+    #answer-hint-area {
+        margin-top: 20px;
+    }
+
+    .hint-display {
+        font-size: 0.95em;
+    }
+
+    #feedback-area {
+        font-size: 1.0em;
+    }
+
+    /* 履歴 */
+    .historylist h1 {
+        font-size: 1.4em;
+    }
+
+    .searchbox,
+    #historyFilter {
+        font-size: 0.95em;
+        padding: 9px;
+    }
+
+    .search-icon {
+        top: 24px;
+    }
+
+    ul.custom-list li {
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .history-sentence {
+        font-size: 1.0em;
+    }
+
+    .history-answer {
+        font-size: 0.9em;
+    }
+
+    .history-meta {
+        font-size: 0.8em;
+    }
+
+    .history-play-btn {
+        font-size: 1.2em;
+    }
+
+    #score {
+        font-size: 0.9em;
+        bottom: 8px;
+        left: 8px;
+    }
+}

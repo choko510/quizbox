@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リスニング学習 (穴埋め)</title>
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11.2.6/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="./listening/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="../../modal.css">
+    <link href="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <a href="../" class="back"></a>
+    <a href="javascript:void(0);" id="settings-btn"
+        style="position: fixed; bottom: 10px; right: 10px; font-size: 20px; color: #666; z-index: 10000;"><i
+            class="fas fa-cog"></i></a>
+
+    <div class="swiper-container">
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide slide1">
+                <div class="resultbox">
+                    <div class="resultbox1">
+                        <div class="progress-title"><i class="fas fa-headphones-alt"></i>学習進捗</div>
+                        <div id="progress-stats">
+                            <div><i class="fas fa-tasks"></i>総単語数: <span id="total-words">0</span></div>
+                            <div><i class="fas fa-check-circle"></i>挑戦済み: <span id="attempted-questions">0</span></div>
+                            <div><i class="fas fa-smile"></i>正解: <span id="correct-answers">0</span></div>
+                            <div><i class="fas fa-times-circle"></i>不正解: <span id="wrong-answers">0</span></div>
+                            <div>
+                                <i class="fas fa-chart-pie"></i>挑戦率: <span id="progress-percentage">0</span>%
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resultbox2">
+                        <div class="stats-title"><i class="fas fa-chart-bar"></i>統計情報</div>
+                        <div id="performance-stats">
+                            <div><i class="fas fa-percentage"></i>平均正解率: <span id="avg-accuracy">0</span>%</div>
+                            <div><i class="fas fa-trophy"></i>最高連続正解: <span id="max-streak">0</span></div>
+                            <div><i class="fas fa-fire"></i>現在の連続正解: <span id="current-streak">0</span></div>
+                            <div><i class="fas fa-lightbulb"></i>ヒント使用回数: <span id="hint-used-count">0</span></div>
+                        </div>
+                    </div>
+                    <div class="resultbox4">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="swiper-slide slide2">
+                <div class="main">
+                    <div class="title">
+                        <div id="instruction">空欄に入る単語を入力してください。</div>
+                        <div id="template-sentence-area" class="template-sentence no-swiping">
+                        </div>
+                        <button id="play-audio-btn" class="audio-btn no-swiping"><i class="fas fa-play"></i>
+                            音声再生</button>
+                    </div>
+
+                    <div id="answer-hint-area" class="no-swiping">
+                        <div class="button-group">
+                            <button id="hint-btn" class="hint-btn no-swiping"><i class="fas fa-lightbulb"></i>
+                                ヒント</button>
+                            <button id="submit-answer-btn" class="submit-btn no-swiping">回答する</button>
+                        </div>
+                        <div id="hint-display" class="hint-display" style="display: none;"></div>
+                    </div>
+                    <div id="feedback-area" style="display: none; margin-top: 15px;">
+                        <p id="feedback-text"></p>
+                        <button id="next-question-btn" style="display: none;">間違えたことを深く反省し、お詫びする事を誓います。</button>
+                    </div>
+                </div>
+                <div id="score">
+                    挑戦数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+                </div>
+            </div>
+
+            <!-- Slide 3: リスニング履歴 (変更なし) -->
+            <div class="swiper-slide slide3">
+                <div class="historylist">
+                    <h1><i class="fas fa-history"></i>リスニング履歴</h1>
+                    <div class="search-container">
+                        <input type="text" id="historySearchBox" class="searchbox" placeholder="履歴を検索 (英文)"
+                            oninput="filterHistory()">
+                        <i class="fas fa-search search-icon"></i>
+                        <div class="filter-options">
+                            <select id="historyFilter" onchange="filterHistory()">
+                                <option value="all">すべての履歴</option>
+                                <option value="correct">正解した問題</option>
+                                <option value="incorrect">間違えた問題</option>
+                            </select>
+                        </div>
+                    </div>
+                    <ul id="historyList" class="custom-list"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+
+    <div class="modal micromodal-slide" id="settings-modal" aria-hidden="true">
+        <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+            <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+                <header class="modal__header" style="text-align: center;">
+                    <h2 id="settings-modal-title">設定</h2>
+                </header>
+                <main class="modal__content" id="settings-modal-content">
+                    <div class="settings-section">
+                        <h3>出題設定</h3>
+                        <div class="settings-option">
+                            <label>
+                                <input type="radio" name="question-mode" id="random-mode" value="random" checked> ランダム出題
+                            </label>
+                        </div>
+                        <div class="settings-option">
+                            <label>
+                                <input type="radio" name="question-mode" id="sequential-mode" value="sequential"> 順番に出題
+                            </label>
+                        </div>
+                        <div class="settings-option">
+                            <label>
+                                <input type="checkbox" id="auto-play-setting"> 問題表示時に自動再生する
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>履歴</h3>
+                        <button id="clear-history-btn" class="setting-btn clear-btn">学習履歴をクリア</button>
+                    </div>
+                </main>
+                <footer class="modal__footer" style="text-align: center;">
+                    <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">閉じる</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer" style="display:none;"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="./listening/script.js"></script>
+</body>
+
+</html>

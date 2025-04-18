@@ -6,6 +6,7 @@ import random
 import re
 from contextlib import asynccontextmanager
 from typing import List, Union
+import base64
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile,Response
@@ -576,13 +577,25 @@ async def reqAI(pronpt, model="gemini-2.0-flash"):
                         result = await response.json()
                     except Exception as json_error:
                         raise Exception(json_error)
-                    return result
+                    return result["choices"][0]["message"]["content"]
         except Exception as e:
             raise Exception(e)
 
 @app.get("/play/")
 async def play(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
+
+@app.get("/play")
+async def play2(request: Request):
+    return templates.TemplateResponse("play.html", {"request": request})
+
+@app.get("/listening/")
+async def listening(request: Request):
+    return templates.TemplateResponse("listening.html", {"request": request})
+
+@app.get("/listening")
+async def listening2(request: Request):
+    return templates.TemplateResponse("listening.html", {"request": request})
 
 @app.get("/dashboard/")
 async def dashboard(request: Request):
@@ -1140,13 +1153,13 @@ async def search_word(data: wordData):
 
 @app.get("/api/gen/speak/{word}")
 async def gen_speak(word: str):
-    #ファイルチェック
+    # ファイルチェック
     filename = f"./data/audio/{xxhash.xxh64(word).hexdigest()}.mp3"
 
     if os.path.exists(filename):
         return FileResponse(filename)
     
-    lang = "ja" if re.search(r'[\u3040-\u309F\u30A0-\u30FF]', word) else "en"
+    lang = "ja" if re.search(r'[--]', word) else "en"
     
     try:
         tts = gTTS(text=word, lang=lang, slow=True)
@@ -1159,11 +1172,46 @@ async def gen_speak(word: str):
         with open(filename, "wb") as f:
             f.write(audio_data)
         
-        
         return Response(
             content=audio_data,
             media_type="audio/mpeg",
             headers={"Content-Disposition": f"attachment; filename={word}.mp3"}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"音声生成に失敗しました: {str(e)}"
+        )
+
+@app.get("/api/listening/{word}")
+async def listening_mode(word:str):
+    """
+    リスニングモードのエンドポイント
+    """
+
+    # 1. 単語から文章を生成
+    prompt = f"""
+    "{word}" という単語を使って、リスニング問題文を生成して下さい。
+    中学生レベルの英語で比較的簡単な、文法的に正しい文章を作成してください。
+    5単語から10単語程度の長さで、自然な文章を生成してください。
+    出力形式は、リスニング用の問題文のみです。
+    """
+    sentence = await reqAI(prompt)
+
+    try:
+        tts = gTTS(text=sentence, lang="en", slow=True)
+        
+        audio_bytes = BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_data = audio_bytes.getvalue()
+        
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        return JSONResponse(
+            content={
+                "question": sentence,
+                "audio": audio_base64,
+            },
+            status_code=200
         )
     except Exception as e:
         raise HTTPException(
