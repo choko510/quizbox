@@ -106,6 +106,12 @@
                         <li><button id="answer3"></button></li>
                         <li><button id="answer4"></button></li>
                     </ul>
+
+                    <div id="input-area" style="display: none;" class="no-swiping">
+                        <input type="text" id="text-answer" placeholder="回答を入力">
+                        <button id="submit-text-answer">回答</button>
+                    </div>
+
                     <div id="handwriting-area" style="display: none;" class="no-swiping">
                         <div class="canvas-container no-swiping">
                             <canvas id="handwriting-canvas" width="400" height="200" class="no-swiping"></canvas>
@@ -187,6 +193,11 @@
                             <input type="radio" id="choice-mode" name="answer-mode" value="choice" checked>
                             <label for="choice-mode">4択モード</label>
                         </div>
+
+                        <div class="settings-option">
+                            <input type="radio" id="input-mode" name="answer-mode" value="input">
+                            <label for="input-mode">入力モード</label>
+                        </div>
                         
                         <div class="settings-option">
                             <input type="radio" id="handwriting-mode" name="answer-mode" value="handwriting" checked>
@@ -203,6 +214,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="../../modal.css">
+    <audio id="audioPlayer" style="display:none;"></audio>
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
@@ -224,6 +236,11 @@
             mousewheel: false,
             noSwiping: true,
             noSwipingClass: "no-swiping",
+        });
+
+        swiper.on('slideChange', function () {
+            document.querySelector('.swiper-button-next').style.display = 'block';
+            document.querySelector('.swiper-button-prev').style.display = 'block';
         });
 
         function getParam(name, url) {
@@ -273,6 +290,12 @@
             }
         }
 
+        // 音声再生用の関数
+        function playWord(word) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = `/api/gen/speak/${encodeURIComponent(word)}`;
+            audioPlayer.play().catch(e => console.error('音声再生エラー:', e));
+        }
 
         function loadQuestions() {
             const showErrorMessage = (errorMessage) => {
@@ -423,14 +446,14 @@
                 if (isReversed) {
                     titleHTML = isItpass ? question.kaisetu : question.description;
                     contentHTML = isItpass ? question.description : question.word;
-                    listHTML += `<li><div class="${titleClass}">${titleHTML}</div><div class="${contentClass}">${contentHTML}</div></li>`;
+                    listHTML += `<li><div class="${titleClass}">${titleHTML}&nbsp;&nbsp;<i class="fas fa-volume-up speak-icon" onclick="playWord('${isReversed ? contentHTML : titleHTML}')"></i></div><div class="${contentClass}">${contentHTML}</div></li>`;
                 } else {
                     titleHTML = isItpass ? question.description : question.word;
                     contentHTML = isItpass ? question.kaisetu : question.description;
                     if (isItpass || titleHTML.endsWith("か。") || titleHTML.endsWith("答えよ。") || titleHTML.endsWith("答えなさい。")) {
-                        listHTML += `<li><div class="${contentClass}">${contentHTML}</div><div class="${titleClass}">${titleHTML}</div></li>`;
+                    listHTML += `<li><div class="${contentClass}">${contentHTML}&nbsp;&nbsp;<i class="fas fa-volume-up speak-icon" onclick="playWord('${isReversed ? titleHTML : contentHTML}')"></i></div><div class="${titleClass}">${titleHTML}</div></li>`;
                     } else {
-                        listHTML += `<li><div class="${titleClass}">${titleHTML}</div><div class="${contentClass}">${contentHTML}</div></li>`;
+                    listHTML += `<li><div class="${titleClass}">${titleHTML}&nbsp;&nbsp;<i class="fas fa-volume-up speak-icon" onclick="playWord('${isReversed ? contentHTML : titleHTML}')"></i></div><div class="${contentClass}">${contentHTML}</div></li>`;
                     }
                 }
             });
@@ -760,12 +783,25 @@
                 currentIndex = (currentIndex + 1) % questions.length;
                 // 進捗を保存
                 localStorage.setItem('current_question_index_' + mondai, currentIndex.toString());
+                
+                // 最後の問題に達したらランダムモードに切り替え
+                if (currentIndex === 0) {
+                    localStorage.setItem('question_mode_' + mondai, 'random');
+                    document.getElementById('random-mode').checked = true;
+                    notie.alert({
+                        type: 'success',
+                        text: 'すべての問題を終了しました。ランダムモードに切り替えます',
+                        time: 3
+                    });
+                }
             } else {
                 // ランダムモード（現状の動作）
                 do {
                     currentIndex = Math.floor(Math.random() * questions.length);
                 } while (currentIndex === lastIndex);
             }
+
+            updateProgressDisplay();
         }
 
         // 進捗表示を更新する関数
@@ -775,7 +811,7 @@
             if (isSequential) {
                 // 順番モードでは問題番号も表示
                 document.getElementById('score').innerHTML = `
-                    問題 ${currentIndex + 1}/${questions.length}<br>
+                    問題 ${currentIndex+1}/${questions.length}<br>
                     回答数: ${totalCount}
                     正解数: ${correctCount}
                     不正解数: ${wrongCount}
@@ -792,16 +828,6 @@
                     正答率: ${calculateAccuracy().toFixed(1)}%
                 `;
             }
-        }
-
-        function displayScore() {
-            document.getElementById('score').textContent = `
-                    回答数: ${totalCount}
-                    正解数: ${correctCount}
-                    不正解数: ${wrongCount}
-                    連続正解数: ${renzokuseikai}
-                    正答率: ${calculateAccuracy().toFixed(1)}%
-                `;
         }
 
         function sendScore(endpoint, id, password) {
@@ -1074,7 +1100,6 @@
 
             // 統計情報を更新
             updateStats();
-            updateProgressDisplay();
         }
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);
@@ -1150,10 +1175,158 @@
             }
         });
 
-        // ページ読み込み時に設定を反映
+        document.querySelectorAll('input[name="answer-mode"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const choiceArea = document.getElementById('choice-answers');
+                const inputArea = document.getElementById('input-area');
+                const handwritingArea = document.getElementById('handwriting-area');
+                
+                if (this.value === 'choice') {
+                    choiceArea.style.display = 'block';
+                    inputArea.style.display = 'none';
+                    handwritingArea.style.display = 'none';
+                } else if (this.value === 'input') {
+                    choiceArea.style.display = 'none';
+                    inputArea.style.display = 'block';
+                    handwritingArea.style.display = 'none';
+                    document.getElementById('text-answer').focus();
+                } else if (this.value === 'handwriting') {
+                    choiceArea.style.display = 'none';
+                    inputArea.style.display = 'none';
+                    handwritingArea.style.display = 'block';
+                }
+            });
+        });
+
+        // テキスト回答送信
+        document.getElementById('submit-text-answer').addEventListener('click', function() {
+            const answer = document.getElementById('text-answer').value.trim();
+            if (answer) {
+                checkTextAnswer(answer);
+            }
+        });
+
+        // テキスト回答のEnterキー処理
+        document.getElementById('text-answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const answer = this.value.trim();
+                if (answer) {
+                    checkTextAnswer(answer);
+                }
+            }
+        });
+
+        // 正解時の処理
+        function handleCorrectAnswer() {
+            const endTime = performance.now();
+            const timeTaken = endTime - start;
+            answerTimes.push(timeTaken);
+
+            if (!questionStats.has(currentIndex)) {
+                questionStats.set(currentIndex, {
+                    attempts: 0,
+                    correctAnswers: 0,
+                    averageTime: 0,
+                    isLongTime: false,
+                    isWrong: false
+                });
+            }
+
+            const stats = questionStats.get(currentIndex);
+            stats.attempts++;
+            stats.averageTime = (stats.averageTime * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            
+            answeredQuestions.add(currentIndex);
+            totalCount++;
+            correctCount++;
+            renzokuseikai++;
+            
+            if (renzokuseikai > maxStreak) {
+                maxStreak = renzokuseikai;
+            }
+            
+            stats.correctAnswers++;
+            if (stats.correctAnswers >= 2) {
+                studyingQuestions.delete(currentIndex);
+            }
+            
+            notie.alert({ type: 1, text: '正解', time: 1 });
+            updateProgressDisplay();
+            updateStats();
+            
+            // 入力フィールドをクリア
+            document.getElementById('text-answer').value = '';
+            
+            nextIndex();
+            showNextQuestion();
+            sendScore("add_correct", accid, password);
+            saveCategoryProgress(true);
+        }
+
+        // 不正解時の処理
+        function handleWrongAnswer(userAnswer, correctAnswer) {
+            const endTime = performance.now();
+            const timeTaken = endTime - start;
+            answerTimes.push(timeTaken);
+
+            if (!questionStats.has(currentIndex)) {
+                questionStats.set(currentIndex, {
+                    attempts: 0,
+                    correctAnswers: 0,
+                    averageTime: 0,
+                    isLongTime: false,
+                    isWrong: false
+                });
+            }
+
+            const stats = questionStats.get(currentIndex);
+            stats.attempts++;
+            stats.averageTime = (stats.averageTime * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            stats.isWrong = true;
+            
+            answeredQuestions.add(currentIndex);
+            totalCount++;
+            wrongCount++;
+            renzokuseikai = 0;
+            studyingQuestions.add(currentIndex);
+            
+            notie.force({
+                type: 'error',
+                text: '<div class="popup">正しい回答: ' + correctAnswer + '<br>あなたの回答: ' + userAnswer + '</div>',
+                buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
+                callback: function() {
+                    // 入力フィールドをクリア
+                    document.getElementById('text-answer').value = '';
+                    
+                    updateProgressDisplay();
+                    updateStats();
+                    showNextQuestion();
+                    sendScore("add_bad", accid, password);
+                    saveCategoryProgress(false);
+                }
+            });
+        }
+
+        // テキスト回答の正誤チェック
+        function checkTextAnswer(answer) {
+            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
+            
+            if (answer === correctAnswer) {
+                handleCorrectAnswer();
+            } else {
+                handleWrongAnswer(answer, correctAnswer);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const mode = localStorage.getItem('question_mode_'+mondai) || 'sequential';
             document.getElementById(mode + '-mode').checked = true;
+            
+            // 初期モード設定
+            const answerMode = localStorage.getItem('answer_mode') || 'choice';
+            document.getElementById(answerMode + '-mode').checked = true;
+            document.getElementById(answerMode + '-mode').dispatchEvent(new Event('change'));
         });
         
     </script>

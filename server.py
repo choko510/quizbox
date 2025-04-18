@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from typing import List, Union
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile,Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -18,6 +18,8 @@ import aiofiles
 import xxhash
 import numpy as np
 import google.generativeai as genai
+from gtts import gTTS
+from io import BytesIO
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -1103,6 +1105,37 @@ async def search_word(data: wordData):
             "success": False,
             "error": str(e)
         }
+
+@app.get("/api/gen/speak/{word}")
+async def gen_speak(word: str):
+    #ファイルチェック
+    filename = f"./data/audio/{xxhash.xxh64(word).hexdigest()}.mp3"
+
+    if os.path.exists(filename):
+        return FileResponse(filename)
+    
+    try:
+        tts = gTTS(text=word, lang='en', slow=True)
+        
+        audio_bytes = BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_data = audio_bytes.getvalue()
+
+        # ファイルに保存
+        with open(filename, "wb") as f:
+            f.write(audio_data)
+        
+        
+        return Response(
+            content=audio_data,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": f"attachment; filename={word}.mp3"}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"音声生成に失敗しました: {str(e)}"
+        )
 
 @app.get("/api/get/category_stats/{id}/{password}")
 async def get_category_stats(id: str, password: str):

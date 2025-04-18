@@ -8,3 +8,4 @@ xxhash==3.5.0
 numpy==2.0.2
 python-multipart==0.0.20
 aiofiles==24.1.0
+gTTS==2.5.4
