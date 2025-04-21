@@ -9,4 +9,4 @@ numpy==2.0.2
 python-multipart==0.0.20
 aiofiles==24.1.0
 gTTS==2.5.4
-aiohttp==2.4.6
+aiohttp==3.11.17
