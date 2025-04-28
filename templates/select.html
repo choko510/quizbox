@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
-    <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/select/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <title>範囲選択</title>
@@ -52,15 +51,33 @@
                 </div>
             </div>
             </div>
+
+            
             
             <div id="loading" class="loading">範囲リストを読み込み中...</div>
             <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <!-- 特殊な範囲アイテム（全ての問題をプレイ） -->
+            <div class="special-range-item">
+                <button id="play-all-button" class="special-range-button">
+                    <i class="fas fa-play-circle"></i> 全て
+                </button>
+                <div class="special-range-text">全ての問題をプレイします</div>
+            </div>
+
+            <!-- 特殊な範囲アイテム（単語リスト表示） -->
+            <div class="special-range-item">
+                <button id="toggle-word-list" class="special-range-button">
+                    <i class="fas fa-list"></i> 単語
+                </button>
+                <div class="special-range-text">単語リストを表示します</div>
+            </div>
+            
             
             <div id="range-container" class="range-container"></div>
         </div>
-        
-    </div>
-<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 
     <script>
         // 教材IDと名前のマッピング
@@ -91,6 +108,21 @@
             
             // サーバーから教材の範囲リストを取得
             fetchRanges(bookId);
+
+            // 全ての問題をプレイするボタンの設定
+            const playAllButton = document.getElementById('play-all-button');
+            playAllButton.addEventListener('click', function() {
+                const maxRange = getMaxRangeForBook(bookId);
+                // 全範囲を選択してplay.htmlにリダイレクト
+                window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
+            });
+            
+            // 単語リスト表示ボタンの設定
+            const toggleWordListButton = document.getElementById('toggle-word-list');
+            
+            toggleWordListButton.addEventListener('click', function() {
+                window.location.href = `/play/?id=${bookId}&tangolist=true`;
+            });
         });
 
         // 教材IDから教材名と画像を取得して表示
@@ -118,7 +150,7 @@
                 });
                 
             }
-            // 指定範囲ごとの進捗を読み込んで表示
+            
             // 指定範囲ごとの進捗を読み込んで表示
             async function loadRangeProgress(bookId, ranges) {
                 let totalLearned = 0;
@@ -175,9 +207,9 @@
                     // 統計情報を更新
                     const remainingWords = totalWords - totalLearned;
                     
-                    document.getElementById('total-words').textContent = totalWords;
+                    document.getElementById('total-words').textContent = totalWords+1;
                     document.getElementById('learned-words').textContent = totalLearned;
-                    document.getElementById('remaining-words').textContent = remainingWords;
+                    document.getElementById('remaining-words').textContent = remainingWords +1;
                 }
             }
         async function fetchRanges(bookId) {

@@ -100,6 +100,83 @@ body {
   border-radius: 3px;
 }
 
+/* 特殊ボタン */
+.special-range-item {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.special-range-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.special-range-button {
+  flex: 0 0 auto;
+  min-width: 110px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  margin-right: 20px;
+}
+
+.special-range-button:hover {
+  background-color: #3d8b40;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.special-range-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.special-range-button i {
+  margin-right: 8px;
+}
+
+.special-range-text {
+  font-size: 15px;
+  color: #555;
+}
+
+.word-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #4caf50;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.word-toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.word-toggle-btn i {
+  margin-right: 4px;
+}
+
 /* 教材情報エリア */
 .book-info {
   display: flex;

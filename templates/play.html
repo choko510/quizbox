@@ -1553,6 +1553,16 @@
 
 
         document.addEventListener('DOMContentLoaded', function () {
+
+            if (getParam("tangolist")=== 'true') {
+                
+                swiper.slideTo(2);
+
+                const url = new URL(window.location.href);
+                url.searchParams.delete('tangolist');
+                window.history.replaceState({}, document.title, url);
+            }
+
             // 保存された出題順序モードを読み込む
             selectQuestionMode(); // これでlocalStorageが読み込まれUIに反映される
 

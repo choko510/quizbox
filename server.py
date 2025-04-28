@@ -1840,7 +1840,7 @@ async def get_range_progress(request: Request, book_id: str, start: int = Query(
     answered = progress.get("answeredQuestions", [])
     # 範囲内の学習済み数をカウント（1始まり）
     learned = sum(1 for idx in answered if start <= idx + 1 <= end)
-    total = end - start + 1
+    total = end - start
     return {"learned": learned, "total": total}
 
 @app.get("/select/")
