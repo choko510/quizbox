@@ -128,9 +128,7 @@
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
             <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
                 <main class="modal__content" id="modal-1-content">
-                    <div id="hansei" style="text-align: center;"></div>
-                    <hr>
-                    <div id="kaisetu"></div>
+                    <div id="result-message" style="text-align: center;"></div>
                 </main>
                 <footer class="modal__footer" style="text-align: center;justify-content: center;align-items: center;">
                     <button class="modal__btn" data-micromodal-close
@@ -240,7 +238,6 @@
         }
 
         let mondai = getParam("id");
-        const isItpass = window.location.pathname.includes('/itpasu/');
         let isCustom = false;
         let accid = Cookies.get('id');
         let password = Cookies.get('password');
@@ -252,7 +249,7 @@
                 isCustom = true;
                 mondai = mondainame;
             } else {
-                mondai = isItpass ? "it" : "hard";  //デフォルトの問題
+                mondai = "hard";  //デフォルトの問題
             }
         }
         const questions = [];  // Initialize questions array
@@ -270,15 +267,7 @@
         let reviewStreaks = {}; // { questionIndex: streakCount }
 
 
-        // 解説表示用の関数 (ITパスポート試験用)
-        function onDontKnowClick() {
-            if (isItpass) {
-                const currentQuestion = questions[currentIndex];
-                document.getElementById('hansei').innerHTML = `<div class="popup">${currentQuestion.description}<br><br>正解: ${currentQuestion.word}</div>`;
-                document.getElementById('kaisetu').innerHTML = currentQuestion.kaisetu;
-                MicroModal.show('modal-1'); // モーダルを表示
-            }
-        }
+        // 音声再生用の関数
 
         // 音声再生用の関数
         function playWord(word) {
@@ -323,32 +312,7 @@
                 return response;
             };
 
-            if (isItpass) {
-                return fetch("../../mondai/" + mondai + '.json')
-                    .then(response => checkResponse(response, 'ITパスポート'))
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(item => {
-                            const realkotae = item.kotae.replace("ア", 0).replace("イ", 1).replace("ウ", 2).replace("エ", 3);
-                            let imageHTML = '';
-                            if (item.mondaiimg && item.mondaiimg.length > 0) {
-                                imageHTML = item.mondaiimg.map(imgPath => `<img src="../../img/${imgPath}" alt="問題画像" class="mondai-image">`).join('');
-                            }
-                            const mondaiCopy = [...item.mondai];
-                            mondaiCopy.splice(realkotae, 1);
-                            questions.push({
-                                word: item.mondai[realkotae],  // 正解の選択肢
-                                description: item.mondaibun + "<br>" + imageHTML,
-                                kouho: item.kouho,
-                                mondai: mondaiCopy, //不正解の選択肢
-                                kaisetu: item.kaisetu
-                            });
-                        });
-                    })
-                    .catch(error => {
-                        console.error('問題ファイルの読み込みに失敗しました:', error);
-                    });
-            } else if (isCustom) {
+            if (isCustom) {
                 return fetch("/api/get/mondai/" + accid + "/" + mondai + '.json')
                     .then(response => checkResponse(response, 'カスタム問題'))
                     .then(response => response.json())
@@ -435,15 +399,15 @@
                 const titleClass = 'tangotitle';
                 const contentClass = 'content no-swiping';
 
-                titleHTML = isItpass ? question.description : question.word;
-                contentHTML = isItpass ? question.kaisetu : question.description;
+                titleHTML = question.word;
+                contentHTML = question.description;
 
-                const isEnglishWord = /^[a-zA-Z0-9\s\-.,'’]+$/.test(titleHTML.trim());
+                const isEnglishWord = /^[a-zA-Z0-9\s\-.,'']+$/.test(titleHTML.trim());
                 const speakerIcon = isEnglishWord
-                    ? `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>`
+                    ? `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>`
                     : '';
 
-                if (isItpass || titleHTML.endsWith("か。") || titleHTML.endsWith("答えよ。") || titleHTML.endsWith("答えなさい。")) {
+                if (titleHTML.endsWith("か。") || titleHTML.endsWith("答えよ。") || titleHTML.endsWith("答えなさい。")) {
                     listHTML += `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${titleHTML}</div></li>`;
                 } else {
                     listHTML += `<li><div class="${titleClass}">${titleHTML}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div></li>`;
@@ -520,9 +484,9 @@
                 });
             } else {
                 // 通常モード
-                if (isItpass || question.mondai) {
-                    // ITパスポート or mondaiフィールドあり: 指定の不正解選択肢 + 他の問題の単語
-                    const providedIncorrect = isItpass ? question.mondai : (question.mondai || []);
+                if (question.mondai) {
+                    // mondaiフィールドあり: 指定の不正解選択肢 + 他の問題の単語
+                    const providedIncorrect = question.mondai || [];
                     providedIncorrect.forEach(opt => {
                         if (opt !== correctAnswer && !incorrectOptions.includes(opt)) {
                             incorrectOptions.push(opt);
@@ -539,7 +503,7 @@
 
             // 2. ハードモード処理 (不正解選択肢の置き換え)
             let similarWordsUsed = 0;
-            if (isHardMode && !isReversed && !isItpass) { // ハードモードは通常表示の英単語問題のみ適用 (仮)
+            if (isHardMode && !isReversed) { // ハードモードは通常表示の英単語問題のみ適用 (仮)
                 const similarWords = [];
                 questions.forEach((q, index) => {
                     if (index !== currentIndex) {

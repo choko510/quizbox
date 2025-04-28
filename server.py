@@ -680,18 +680,6 @@ async def dashboard(request: Request):
     
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
-@app.get("/itpasu/play/")
-async def itpasplay(request: Request):
-    return templates.TemplateResponse("play.html", {"request": request})
-
-@app.get("/itpasu/play/{path:path}")
-async def redirect_to_itpasu(path: str):
-    return RedirectResponse(url=f"/play/{path}", status_code=302)
-
-@app.get("/itpasu/")
-async def redirect_to_top():
-    return RedirectResponse(url="/", status_code=302)
-
 # APIエンドポイント
 @app.post("/api/registration")
 async def registration(data: Data):
