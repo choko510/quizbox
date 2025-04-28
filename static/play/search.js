@@ -432,8 +432,8 @@ function buildSearchIndex() {
 
     questions.forEach((question, idx) => {
         // 検索対象のテキスト（環境によって条件分岐）
-        const title = isItpass ? question.description : question.word;
-        const content = isItpass ? question.kaisetu : question.description;
+        const title = question.word;
+        const content = question.description;
 
         // 単語のトークン化（小文字変換）
         const titleTokens = title.toLowerCase().split(/\s+/);

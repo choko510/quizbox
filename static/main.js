@@ -492,10 +492,11 @@ async function drawMainChart() {
     
     try {
         const data = await fetchData(id, password);
+        console.log('APIから取得したデータ:', data); // デバッグ用ログ追加
 
         // データ検証
         if (!data || typeof data.correct !== 'object' || typeof data.bad !== 'object') {
-            console.error('無効なデータ形式です');
+            console.error('無効なデータ形式です:', data); // データ内容もログに出力
             displayChartError(ctx, 'データがありません');
             return;
         }
@@ -512,11 +513,19 @@ async function drawMainChart() {
 
         // データを日付順に整理
         const labels = dates.map(date => moment(date).format('YYYY/MM/DD'));
-        const correctData = dates.map(date => data.correct[date] || 0);
-        const badData = dates.map(date => data.bad[date] || 0);
+        // オブジェクト形式の場合も考慮して数値を取得
+        const correctData = dates.map(date => {
+            const val = data.correct[date];
+            return typeof val === 'object' && val !== null && val.hasOwnProperty('other') ? val.other : (val || 0);
+        });
+        const badData = dates.map(date => {
+            const val = data.bad[date];
+            return typeof val === 'object' && val !== null && val.hasOwnProperty('other') ? val.other : (val || 0);
+        });
 
-        // トータルを計算
+        // トータルを計算 (修正後の数値データで計算)
         const totalData = correctData.map((correct, index) => correct + badData[index]);
+        console.log('Chart.jsに渡すデータ:', { labels, correctData, badData, totalData }); // デバッグ用ログ追加
 
         // 既存のチャートがある場合は破棄
         if (window.mainChart instanceof Chart) {
