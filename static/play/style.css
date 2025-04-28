@@ -412,7 +412,6 @@ ul.custom-list li .content {
     align-items: center;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(240, 242, 245, 0.6);
     transition: all 0.2s ease;
 }
 

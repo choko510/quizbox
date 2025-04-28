@@ -1,0 +1,540 @@
+/* 英単語範囲選択ページのスタイル */
+
+/* ベーススタイル */
+body {
+  font-family: 'Noto Sans Japanese', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ページコンテナ */
+.main {
+  max-width: 900px; /* より広くして大きな範囲アイテムに対応 */
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ヘッダーアクション */
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0 5px;
+}
+
+.header-actions a {
+  color: #4caf50;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-actions a:hover {
+  color: #2e7d32;
+  text-decoration: underline;
+}
+
+.header-actions a i {
+  margin-right: 6px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.create-btn {
+  background-color: #4caf50;
+  color: white !important;
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.create-btn:hover {
+  background-color: #3d8b40;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none !important;
+  transform: translateY(-1px);
+}
+
+/* メインボックス */
+.box1 {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin-top: 5px;
+  position: relative;
+}
+
+/* 教材タイトル */
+.book-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #333;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.book-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background-color: #4caf50;
+  border-radius: 3px;
+}
+
+/* 教材情報エリア */
+.book-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 25px;
+  margin-bottom: 35px;
+}
+
+/* 教材画像 */
+.book-image-container {
+  flex: 0 0 auto;
+}
+
+.book-image {
+  display: block;
+  width: 150px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.book-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+/* 説明テキスト */
+.description {
+  flex: 1;
+  padding: 20px;
+  background-color: #e8f5e9;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* 教材サマリー */
+.book-summary {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 15px;
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+}
+
+.book-summary i {
+  margin-right: 8px;
+  color: #4caf50;
+}
+
+/* 全体の統計 */
+.book-stats {
+  margin-top: 5px;
+}
+
+.stats-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px 0;
+}
+
+.stats-item {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.stats-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background-color: #e0e0e0;
+}
+
+.stats-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #424242;
+  margin-bottom: 5px;
+}
+
+.stats-number.highlight {
+  color: #f44336;
+}
+
+.stats-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #757575;
+}
+
+.overall-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.overall-progress-bar {
+  flex: 1;
+  height: 12px;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.overall-progress-value {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.overall-progress-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #424242;
+  width: 45px;
+  text-align: right;
+}
+
+/* 範囲選択コンテナ */
+.range-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 25px;
+  margin: 30px 0;
+}
+
+/* 範囲項目 */
+.range-item {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  min-height: 70px;
+}
+
+.range-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 範囲選択ボタン */
+.range-button {
+  flex: 0 0 auto;
+  min-width: 110px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  margin-right: 20px;
+  z-index: 1;
+}
+
+.range-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.6s ease;
+  z-index: -1;
+}
+
+.range-button:hover {
+  background-color: #3d8b40;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.range-button:hover::before {
+  left: 100%;
+}
+
+.range-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 進捗状態によるボタンスタイル */
+.range-button.completed {
+  background-color: #2e7d32;
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+  position: relative;
+}
+
+.range-button.completed::after {
+  content: "\f00c";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.range-button.in-progress {
+  background-color: #ff9800;
+  box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
+}
+
+/* 進捗表示コンテナ */
+.range-progress-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-value {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #555555;
+  font-weight: 500;
+}
+
+/* ローディング表示 */
+.loading {
+  text-align: center;
+  margin: 30px 0;
+  font-size: 16px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin-top: 15px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4caf50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* エラーメッセージ */
+.error-message {
+  color: #f44336;
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #ffebee;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.error-message i {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* フッター */
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  color: #777;
+  font-size: 14px;
+}
+
+/* レスポンシブデザイン */
+@media screen and (max-width: 1200px) {
+  .range-container {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+  }
+  
+  .main {
+    max-width: 800px;
+  }
+  
+  .box1 {
+    padding: 25px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .range-container {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+  }
+  
+  .range-button {
+    min-width: 80px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-right: 12px;
+  }
+  
+  .range-item {
+    padding: 12px 15px;
+    min-height: 60px;
+  }
+  
+  .book-title {
+    font-size: 20px;
+  }
+  
+  .main {
+    padding: 15px 10px;
+    max-width: 100%;
+  }
+  
+  .box1 {
+    padding: 20px;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .book-info {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .description {
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+  }
+  
+  .progress-bar {
+    height: 10px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .range-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .range-item {
+    padding: 10px 12px;
+    min-height: auto;
+  }
+  
+  .range-button {
+    min-width: 60px;
+    padding: 8px 10px;
+    font-size: 13px;
+    margin-right: 10px;
+  }
+  
+  .book-title {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .progress-bar {
+    height: 6px;
+  }
+  
+  .progress-text {
+    font-size: 11px;
+  }
+  
+  .book-image {
+    width: 100px;
+  }
+  
+  .book-stats {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+  
+  .stats-label {
+    font-size: 13px;
+  }
+  
+  .overall-progress-text {
+    font-size: 13px;
+  }
+}

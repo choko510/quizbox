@@ -1,3 +1,171 @@
+/* 検索機能のスタイル */
+.top .search-container {
+    margin-left: auto;
+    display: flex;
+    width: 280px;
+}
+
+#search-input {
+    flex-grow: 1;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+#search-button {
+    padding: 8px 12px;
+    background-color: #3498db;
+    border: none;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+#search-button:hover {
+    background-color: #2980b9;
+}
+/* 検索オーバーレイ */
+/* 背景スクロール防止用 */
+body.no-scroll {
+    overflow: hidden;
+}
+
+.search-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.search-overlay.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.search-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #3498db;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.back-button:hover {
+    background-color: #f0f0f0;
+}
+
+.search-header h2 {
+    margin: 0;
+    font-size: 18px;
+    flex-grow: 1;
+}
+
+.search-results {
+    padding: 15px;
+    flex-grow: 1;
+}
+
+.result-item {
+    margin-bottom: 12px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.result-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.result-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.result-type {
+    display: inline-block;
+    padding: 3px 8px;
+    background-color: #e9f0f8;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #3498db;
+}
+
+.result-author {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin-top: 8px;
+}
+
+.no-results {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 40px;
+    font-size: 16px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-size: 16px;
+}
+
+@media screen and (max-width: 767px) {
+    .top .search-container {
+        width: 100%;
+        margin-top: 10px;
+        order: 3;
+    }
+    
+    .top {
+        flex-wrap: wrap;
+    }
+    
+    .search-header h2 {
+        font-size: 16px;
+    }
+    
+    .back-button {
+        font-size: 14px;
+    }
+}
+
 body {
     font-family: 'Noto Sans Japanese', sans-serif;
     background-color: #ebedf1;

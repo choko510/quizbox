@@ -1,5 +1,142 @@
+// 検索機能
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const searchResults = document.getElementById('search-results');
+    const searchOverlay = document.getElementById('search-overlay');
+    const backButton = document.getElementById('back-button');
 
-// スコアダッシュボードの機能を管理するJavaScriptファイル
+    // ページ内のすべてのリンクテキストを収集
+    let linkTexts = [];
+    document.querySelectorAll('a').forEach(link => {
+        if (link.textContent && link.textContent.trim()) {
+            linkTexts.push({
+                text: link.textContent.trim(),
+                url: link.href
+            });
+        }
+    });
+
+    if (searchButton && searchInput) {
+        searchButton.addEventListener('click', function() {
+            performSearch(searchInput.value);
+        });
+
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch(searchInput.value);
+            }
+        });
+    }
+
+    if (backButton) {
+        backButton.addEventListener('click', function() {
+            // アニメーションでフェードアウト
+            searchOverlay.classList.remove('visible');
+            
+            // アニメーション終了後に非表示にする
+            setTimeout(() => {
+                searchOverlay.style.display = 'none';
+                // スクロール制御を解除
+                document.body.classList.remove('no-scroll');
+            }, 300);
+        });
+    }
+
+    // 検索を実行する関数
+    async function performSearch(query) {
+        if (!query || query.trim().length < 1) {
+            return;
+        }
+
+        // スクロール制御を適用
+        document.body.classList.add('no-scroll');
+        
+        // オーバーレイを表示
+        searchOverlay.style.display = 'flex';
+        
+        // 少し遅延させてからアニメーション開始（DOMが反映されるため）
+        setTimeout(() => {
+            searchOverlay.classList.add('visible');
+        }, 10);
+
+        try {
+            // 検索中の表示
+            searchResults.innerHTML = '<div class="loading-spinner">検索中...</div>';
+
+            // APIリクエスト
+            const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+            
+            if (!response.ok) {
+                throw new Error('検索に失敗しました');
+            }
+
+            const data = await response.json();
+
+            // リンクテキストからも検索
+            const linkMatches = searchInLinkTexts(query);
+
+            // APIの結果とリンク検索結果を結合
+            const combinedResults = [...data];
+            
+            // 結果に重複がないように追加
+            linkMatches.forEach(match => {
+                if (!combinedResults.some(item => item.url === match.url)) {
+                    combinedResults.push(match);
+                }
+            });
+
+            // 検索結果の表示
+            displaySearchResults(combinedResults);
+        } catch (error) {
+            console.error('検索エラー:', error);
+            searchResults.innerHTML = `<div class="no-results">検索中にエラーが発生しました: ${error.message}</div>`;
+        }
+    }
+
+    // リンクテキストから検索する関数
+    function searchInLinkTexts(query) {
+        const normalizedQuery = query.toLowerCase();
+        return linkTexts.filter(item =>
+            item.text.toLowerCase().includes(normalizedQuery)
+        ).map(item => {
+            // URLからfindパラメータを抽出
+            const url = new URL(item.url);
+            const id = url.searchParams.get('id');
+            
+            return {
+                title: item.text,
+                type: "リンク検索結果",
+                author: "システム",
+                url: item.url
+            };
+        });
+    }
+
+    // 検索結果を表示する関数
+    function displaySearchResults(results) {
+        if (!results || results.length === 0) {
+            searchResults.innerHTML = '<div class="no-results">検索結果がありません</div>';
+            return;
+        }
+
+        let html = '';
+        
+        results.forEach(item => {
+            const type = item.type || '問題セット';
+            const author = item.author || 'システム';
+            
+            html += `
+            <div class="result-item" onclick="window.location.href='${item.url}'">
+                <div class="result-title">${item.title}</div>
+                <div class="result-type">${type}</div>
+                <div class="result-author">作成者: ${author}</div>
+            </div>`;
+        });
+
+        searchResults.innerHTML = html;
+    }
+});
 
 // グローバルスコープで要素を取得（DOMContentLoaded前でも参照可能にするため）
 const adviceContent = document.getElementById('advice-content');
@@ -27,8 +164,8 @@ async function handleLogin(event) {
         }
         
         // クッキーを更新
-        Cookies.set('id', id, { expires: 30 });
-        Cookies.set('password', password, { expires: 30 });
+        Cookies.set('id', id, { expires: 120 });
+        Cookies.set('password', password, { expires: 120 });
         alert("ログイン成功");
         MicroModal.close('modal-1');
     } catch (error) {
@@ -138,6 +275,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // アプリケーションの初期化完了
     console.log('アプリケーションの初期化が完了しました');
+// ページ読み込み時に進捗データを取得してプログレスバーを表示
+    const userId = Cookies.get('id');
+    const userPassword = Cookies.get('password');
+    if (userId && userPassword) {
+        try {
+            const scoresData = await fetchScores(userId, userPassword);
+            if (scoresData) {
+                analyzedata(scoresData); // プログレスバーを表示
+            }
+        } catch (error) {
+            console.error('ページ読み込み時の進捗データ取得エラー:', error);
+        }
+    } else {
+        console.log('ログイン情報が見つからないため、進捗バーは表示されません。');
+        // 必要であれば、未ログイン状態のプログレスバー表示処理を追加
+    }
 });
 
 // APIからスコアデータを取得
@@ -160,14 +313,45 @@ async function fetchScores(id, password) {
     return data;
 }
 
-async function fetchRanking() {
-    const response = await fetch(`api/ranking`);
-    //{"userid": userid, "correct": correct, "bad": bad}
-    const data = await response.json();
-    const ranking = data.map((d, i) => {
-        return `${i + 1}位: ${d.userid} 正解数:${d.correct} 不正解数:${d.bad}`;
+// リンクの href から 'id' クエリパラメータを取得する関数
+function getProgressKey(href) {
+    try {
+        const url = new URL(href, window.location.origin); // 相対URLも扱えるように基底URLを指定
+        return url.searchParams.get('id');
+    } catch (e) {
+        console.error('URLの解析に失敗しました:', href, e);
+        return null; // エラー時は null を返す
+    }
+}
+
+// 進捗データを抽出する関数
+function extractProgressData(summary, key) {
+    const p = summary[key] || { learned: 0, learning: 0, unlearned: 0, total: 0 };
+    // total が 0 または未定義の場合のフォールバックを追加
+    const total = p.total > 0 ? p.total : (p.learned + p.learning + (p.unlearned || 0));
+    return { learned: p.learned || 0, learning: p.learning || 0, total: total || 0 };
+}
+
+function analyzedata(data) {
+    console.log('進捗データ:', data); // デバッグ用
+    const allProgressData = data.progress_summary || {};
+    console.log('処理する全進捗データ:', allProgressData);
+    // 全問題リンクに対してプログレスバーを追加
+    const categoryDivs = document.querySelectorAll('.category');
+    categoryDivs.forEach(category => {
+        const links = category.querySelectorAll('a');
+        links.forEach(link => {
+            // リンクからプログレスキーを取得
+            const progressKey = getProgressKey(link.href); // textContent は不要
+            if (!progressKey) {
+                return; // キーが取得できなければスキップ
+            }
+            // 進捗データの抽出
+            const progressData = extractProgressData(allProgressData, progressKey);
+            // プログレスバー作成・追加
+            createProgressBar(link, progressData);
+        });
     });
-    document.getElementById("ranking").textContent = ranking;
 }
 
 function displayScores(correct, bad, total, ritu) {
@@ -214,7 +398,7 @@ function setupTabs() {
             // タブによって追加のアクションを実行
             switch(tabContentId) {
                 case 'ranking': // ランキングタブの場合
-                    fetchAndDisplayRanking(); // ランキングデータを取得・表示
+                    fetchAndDisplayRanking('learned_words'); // 覚えた単語数でソートしたランキングを表示
                     break;
                 case 'advice':
                     generateAdvice();
@@ -233,10 +417,11 @@ async function iconmodal() {
     const scores = await fetchScores(id, password);
     if (!scores) return;
 
+analyzedata(scores); // 進捗データを分析してプログレスバーを表示
     const total = scores.correct + scores.bad;
     const ritu = total > 0 ? Math.round(scores.correct / total * 100) + "%" : "0%";
 
-    // スコアカード表示を更新
+    // スコアカード表示を更新（覚えた単語数も更新される）
     updateScoreCards(scores.correct, scores.bad, total, ritu);
 
     // メインチャート描画
@@ -246,12 +431,57 @@ async function iconmodal() {
     console.log('モーダルの表示が完了しました');
 }
 
+// プログレスバーを作成して挿入する関数
+function createProgressBar(linkElement, progressData) {
+    // 既存のプログレスバーがあれば削除
+    const existingProgressBar = linkElement.nextElementSibling;
+    if (existingProgressBar && existingProgressBar.classList.contains('progress-container')) {
+        existingProgressBar.remove();
+    }
+    // 総数が0の場合はデフォルト値を使用
+    const total = progressData.total || 100;
+    // パーセンテージ計算
+    const learnedPercent = Math.min(100, Math.max(0, (progressData.learned / total) * 100)) || 0;
+    const learningPercent = Math.min(100 - learnedPercent, Math.max(0, (progressData.learning / total) * 100)) || 0;
+    const unlearnedPercent = 100 - learnedPercent - learningPercent;
+    // プログレスバー要素作成
+    const container = document.createElement('div');
+    container.className = 'progress-container';
+    const learnedBar = document.createElement('div');
+    learnedBar.className = 'progress-learned';
+    learnedBar.style.width = `${learnedPercent}%`;
+    learnedBar.title = `学習済み: ${progressData.learned}問 (${learnedPercent.toFixed(1)}%)`;
+    const learningBar = document.createElement('div');
+    learningBar.className = 'progress-learning';
+    learningBar.style.width = `${learningPercent}%`;
+    learningBar.title = `学習中: ${progressData.learning}問 (${learningPercent.toFixed(1)}%)`;
+    const unlearnedBar = document.createElement('div');
+    unlearnedBar.className = 'progress-unlearned';
+    unlearnedBar.style.width = `${unlearnedPercent}%`;
+    unlearnedBar.title = `未学習: ${total - progressData.learned - progressData.learning}問 (${unlearnedPercent.toFixed(1)}%)`;
+    // 組み立て
+    container.appendChild(learnedBar);
+    container.appendChild(learningBar);
+    container.appendChild(unlearnedBar);
+    // リンク要素の後に挿入
+    linkElement.insertAdjacentElement('afterend', container);
+}
+
 // スコアカード表示を更新
 function updateScoreCards(correct, bad, total, ritu) {
     document.getElementById("correct").textContent = correct;
     document.getElementById("bad").textContent = bad;
     document.getElementById("total").textContent = total;
     document.getElementById("ritu").textContent = ritu;
+    
+    // 覚えた単語数を表示する要素を更新
+    const learnedWordsElement = document.getElementById("learned-words");
+    if (learnedWordsElement) {
+        learnedWordsElement.textContent = correct;
+        console.log("覚えた単語数要素を更新しました:", correct);
+    } else {
+        console.error("覚えた単語数表示要素が見つかりません");
+    }
 }
 
 // メインダッシュボードのグラフ描画
@@ -487,7 +717,7 @@ async function generateAdvice() {
 }
 
 // ランキングデータを取得して表示する関数
-async function fetchAndDisplayRanking(period = 'all') {
+async function fetchAndDisplayRanking(sortBy = 'correct') { // デフォルトのソート基準を 'correct' に
     // ランキングリスト要素がなければ処理中断
     if (!rankingList) {
         console.error("Ranking list element not found.");
@@ -515,8 +745,8 @@ async function fetchAndDisplayRanking(period = 'all') {
     }
 
     try {
-        // 期間パラメータを追加
-        const url = period !== 'all' ? `/api/ranking?period=${period}` : '/api/ranking';
+        // ソート基準をクエリパラメータに追加
+        const url = `/api/ranking?sort_by=${sortBy}`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -537,11 +767,19 @@ async function fetchAndDisplayRanking(period = 'all') {
             const total = user.correct + user.bad;
             const accuracyRate = total > 0 ? Math.round((user.correct / total) * 100) : 0;
             
+            // ソート基準に基づいて強調表示する項目を決定
+            // アクティブなソートボタンを取得
+            const activeButton = document.querySelector('.sort-button.active');
+            const currentSortBy = activeButton ? activeButton.getAttribute('data-sort') : 'correct';
+            
             // 順位に応じたポジションクラスを設定
             let positionClass = 'position-default';
             if (position === 1) positionClass = 'position-1';
             else if (position === 2) positionClass = 'position-2';
             else if (position === 3) positionClass = 'position-3';
+            
+            // 覚えた単語数を取得（APIレスポンスから）
+            const learnedWords = user.learned_words !== undefined ? user.learned_words : user.correct;
             
             html += `
                 <div class="ranking-item">
@@ -549,17 +787,20 @@ async function fetchAndDisplayRanking(period = 'all') {
                     <div class="ranking-info">
                         <div class="ranking-user">${user.userid}</div>
                         <div class="ranking-stats">
-                            <div class="stat-item total">
-                                <b>合計 ${total}問</b>
+                            <div class="stat-item total ${currentSortBy === 'total' ? 'highlight' : ''}">
+                                <b>合計: ${total}問</b>
                             </div>
-                            <div class="stat-item correct">
-                                <i class="fas fa-check-circle"></i> ${user.correct}問正解
+                            <div class="stat-item learned-words ${currentSortBy === 'learned_words' ? 'highlight' : ''}">
+                                <i class="fas fa-book"></i> <b>覚えた単語数: ${learnedWords}</b>
+                            </div>
+                            <div class="stat-item correct ${currentSortBy === 'correct' ? 'highlight' : ''}">
+                                <i class="fas fa-check-circle"></i> 正解数: ${user.correct}
                             </div>
                             <div class="stat-item incorrect">
-                                <i class="fas fa-times-circle"></i> ${user.bad}問不正解
+                                <i class="fas fa-times-circle"></i> 不正解: ${user.bad}問
                             </div>
-                            <div class="stat-item accuracy">
-                                <i class="fas fa-bullseye"></i> 正答率 ${accuracyRate}%
+                            <div class="stat-item accuracy ${currentSortBy === 'accuracy' ? 'highlight' : ''}">
+                                <i class="fa-solid fa-chart-line"></i>正答率: ${accuracyRate}%
                             </div>
                         </div>
                         <div class="progress-bar-container">
@@ -595,27 +836,36 @@ async function fetchAndDisplayRanking(period = 'all') {
 
 // ランキング関連のイベントリスナーを設定
 function setupRankingEventListeners() {
-    // 期間フィルターの変更イベント
-    const periodFilter = document.getElementById('ranking-period');
-    if (periodFilter && !periodFilter.hasEventListener) {
-        periodFilter.addEventListener('change', function() {
-            fetchAndDisplayRanking(this.value);
-        });
-        periodFilter.hasEventListener = true;
-    }
+    // ソートボタンのイベント設定
+    const sortButtons = document.querySelectorAll('.sort-button');
+    sortButtons.forEach(button => {
+        if (!button.hasEventListener) {
+            button.addEventListener('click', function() {
+                // 全てのボタンから active クラスを削除
+                sortButtons.forEach(btn => btn.classList.remove('active'));
+                // クリックされたボタンに active クラスを追加
+                this.classList.add('active');
+                // データ属性からソート基準を取得
+                const sortBy = this.getAttribute('data-sort');
+                // ランキングを更新
+                fetchAndDisplayRanking(sortBy);
+            });
+            button.hasEventListener = true;
+        }
+    });
     
     // リフレッシュボタンのクリックイベント
     const refreshBtn = document.getElementById('ranking-refresh');
-    if (refreshBtn && !refreshBtn.hasEventListener) {
+    if (refreshBtn && !refreshBtn.hasEventListener) { // イベントリスナーが重複しないようにチェック
         refreshBtn.addEventListener('click', function() {
-            const periodFilter = document.getElementById('ranking-period');
-            const period = periodFilter ? periodFilter.value : 'all';
-            fetchAndDisplayRanking(period);
+            // アクティブなボタンからソート基準を取得
+            const activeButton = document.querySelector('.sort-button.active');
+            const sortBy = activeButton ? activeButton.getAttribute('data-sort') : 'correct';
+            fetchAndDisplayRanking(sortBy); // 現在のソート基準でランキングを再取得
         });
-        refreshBtn.hasEventListener = true;
+        refreshBtn.hasEventListener = true; // リスナーが設定されたことをマーク
     }
 }
-
 
 // グローバルに必要な関数を公開
 window.iconmodal = iconmodal;

@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <title>notlet</title>
+    <title>Quizbox</title>
     <link rel="manifest" href="manifest.json">
     <style>
         .progress-container {
@@ -48,47 +49,65 @@
             <a href="/make" class="create-btn">問題を作る</a>
             <a href="/dashboard/" class="create-btn">問題管理</a>
         </div>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="問題を検索...">
+            <button id="search-button">検索</button>
+        </div>
+    </div>
+
+    <!-- 検索結果オーバーレイ -->
+    <div id="search-overlay" class="search-overlay">
+        <div class="search-header">
+            <button id="back-button" class="back-button">
+                <i class="fas fa-arrow-left"></i> 戻る
+            </button>
+            <h2>検索結果</h2>
+        </div>
+        <div id="search-results" class="search-results"></div>
     </div>
 
     <div class="main">
         <div class="box1">
 
-            {{ html | safe}}
-
             <div class="category-book">
                 <p>英単語</p>
                 <div class="category-book-grid">
-                    <a href="play/?id=leap">
+                    <a href="select/?id=leap">
                         <span>LEAP</span>
                         <img src="/img/book/leap.webp" class="book" alt="LEAP">
                     </a>
-                    <a href="play/?id=systemeitango">
+                    <a href="select">
                         <span>システム英単語</span>
                         <img src="/img/book/systemeitango.webp" class="book" alt="システム英単語">
                     </a>
-                    <a href="play/?id=target1000">
+                    <a href="select/?id=target1000">
                         <span>ターゲット 1000</span>
                         <img src="/img/book/target1000.webp" class="book" alt="ターゲット 1000">
                     </a>
-                    <a href="play/?id=target1200">
+                    <a href="select/?id=target1200">
                         <span>ターゲット 1200</span>
                         <img src="/img/book/target1200.webp" class="book" alt="ターゲット 1200">
                     </a>
-                    <a href="play/?id=target1400">
+                    <a href="select/?id=target1400">
                         <span>ターゲット 1400</span>
                         <img src="/img/book/target1400.webp" class="book" alt="ターゲット 1400">
                     </a>
-                    <a href="play/?id=target1900">
+                    <a href="select/?id=target1900">
                         <span>ターゲット 1900</span>
                         <img src="/img/book/target1900.webp" class="book" alt="ターゲット 1900">
                     </a>
                 </div>
             </div>
+
+            {{ html | safe}}
+
             <div class="category">
                 <p>授業</p>
-                <a href="play/?id=target1200701750">ターゲット1200 701-750 前回</a>
-                <a href="play/?id=target1200751800">ターゲット1200 751-800</a>
+                <a href="play/?id=target1200701750">ターゲット1200 701-750 旧</a>
+                <a href="play/?id=target1200751800">ターゲット1200 751-800 前回</a>
+                <a href="play/?id=target1200801850">ターゲット1200 801-850</a>
             </div>
+
             <div class="category">
                 <p>ITパスポート</p>
                 <a href="itpasu/play/">ITパスポート</a>
@@ -96,30 +115,35 @@
                 <a href="itpasu/play/?id=strategy">ITパスポート ストラテジ系</a>
                 <a href="itpasu/play/?id=technology">ITパスポート テクノロジ系</a>
             </div>
+
             <div class="category">
                 <p>ITパス 年代別</p>
                 <a href="itpasu/play/?id=r06">令和6年</a>
                 <a href="itpasu/play/?id=r05">令和5年</a>
                 <a href="itpasu/play/?id=r04">令和4年</a>
             </div>
+
             <div class="category">
                 <p>1級全般</p>
                 <a href="play/">プログラミング・ビジネス 1級</a>
                 <a href="beta/">プログラミング・ビジネス 1級 ハードモード</a>
                 <a href="play/?id=for">プログラミング・ビジネス フォール系 特訓 </a>
             </div>
+
             <div class="category">
                 <p>1級プログラミング</p>
                 <a href="play/?id=prog">プログラミング 1級</a>
                 <a href="play/?id=proghard">プログラミング 1級 ハードモード</a>
                 <a href="play/?id=re">プログラミング リ系 特訓 </a>
             </div>
+
             <div class="category">
                 <p>1級ビジネス</p>
                 <a href="play/?id=bizinesu">ビジネス 1級</a>
                 <a href="play/?id=hardbizinesu">ビジネス 1級 ハードモード</a>
                 <a href="play/?id=excelmondai">ビジネス エクセル 1級</a>
             </div>
+            
             <div class="category">
                 <p>2級全般</p>
                 <a href="play/?id=detabase">データベース全般</a>
@@ -138,9 +162,9 @@
     <script>
         if (!Cookies.get('id')) {
             const cookieId = Math.random().toString(36).substring(2);
-            Cookies.set('id', cookieId, { expires: 30 });
+            Cookies.set('id', cookieId, { expires: 120 });
             const password = Math.random().toString(36).substring(2);
-            Cookies.set('password', password, { expires: 30 });
+            Cookies.set('password', password, { expires: 120 });
             (async () => {
                 const response = await fetch('api/registration', {
                     method: 'POST',
@@ -174,8 +198,8 @@
                         // パスワードが間違っている場合、新しいアカウントを作成
                         const newId = Math.random().toString(36).substring(2);
                         const newPassword = Math.random().toString(36).substring(2);
-                        Cookies.set('id', newId, { expires: 30 });
-                        Cookies.set('password', newPassword, { expires: 30 });
+                        Cookies.set('id', newId, { expires: 120 });
+                        Cookies.set('password', newPassword, { expires: 120 });
                         await fetch('api/registration', {
                             method: 'POST',
                             headers: {
@@ -205,8 +229,8 @@
                     <!-- タブナビゲーション -->
                     <div class="tabs">
                         <div class="tab active" data-tab="dashboard">ダッシュボード</div>
-                        <div class="tab" data-tab="account">アカウント管理</div>
                         <div class="tab" data-tab="ranking">ランキング</div>
+                        <div class="tab" data-tab="account">アカウント管理</div>
                         <div class="tab" data-tab="advice">学習アドバイス</div>
                     </div>
 
@@ -229,6 +253,10 @@
                                 <h3 class="score-card__title">正答率</h3>
                                 <p id="ritu" class="score-card__value">0%</p>
                             </div>
+                            <div class="score-card score-card--learned-words">
+                                <h3 class="score-card__title">覚えた単語数</h3>
+                                <p id="learned-words" class="score-card__value">0</p>
+                            </div>
                         </div>
 
                         <div class="chart-container">
@@ -240,6 +268,17 @@
                     <div id="ranking" class="tab-content">
                         <div class="ranking-header">
                             <h3>ランキング</h3>
+                            <div class="ranking-controls">
+                                <div class="ranking-sort-buttons">
+                                    <button id="sort-total" class="sort-button" data-sort="total">合計解答数</button>
+                                    <button id="sort-learned" class="sort-button active" data-sort="learned_words">覚えた単語数</button>
+                                    <button id="sort-correct" class="sort-button" data-sort="correct">正解数</button>
+                                    <button id="sort-accuracy" class="sort-button" data-sort="accuracy">正答率</button>
+                                </div>
+                                <button id="ranking-refresh" class="refresh-btn" title="ランキングを更新">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="ranking-container">
                             <div id="ranking-list" class="modern-ranking-list">
@@ -305,261 +344,7 @@
         </div>
     </div>
 
-    <script src="score-dashboard.js" defer></script>
-
-    <script>
-        // 問題の進捗状況を表示するためのスクリプト
-        document.addEventListener('DOMContentLoaded', async function () {
-            // ユーザーID取得
-            const userId = Cookies.get('id');
-            const password = Cookies.get('password');
-
-            if (userId && password) {
-                try {
-                    // 全ての問題セットの進捗データを取得
-                    const response = await fetch('/api/get_all_progress', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: userId, password: password })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('進捗データの取得に失敗しました');
-                    }
-
-                    const data = await response.json();
-                    console.log('進捗データ:', data); // デバッグ用
-                    const allProgressData = data.all_progress_data || {};
-                    console.log('処理する全進捗データ:', allProgressData);
-
-                    // 全問題リンクに対してプログレスバーを追加
-                    const categoryDivs = document.querySelectorAll('.category');
-                    categoryDivs.forEach(category => {
-                        const links = category.querySelectorAll('a');
-                        links.forEach(link => {
-                            // リンクからプログレスキーを取得
-                            const progressKey = getProgressKey(link.href, link.textContent);
-                            console.log('Using progress key:', progressKey, 'for link:', link.textContent);
-
-                            // 進捗データの抽出 (linkElement を第三引数として渡す)
-                            const progressData = extractProgressData(allProgressData, progressKey, link);
-
-                            // プログレスバー作成・追加
-                            createProgressBar(link, progressData);
-                        });
-                    });
-                } catch (error) {
-                    console.error('プログレスバーの表示エラー:', error);
-                }
-            }
-        });
-
-        // URLから問題IDを抽出する関数
-        function extractProblemId(href) {
-            const url = new URL(href, window.location.origin);
-            const idParam = url.searchParams.get('id');
-
-            if (idParam) {
-                return idParam;
-            }
-
-            // idパラメータがない場合はパスの最後の部分を使用
-            const pathParts = url.pathname.split('/').filter(part => part);
-            return pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'default';
-        }
-
-        // URLとリンクテキストからプログレスキー(prog, for, bizinensu等)を判定する関数
-        function getProgressKey(href, linkText) {
-            // IDがURLパラメータで直接指定されている場合
-            const url = new URL(href, window.location.origin);
-            const idParam = url.searchParams.get('id');
-
-            if (idParam) {
-                // IDパラメータが直接APIのキーと一致する場合
-                if (['prog', 'for', 'bizinesu'].includes(idParam)) {
-                    return idParam;
-                }
-
-                // その他の特殊なIDケース
-                if (idParam.includes('prog')) return 'prog';
-                if (idParam.includes('biz')) return 'bizinesu';
-            }
-            
-            // URLやリンクテキストからキーを推測
-            if (href.includes('bizinesu') || linkText.includes('ビジネス')) {
-                return 'bizinesu';
-            } else if (href.includes('prog') || linkText.includes('プログラミング')) {
-                return 'prog';
-            } else if (href.includes('for')) {
-                return 'for';
-            } else if (href.includes('itpasu') || linkText.includes('ITパスポート')) {
-                // APIデータがどのキーにITパスポートの情報を格納しているか確認
-                // 仮にprogに格納されていると仮定
-                return 'prog';
-            }
-
-            // デフォルト値
-            return 'prog'; // 適切なデフォルト値に変更する必要があるかも
-        }
-
-        // 進捗データをAPI形式から使いやすい形式に変換する関数
-        function extractProgressData(allProgressData, group, linkElement) {
-            // デフォルト値
-            const defaultData = {
-                learned: 0,  // 学習済み（正解した問題）
-                learning: 0, // 学習中（回答したが正解していない問題）
-                total: 100   // 総問題数
-            };
-
-            // グループが存在しない場合はデフォルト値を返す
-            if (!allProgressData[group]) {
-                console.log('Group not found in data:', group);
-                return defaultData;
-            }
-
-            // URLからカテゴリを取得する
-            const href = linkElement.href;
-            const url = new URL(href, window.location.origin);
-            const idParam = url.searchParams.get('id');
-            const category = getCategory(idParam, href);
-
-            console.log('Checking category:', category, 'for link:', linkElement.textContent, 'in group:', group);
-
-            // グループデータの取得
-            const groupData = allProgressData[group];
-
-            try {
-                // 直接構造の場合（categoryDataがオブジェクトの一部として存在）
-                if (groupData.categoryData && groupData.categoryData[category]) {
-                    const catData = groupData.categoryData[category];
-                    const extracted = { learned: catData.correct, learning: 0, total: catData.total };
-                    console.log('Extracted progress data for', linkElement.textContent, ':', extracted);
-                    return extracted;
-                }
-
-                // テキストマッチングを試みる (リンクテキストとカテゴリ名の一致)
-                if (groupData.categoryData) {
-                    // カテゴリデータから一致するものを探す
-                    for (const cat in groupData.categoryData) {
-                        // リンクテキストにカテゴリ名が含まれている、またはその逆の場合
-                        if (linkElement.textContent.toLowerCase().includes(cat.toLowerCase()) ||
-                            cat.toLowerCase().includes(linkElement.textContent.toLowerCase())) {
-
-                            const catData = groupData.categoryData[cat];
-                            const extracted = { learned: catData.correct, learning: 0, total: catData.total };
-                            console.log('Extracted progress data by text match for', linkElement.textContent, 'using category', cat, ':', extracted);
-                            return extracted;
-                        }
-                    }
-                }
-
-                // categoryDataが直接存在せず、カテゴリがグループのプロパティとして存在する場合
-                if (groupData[category]) {
-                    const catData = groupData[category];
-                    // 異なるデータ形式に対応
-                    const correct = catData.correct || 0;
-                    const total = catData.total || 100;
-                    const extracted = { learned: correct, learning: 0, total: total };
-                    console.log('Extracted progress data (alt format) for', linkElement.textContent, ':', extracted);
-                    return extracted;
-                }
-
-                // 学習中の問題数を取得 (studyingQuestionsから)
-                const studying = groupData.studyingQuestions ? groupData.studyingQuestions.length : 0;
-
-                // totalQuestionsが存在する場合、それを使用
-                if (groupData.totalQuestions) {
-                    const correct = groupData.questionStats ?
-                        groupData.questionStats.filter(q => q[1].correctAnswers > 0).length : 0;
-
-                    const extracted = {
-                        learned: correct,
-                        learning: studying,
-                        total: groupData.totalQuestions
-                    };
-                    console.log('Extracted progress data using totalQuestions for', linkElement.textContent, ':', extracted);
-                    return extracted;
-                }
-            } catch (error) {
-                console.error('Error extracting progress data:', error);
-            }
-
-            console.log('No matching category for', linkElement.textContent, 'in group', group, '- using default:', defaultData);
-            return defaultData;
-        }
-
-        // URLやリンク情報からカテゴリを判定する関数
-        function getCategory(idParam, href) {
-            // idパラメータがある場合はそれを使用
-            if (idParam) {
-                return idParam;
-            }
-
-            // URLパスからカテゴリを推測
-            if (href.includes('itpasu/play')) {
-                return "ITパスポート";
-            } else if (href.includes('beta') && (href.includes('proghard') || !idParam)) {
-                return "プログラミング";
-            } else if (href.includes('beta') && href.includes('hardbizinesu')) {
-                return "ビジネス";
-            } else if (href.includes('play') && href.includes('prog')) {
-                return "プログラミング";
-            } else if (href.includes('play') && href.includes('bizinesu')) {
-                return "ビジネス";
-            } else if (href.includes('detabase')) {
-                return "データベース";
-            } else if (href.includes('excel')) {
-                return "エクセル関数";
-            }
-
-            // デフォルトカテゴリ
-            return href.includes('beta') ? "hard" : "it";
-        }
-
-        // プログレスバーを作成して挿入する関数
-        function createProgressBar(linkElement, progressData) {
-            // 既存のプログレスバーがあれば削除
-            const existingProgressBar = linkElement.nextElementSibling;
-            if (existingProgressBar && existingProgressBar.classList.contains('progress-container')) {
-                existingProgressBar.remove();
-            }
-
-            // 総数が0の場合はデフォルト値を使用
-            const total = progressData.total || 100;
-
-            // パーセンテージ計算
-            const learnedPercent = Math.min(100, Math.max(0, (progressData.learned / total) * 100)) || 0;
-            const learningPercent = Math.min(100 - learnedPercent, Math.max(0, (progressData.learning / total) * 100)) || 0;
-            const unlearnedPercent = 100 - learnedPercent - learningPercent;
-
-            // プログレスバー要素作成
-            const container = document.createElement('div');
-            container.className = 'progress-container';
-
-            const learnedBar = document.createElement('div');
-            learnedBar.className = 'progress-learned';
-            learnedBar.style.width = `${learnedPercent}%`;
-            learnedBar.title = `学習済み: ${progressData.learned}問 (${learnedPercent.toFixed(1)}%)`;
-
-            const learningBar = document.createElement('div');
-            learningBar.className = 'progress-learning';
-            learningBar.style.width = `${learningPercent}%`;
-            learningBar.title = `学習中: ${progressData.learning}問 (${learningPercent.toFixed(1)}%)`;
-
-            const unlearnedBar = document.createElement('div');
-            unlearnedBar.className = 'progress-unlearned';
-            unlearnedBar.style.width = `${unlearnedPercent}%`;
-            unlearnedBar.title = `未学習: ${total - progressData.learned - progressData.learning}問 (${unlearnedPercent.toFixed(1)}%)`;
-
-            // 組み立て
-            container.appendChild(learnedBar);
-            container.appendChild(learningBar);
-            container.appendChild(unlearnedBar);
-
-            // リンク要素の後に挿入
-            linkElement.insertAdjacentElement('afterend', container);
-        } 
-    </script>
+    <script src="main.js" defer></script>
 </body>
 
 </html>

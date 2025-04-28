@@ -163,6 +163,15 @@
     color: #ef6c00;
 }
 
+/* 覚えた単語数のスコアカード */
+.score-card--learned-words {
+    background-color: #e3f2fd;
+}
+
+.score-card--learned-words .score-card__value {
+    color: #1565c0;
+}
+
 /* タブ切り替え */
 .tabs {
     display: flex;
@@ -306,6 +315,33 @@
     align-items: center;
 }
 
+/* ソート用ボタングループ */
+.ranking-sort-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.sort-button {
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: #f2f2f2;
+    font-size: 0.9rem;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sort-button:hover {
+    background-color: #e0e0e0;
+}
+
+.sort-button.active {
+    background-color: #4a6cf7;
+    color: white;
+    border-color: #4a6cf7;
+}
+
 .ranking-filter select {
     padding: 8px 12px;
     border: 1px solid #e0e0e0;
@@ -352,13 +388,18 @@
 .ranking-item {
     display: flex;
     align-items: center;
-    padding: 14px 16px;
+    padding: 16px 18px;
     border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .ranking-item:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    z-index: 1;
 }
 
 .ranking-item:last-child {
@@ -366,17 +407,24 @@
 }
 
 .ranking-position {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: bold;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 16px;
+    margin-right: 18px;
     color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.ranking-item:hover .ranking-position {
+    transform: scale(1.08);
 }
 
 .position-1 {
@@ -439,6 +487,48 @@
 
 .stat-item.accuracy i {
     color: #2196f3;
+}
+
+.stat-item.learned-words i {
+    color: #4caf50;
+}
+
+.stat-item.learned-words i {
+    color: #4caf50;
+}
+
+/* 強調表示のスタイル */
+.stat-item.highlight {
+    font-weight: bold;
+    color: #333;
+    background-color: rgba(74, 108, 247, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: -4px 0;
+}
+
+.stat-item.highlight i {
+    color: #4a6cf7;
+}
+
+.stat-item.correct.highlight {
+    background-color: rgba(76, 175, 80, 0.15);
+}
+
+.stat-item.correct.highlight i {
+    color: #2e7d32;
+}
+
+.stat-item.accuracy.highlight {
+    background-color: rgba(33, 150, 243, 0.15);
+}
+
+.stat-item.accuracy.highlight i {
+    color: #1976d2;
+}
+
+.stat-item.total.highlight {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar-container {
@@ -683,4 +773,10 @@
         padding: 8px 12px;
         font-size: 0.9rem;
     }
+}
+
+/* アニメーション */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

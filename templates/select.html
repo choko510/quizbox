@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/select/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>範囲選択</title>
+    <link rel="manifest" href="/manifest.json">
+</head>
+
+<body>
+    <div class="main">
+        <div class="header-actions">
+            <a href="/"><i class="fas fa-home"></i> トップ</a>
+        </div>
+        <div class="box1">
+            <div id="book-title" class="book-title">教材を読み込み中...</div>
+            <div class="book-info">
+                <div id="book-image-container" class="book-image-container">
+                    <img id="book-image" class="book-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="教材表紙" style="display: none;">
+                </div>
+                <div class="description">
+                    <div class="book-summary">
+                        <i class="fas fa-book"></i> <span id="book-title-name">教材名</span>
+                    </div>
+                    <div id="book-stats" class="book-stats">
+                        <div class="stats-info">
+                            <div class="stats-item">
+                                <div class="stats-number" id="total-words">0</div>
+                                <div class="stats-label">総問題数</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-number" id="learned-words">0</div>
+                                <div class="stats-label">学習済み</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-number highlight" id="remaining-words">0</div>
+                                <div class="stats-label">残り</div>
+                            </div>
+                        </div>
+                        <div class="overall-progress">
+                            <div class="overall-progress-bar">
+                                <div class="overall-progress-value" style="width:0%"></div>
+                            </div>
+                            <div class="overall-progress-text">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            
+            <div id="loading" class="loading">範囲リストを読み込み中...</div>
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            
+            <div id="range-container" class="range-container"></div>
+        </div>
+        
+    </div>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+
+    <script>
+        // 教材IDと名前のマッピング
+        const bookTitles = {
+            'leap': 'LEAP',
+            'systemeitango': 'システム英単語',
+            'target1000': 'ターゲット1000',
+            'target1200': 'ターゲット1200',
+            'target1400': 'ターゲット1400',
+            'target1900': 'ターゲット1900'
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLから教材IDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            
+            if (!bookId) {
+                showError('教材IDが指定されていません。');
+                return;
+            }
+            
+            // 教材名を設定
+            updateBookTitle(bookId);
+            
+            // 教材名を説明部分にも設定
+            document.getElementById('book-title-name').textContent = bookTitles[bookId] || bookId;
+            
+            // サーバーから教材の範囲リストを取得
+            fetchRanges(bookId);
+        });
+
+        // 教材IDから教材名と画像を取得して表示
+        function updateBookTitle(bookId) {
+            
+            const bookTitle = bookTitles[bookId] || bookId;
+            document.getElementById('book-title').textContent = `${bookTitle} - 範囲選択`;
+            
+            // 教材画像の表示
+            const bookImage = document.getElementById('book-image');
+            const imagePath = `/img/book/${bookId}.webp`;
+            
+            // 画像の存在確認
+            fetch(imagePath)
+                .then(response => {
+                    if (response.ok) {
+                        bookImage.src = imagePath;
+                        bookImage.style.display = 'block';
+                    } else {
+                        console.log('教材画像が見つかりません');
+                    }
+                })
+                .catch(error => {
+                    console.error('画像読み込みエラー:', error);
+                });
+                
+            }
+            // 指定範囲ごとの進捗を読み込んで表示
+            // 指定範囲ごとの進捗を読み込んで表示
+            async function loadRangeProgress(bookId, ranges) {
+                let totalLearned = 0;
+                let totalWords = 0;
+                
+                for (const range of ranges) {
+                    try {
+                        const response = await fetch(`/api/get/range_progress/${bookId}?start=${range.start}&end=${range.end}`);
+                        if (!response.ok) continue;
+                        const { learned, total } = await response.json();
+                        
+                        // 全体の学習進捗に加算
+                        totalLearned += learned;
+                        totalWords += total;
+                        
+                        const rangeItems = document.querySelectorAll('.range-item');
+                        
+                        for (const item of rangeItems) {
+                            const btn = item.querySelector('button');
+                            if (parseInt(btn.dataset.start) === range.start && parseInt(btn.dataset.end) === range.end) {
+                                const textEl = item.querySelector('.progress-text');
+                                textEl.textContent = `${learned}/${total}`;
+                                
+                                const percent = Math.round(learned / total * 100);
+                                const bar = item.querySelector('.progress-value');
+                                bar.style.width = `${percent}%`;
+                                
+                                // 進捗に応じてボタンの色を変更
+                                if (percent === 100) {
+                                    btn.classList.add('completed');
+                                } else if (percent > 0) {
+                                    btn.classList.add('in-progress');
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('進捗取得エラー:', e);
+                    }
+                }
+                
+                // 全体の進捗を表示
+                if (totalWords > 0) {
+                    const overallPercent = Math.round(totalLearned / totalWords * 100);
+                    
+                    // 進捗バーと割合を更新
+                    const overallProgressBar = document.querySelector('.overall-progress-value');
+                    const overallProgressText = document.querySelector('.overall-progress-text');
+                    
+                    if (overallProgressBar && overallProgressText) {
+                        overallProgressBar.style.width = `${overallPercent}%`;
+                        overallProgressText.textContent = `${overallPercent}%`;
+                    }
+                    
+                    // 統計情報を更新
+                    const remainingWords = totalWords - totalLearned;
+                    
+                    document.getElementById('total-words').textContent = totalWords;
+                    document.getElementById('learned-words').textContent = totalLearned;
+                    document.getElementById('remaining-words').textContent = remainingWords;
+                }
+            }
+        async function fetchRanges(bookId) {
+            try {
+                // APIからデータを取得
+                // 注: このAPIエンドポイントはserver.pyに実装する必要があります
+                const response = await fetch(`/api/get/ranges/${bookId}`);
+                
+                if (!response.ok) {
+                    throw new Error('範囲データの取得に失敗しました');
+                }
+                
+                const ranges = await response.json();
+                
+                // 範囲データがない場合は、デフォルトの範囲を生成
+                if (ranges.length === 0) {
+                    generateDefaultRanges(bookId);
+                } else {
+                    displayRanges(bookId, ranges);
+                    if (window.Cookies && Cookies.get('id') && Cookies.get('password')) {
+                        loadRangeProgress(bookId, ranges);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching ranges:', error);
+                
+                // APIがまだ実装されていない場合は、デフォルトの範囲を使用
+                generateDefaultRanges(bookId);
+            }
+            
+            // ローディング表示を非表示
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // 教材ごとの最大範囲を取得
+        function getMaxRangeForBook(bookId) {
+            const maxRanges = {
+                'leap': 1935,
+                'systemeitango': 1500,
+                'target1000': 1000,
+                'target1200': 1200,
+                'target1400': 1400,
+                'target1900': 1900
+            };
+            
+            return maxRanges[bookId] || 100;
+        }
+        
+        // 範囲リストを表示
+        function displayRanges(bookId, ranges) {
+            const container = document.getElementById('range-container');
+            container.innerHTML = '';
+            
+            ranges.forEach(range => {
+                const button = document.createElement('button');
+                button.className = 'range-button';
+                button.textContent = range.label;
+                button.dataset.start = range.start;
+                button.dataset.end = range.end;
+                
+                button.addEventListener('click', function() {
+                    // 選択された範囲でplay.htmlにリダイレクト
+                    window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                });
+                
+                const rangeItem = document.createElement('div');
+                rangeItem.className = 'range-item';
+
+                // 進捗表示用コンテナを作成
+                const progressContainer = document.createElement('div');
+                progressContainer.className = 'range-progress-container';
+                const totalCount = range.end - range.start;
+                progressContainer.innerHTML = `
+                    <div class="progress-bar">
+                        <div class="progress-value" style="width:0%"></div>
+                    </div>
+                    <span class="progress-text">0/${totalCount}</span>`;
+
+                // rangeItemにボタンと進捗コンテナを追加
+                rangeItem.appendChild(button);
+                rangeItem.appendChild(progressContainer);
+
+                container.appendChild(rangeItem);
+            });
+        }
+        
+        // エラーメッセージを表示
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

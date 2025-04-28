@@ -2,6 +2,7 @@ import datetime
 import io
 import json
 import os
+from pathlib import Path
 import random
 import re
 from contextlib import asynccontextmanager
@@ -9,7 +10,7 @@ from typing import List, Union
 import base64
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile,Response
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,15 +18,14 @@ from pydantic import BaseModel
 from PIL import Image
 import aiofiles
 import xxhash
-import numpy as np
 import google.generativeai as genai
 from gtts import gTTS
 from io import BytesIO
 import aiohttp
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float, func, case
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.future import select
+from sqlalchemy.future import select as sa_select
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
@@ -52,7 +52,8 @@ class Account(Base):
     bad = Column(Integer)
     correctdata = Column(String)
     baddata = Column(String)
-    progress_data = Column(String, default="{}")  # 学習進捗データを保存するカラム
+    progress_data = Column(String, default="{}")
+    progress_details = Column(String, default="{}") 
 
 class Mondai(Base):
     __tablename__ = 'mondai'
@@ -115,7 +116,7 @@ class DB:
     @staticmethod
     async def password(id: str):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             return user.password if user else None
 
@@ -136,14 +137,14 @@ class DB:
     @staticmethod
     async def get_correct(id: str):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             return user.correct if user else None
 
     @staticmethod
     async def add_correct(id: str, subject: str = None):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 user.correct += 1
@@ -185,7 +186,7 @@ class DB:
     @staticmethod
     async def add_bad(id: str, subject: str = None):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 user.bad += 1
@@ -221,14 +222,14 @@ class DB:
     @staticmethod
     async def get_bad(id: str):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             return user.bad if user else None
 
     @staticmethod
     async def get_all(id: str):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 return {
@@ -244,7 +245,7 @@ class DB:
         戻り値: List[Dict] 形式で、各要素は {"subject": "科目名", "result": bool} の形式
         """
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if not user:
                 return []
@@ -285,16 +286,24 @@ class DB:
     @staticmethod
     async def get(id: str):
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
-                return {"correct": user.correct, "bad": user.bad}
+                # 覚えた単語数を取得
+                learned_words_count = await DB.get_learned_words_count(id)
+                
+                return {
+                    "correct": user.correct,
+                    "bad": user.bad,
+                    "learned_words": learned_words_count,
+                    "progress_data": json.loads(user.progress_data) if user.progress_data else {}
+                }
             return None
 
     @staticmethod
     async def get_mondai(userid:str,name: str):
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(userid=userid, name=name))
+            result = await session.execute(sa_select(Mondai).filter_by(userid=userid, name=name))
             mondai = result.scalar_one_or_none()
             if mondai:
                 return json.loads(mondai.mondai)
@@ -303,7 +312,7 @@ class DB:
     @staticmethod
     async def get_mondai_userids(userid: str):
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(userid=userid))
+            result = await session.execute(sa_select(Mondai).filter_by(userid=userid))
             mondai_list = result.scalars().all()
             if not mondai_list:
                 return None
@@ -315,7 +324,7 @@ class DB:
         ユーザーの作成した問題の詳細情報を取得する
         """
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(userid=userid))
+            result = await session.execute(sa_select(Mondai).filter_by(userid=userid))
             mondai_list = result.scalars().all()
             if not mondai_list:
                 return []
@@ -356,7 +365,7 @@ class DB:
     @staticmethod
     async def edit_mondai(name: str, userid: str, mondai_data, is_public: bool = None):
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
             mondai = result.scalar_one_or_none()
             if mondai:
                 mondai.mondai = json.dumps(mondai_data)
@@ -375,7 +384,7 @@ class DB:
         問題の公開状態を切り替える
         """
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
             mondai = result.scalar_one_or_none()
             if mondai:
                 mondai.is_public = 1 if mondai.is_public == 0 else 0
@@ -391,7 +400,7 @@ class DB:
         問題を削除する
         """
         async with async_session() as session:
-            result = await session.execute(select(Mondai).filter_by(name=name, userid=userid))
+            result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
             mondai = result.scalar_one_or_none()
             if mondai:
                 await session.delete(mondai)
@@ -399,60 +408,129 @@ class DB:
                 return True
             else:
                 return False
-                
+            
     @staticmethod
-    async def save_progress_data(id: str, progress_data: dict, problem_set: str):
+    async def get_progress_summary(id: str):
         """
-        ユーザーの学習進捗データを保存する（問題セットごと）
+        Generate per-set summary: learned, learning, unlearned, total.
         """
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            # load raw progress data
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
+            user = result.scalar_one_or_none()
+            raw = json.loads(user.progress_data) if user and user.progress_data else {}
+        summary = {}
+        for ps, prog in raw.items():
+            total = 0
+            file_path = Path("static/deta") / f"{ps}.txt"
+            if file_path.exists():
+                with open(file_path, "r", encoding="utf-8") as f:
+                    total = sum(1 for l in f if l.strip())
+            else:
+                async with async_session() as s2:
+                    res = await s2.execute(sa_select(Mondai).filter_by(userid=id, name=ps))
+                    m = res.scalar_one_or_none()
+                    if m and m.mondai:
+                        total = len(json.loads(m.mondai))
+            learned = prog.get("learned", 0)
+            learning = prog.get("learning", 0)
+            unlearned = max(0, total - learned - learning)
+            summary[ps] = {"learned": learned, "learning": learning, "unlearned": unlearned, "total": total}
+        return summary
+
+    @staticmethod
+    async def save_progress_data(id: str, problem_set: str, summary: dict, details: dict):
+        """
+        ユーザーの学習進捗データ（サマリと詳細）を保存する（問題セットごと）
+        """
+        async with async_session() as session:
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 try:
-                    # 既存のデータを取得
-                    all_progress_data = json.loads(user.progress_data) if user.progress_data else {}
-                except json.JSONDecodeError:
-                    all_progress_data = {}
-                
-                # 問題セットごとのデータを更新
-                if not isinstance(all_progress_data, dict):
-                    all_progress_data = {}
-                
-                # 問題セットのデータを更新
-                all_progress_data[problem_set] = progress_data
-                
-                # 更新したデータを保存
-                user.progress_data = json.dumps(all_progress_data)
-                await session.commit()
-                return True
+                    # 既存のサマリデータを取得・更新
+                    all_summary_data = json.loads(user.progress_data) if user.progress_data else {}
+                    if not isinstance(all_summary_data, dict): all_summary_data = {}
+                    all_summary_data[problem_set] = summary
+                    user.progress_data = json.dumps(all_summary_data)
+
+                    # 既存の詳細データを取得・更新
+                    all_details_data = json.loads(user.progress_details) if user.progress_details else {}
+                    if not isinstance(all_details_data, dict): all_details_data = {}
+                    all_details_data[problem_set] = details
+                    user.progress_details = json.dumps(all_details_data)
+
+                    await session.commit()
+                    return True
+                except Exception as e:
+                    print(f"Error saving progress data for user {id}, set {problem_set}: {e}")
+                    await session.rollback() # ロールバックを追加
+                    return False
             return False
             
     @staticmethod
     async def get_progress_data(id: str, problem_set: str = None):
         """
-        ユーザーの学習進捗データを取得する
+        ユーザーの学習進捗 *詳細* データを取得する (progress_details カラムから)
         問題セットが指定された場合はその問題セットのデータのみを返す
         指定されない場合は全データを返す
         """
         async with async_session() as session:
-            result = await session.execute(select(Account).filter_by(userid=id))
+            result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
                 try:
-                    all_progress_data = json.loads(user.progress_data) if user.progress_data else {}
-                    if not isinstance(all_progress_data, dict):
-                        all_progress_data = {}
-                        
+                    # Load from progress_details column
+                    all_details_data = json.loads(user.progress_details) if user.progress_details else {}
+                    if not isinstance(all_details_data, dict):
+                        all_details_data = {}
+
                     if problem_set:
-                        # 特定の問題セットのデータを返す
-                        return all_progress_data.get(problem_set, {})
+                        # Return details for the specific problem set
+                        return all_details_data.get(problem_set, {})
                     else:
-                        # 全データを返す
-                        return all_progress_data
+                        # Return all details data
+                        return all_details_data
                 except json.JSONDecodeError:
-                    return {} if problem_set else {}
-            return {}
+                    print(f"Error decoding progress_details for user {id}")
+                    return {} # Return empty dict on error, whether specific set or all
+            return {} # Return empty dict if user not found
+            
+    @staticmethod
+    async def get_learned_words_count(id: str):
+        """
+        ユーザーが覚えた総単語数をカウントする（最適化版：カラム限定）。
+        各問題セットのサマリデータ (progress_data カラム) から 'learned' の数を合計する。
+        """
+        async with async_session() as session:
+            stmt = sa_select(Account.progress_data).filter_by(userid=id)
+            result = await session.execute(stmt)
+
+            progress_data_str = result.scalar_one_or_none()
+
+            if progress_data_str is None: #ユーザのデータがない場合
+                return 0
+
+            total_learned_words = 0
+
+            try:
+                all_summary_data = json.loads(progress_data_str)
+                if not isinstance(all_summary_data, dict):
+                    print(f"Invalid progress_data format for user {id}: Not a dict.")
+                    return 0
+
+                for summary in all_summary_data.values():
+                    if isinstance(summary, dict):
+                        learned_count = summary.get('learned', 0)
+                        if isinstance(learned_count, int) and learned_count >= 0:
+                            total_learned_words += learned_count
+                return total_learned_words
+            except json.JSONDecodeError as e:
+                print(f"Error decoding progress_data (summary) for user {id}: {e}")
+                return 0
+            except Exception as e: # Catch other potential errors
+                print(f"Unexpected error calculating learned words for {id}: {e}")
+                return 0
     
     @staticmethod
     async def update_mondai_stats(mondai_name: str, is_correct: bool):
@@ -463,7 +541,7 @@ class DB:
         async with async_session() as session:
             # 既存の統計データを検索
             result = await session.execute(
-                select(MondaiStats).filter_by(mondai_name=mondai_name)
+                sa_select(MondaiStats).filter_by(mondai_name=mondai_name)
             )
             stats = result.scalar_one_or_none()
             
@@ -496,7 +574,7 @@ class DB:
         """
         async with async_session() as session:
             result = await session.execute(
-                select(MondaiStats).filter_by(mondai_name=mondai_name)
+                sa_select(MondaiStats).filter_by(mondai_name=mondai_name)
             )
             stats = result.scalar_one_or_none()
             
@@ -585,19 +663,16 @@ async def reqAI(pronpt, model="gemini-2.0-flash"):
 async def play(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
 
-@app.get("/play")
-async def play2(request: Request):
-    return templates.TemplateResponse("play.html", {"request": request})
+@app.get("/select/")
+async def select(request: Request):
+    return templates.TemplateResponse("select.html", {"request": request})
 
 @app.get("/listening/")
 async def listening(request: Request):
     return templates.TemplateResponse("listening.html", {"request": request})
 
-@app.get("/listening")
-async def listening2(request: Request):
-    return templates.TemplateResponse("listening.html", {"request": request})
-
 @app.get("/dashboard/")
+@app.get("/dashboard")
 async def dashboard(request: Request):
     userid = request.cookies.get("id")
     if not userid:
@@ -638,8 +713,9 @@ class AnswerData(BaseModel):
 class ProgressData(BaseModel):
     id: str
     password: str
-    progress_data: dict
-    problem_set: str  # 問題セット名（mondai）を追加
+    problem_set: str
+    summary: dict  # {learned, learning, unlearned, total}
+    details: dict  # {answeredQuestions, questionStats, etc.}
 
 @app.post("/api/add_correct")
 async def add_correct(data: AnswerData):
@@ -680,7 +756,12 @@ async def get_bad(data: Data):
 async def get_user(data: Data):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    return await DB.get(data.id)
+    # fetch base user data
+    user_data = await DB.get(data.id)
+    # include progress summary
+    progress_summary = await DB.get_progress_summary(data.id)
+    user_data["progress_summary"] = progress_summary
+    return user_data
 
 @app.post("/api/get/user")
 async def get_all(data: Data):
@@ -689,14 +770,54 @@ async def get_all(data: Data):
     return await DB.get_all(data.id)
 
 @app.get("/api/ranking")
-async def ranking():
+async def ranking(
+    count: int = Query(20, le=20),
+    sort_by: str = Query("correct", enum=["correct", "accuracy", "total", "learned_words"])
+):
     async with async_session() as session:
-        result = await session.execute(select(Account).order_by(Account.correct.desc()).limit(5))
-        users = result.scalars().all()
-    ranking_list = [
-        {"userid": user.userid, "correct": user.correct, "bad": user.bad}
-        for user in users if user.correct != 0
-    ]
+        count = min(count, 20)
+        
+        # ソート基準に応じてクエリを構築
+        if sort_by == "accuracy":
+            # 正答率でソート (correct / (correct + bad))
+            # 0除算を避けるため、correct + bad > 0 の場合のみ計算
+            accuracy_expr = case(
+                (Account.correct + Account.bad > 0, func.cast(Account.correct, Float) / (Account.correct + Account.bad)),
+                else_=0.0
+            ).label("accuracy")
+            query = sa_select(Account, accuracy_expr).order_by(accuracy_expr.desc())
+        elif sort_by == "total":
+            # 合計解答数でソート
+            total_expr = (Account.correct + Account.bad).label("total_answers")
+            query = sa_select(Account, total_expr).order_by(total_expr.desc())
+        else: # sort_by == "correct" (デフォルト)
+            # 正解数でソート
+            query = sa_select(Account).order_by(Account.correct.desc())
+
+        # 上位N件を取得
+        result = await session.execute(query.limit(count))
+        
+        # 結果を整形
+        ranking_list = []
+        for row in result:
+            user = row[0] # Accountオブジェクトを取得
+            if user.correct + user.bad > 0: # 解答数が0のユーザーは除外
+                # ソート基準が「覚えた単語数」なら、各ユーザーの覚えた単語数を取得
+                learned_words = 0
+                if sort_by == "learned_words":
+                    learned_words = await DB.get_learned_words_count(user.userid)
+                
+                ranking_list.append({
+                    "userid": user.userid,
+                    "correct": user.correct,
+                    "bad": user.bad,
+                    "learned_words": learned_words
+                })
+        
+        # learned_wordsでソートする場合は、メモリ上でソート
+        if sort_by == "learned_words":
+            ranking_list.sort(key=lambda x: x["learned_words"], reverse=True)
+
     return ranking_list
 
 @app.post("/api/change/name/{newname}")
@@ -704,7 +825,7 @@ async def change_name(data: Data, newname: str):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     async with async_session() as session:
-        result = await session.execute(select(Account).filter_by(userid=data.id))
+        result = await session.execute(sa_select(Account).filter_by(userid=data.id))
         user = result.scalar_one_or_none()
         if user:
             user.userid = newname
@@ -717,7 +838,7 @@ async def change_password(data: Data, newpassword: str):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     async with async_session() as session:
-        result = await session.execute(select(Account).filter_by(userid=data.id))
+        result = await session.execute(sa_select(Account).filter_by(userid=data.id))
         user = result.scalar_one_or_none()
         if user:
             user.password = newpassword
@@ -926,6 +1047,36 @@ async def edit_mondai(data: MondaiData):
     else:
         return {"status": "failed"}
 
+@app.get("/api/get/mondai/{name}.json")
+async def get_mondai(name: str, start: int = 0, end: int = None):
+
+    path = f"./static/deta/{name}.txt"
+    
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    start = max(start, 0)
+    results = []
+    count = 0
+
+    async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+        async for raw in f:
+            line = raw.rstrip("\n")
+            if not line.strip():
+                continue
+
+            if count >= start and (end is None or count < end):
+                results.append(line)
+
+            count += 1
+            if end is not None and count >= end:
+                break
+
+    if count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return results
+
 @app.get("/api/get/mondai/{userid}/{name}.json")
 async def get_mondai(userid: str, name: str):
     mondai = await DB.get_mondai(userid, name)
@@ -1044,23 +1195,6 @@ async def get_problem_stats(data: MondaiIdData, request: Request):
         "stats": stats
     }
 
-@app.get("/api/mosi/get")
-async def mosiget():
-    async with aiofiles.open('./app/itpasu/play/mondai/management.json', mode='r') as f:
-        management_data = json.loads(await f.read())
-    async with aiofiles.open('./app/itpasu/play/mondai/strategy.json', mode='r') as f:
-        strategy_data = json.loads(await f.read())
-    async with aiofiles.open('./app/itpasu/play/mondai/technology.json', mode='r') as f:
-        technology_data = json.loads(await f.read())
-
-    management_mondai = random.sample(management_data, min(20, len(management_data)))
-    strategy_mondai = random.sample(strategy_data, min(35, len(strategy_data)))
-    technology_mondai = random.sample(technology_data, min(45, len(technology_data)))
-
-    combined_mondai = management_mondai + strategy_mondai + technology_mondai
-
-    return combined_mondai
-
 @app.post("/api/save_progress")
 async def save_progress(data: ProgressData):
     """
@@ -1068,12 +1202,13 @@ async def save_progress(data: ProgressData):
     """
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
-    
-    success = await DB.save_progress_data(data.id, data.progress_data, data.problem_set)
+
+    success = await DB.save_progress_data(data.id, data.problem_set, data.summary, data.details)
     if success:
         return {"message": "progress data saved successfully"}
     else:
-        return {"message": "user not found"}
+        # Redundant 'else:' removed, corrected indentation
+        return {"message": "failed to save progress data"} # More specific error
 
 class GetProgressData(BaseModel):
     id: str
@@ -1088,8 +1223,10 @@ async def get_progress(data: GetProgressData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    progress_data = await DB.get_progress_data(data.id, data.problem_set)
-    return {"progress_data": progress_data}
+    # Use the updated DB.get_progress_data which reads from progress_details
+    details_data = await DB.get_progress_data(data.id, data.problem_set)
+    # Return under a key like "details_data" or "progress_details" for clarity
+    return {"progress_details": details_data}
 
 @app.post("/api/get_all_progress")
 async def get_all_progress(data: Data):
@@ -1099,13 +1236,155 @@ async def get_all_progress(data: Data):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    all_progress_data = await DB.get_progress_data(data.id)
-    return {"all_progress_data": all_progress_data}
+    # Use the updated DB.get_progress_data which reads from progress_details
+    all_details_data = await DB.get_progress_data(data.id)
+    # Return under a key like "all_details_data" or "all_progress_details"
+    return {"all_progress_details": all_details_data}
 
 class wordData(BaseModel):
     word: str
     mondai: str
 
+@app.get("/api/search")
+@app.get("/api/search")
+async def search_problems(query: str = Query(..., min_length=1)):
+    """
+    問題を検索するAPIエンドポイント
+    """
+    results = []
+    
+    # クエリを小文字に変換して前処理
+    query_lower = query.lower()
+    
+    # 1. 範囲検索パターンの検出 (例：「801-850」)
+    range_match = re.search(r'(\d+)[^\d]+(\d+)', query)
+    range_keywords = []
+    if range_match:
+        start_num, end_num = int(range_match.group(1)), int(range_match.group(2))
+        if start_num < end_num:
+            # 範囲が検出されたら、追加のキーワードとして保存
+            range_keywords = [f"{start_num}-{end_num}", f"{start_num}から{end_num}", f"{start_num}～{end_num}"]
+    
+    # 2. ユーザー作成の問題を検索（Mondaiテーブル）
+    try:
+        async with async_session() as session:
+            # 公開状態の問題のみ検索
+            stmt = sa_select(Mondai).filter(
+                (Mondai.is_public == 1) &
+                ((Mondai.name.ilike(f'%{query}%')) |
+                 (Mondai.mondai.ilike(f'%{query}%')))
+            ).limit(20)
+            
+            result = await session.execute(stmt)
+            user_problems = result.scalars().all()
+            
+            for problem in user_problems:
+                results.append({
+                    "title": problem.name,
+                    "type": "ユーザー作成",
+                    "author": problem.userid,
+                    "url": f"/play/?userid={problem.userid}&name={problem.name}"
+                })
+    except Exception as e:
+        print(f"ユーザー問題検索エラー: {e}")
+
+    # 3. 既存の問題ファイルを検索（static/detaディレクトリ）
+    deta_files = []
+    try:
+        deta_dir = Path("static/deta")
+        if deta_dir.exists() and deta_dir.is_dir():
+            for file_path in deta_dir.glob("*.txt"):
+                file_name = file_path.stem
+                file_name_lower = file_name.lower()
+                
+                # ファイル名に検索クエリが含まれている場合
+                if query_lower in file_name_lower:
+                    deta_files.append((file_name, 100)) # 優先度を高く設定
+                elif any(kw.lower() in file_name_lower for kw in range_keywords):
+                    deta_files.append((file_name, 90))  # 範囲検索でマッチするケース
+                else:
+                    # 部分一致検索（単語単位でマッチする場合）
+                    query_words = query_lower.split()
+                    file_words = file_name_lower.split()
+                    match_count = sum(1 for qw in query_words if any(qw in fw for fw in file_words))
+                    if match_count > 0:
+                        # 部分一致の数に応じて優先度を設定
+                        deta_files.append((file_name, 80 + match_count))
+                    else:
+                        # ファイルの内容も検索（最初の20行）
+                        try:
+                            with open(file_path, "r", encoding="utf-8") as f:
+                                content = "".join([next(f, "") for _ in range(20)])
+                                content_lower = content.lower()
+                                if query_lower in content_lower:
+                                    deta_files.append((file_name, 70))
+                                elif any(kw.lower() in content_lower for kw in range_keywords):
+                                    deta_files.append((file_name, 60))
+                        except Exception as e:
+                            print(f"ファイル内容検索エラー: {e}")
+        
+        # 優先度でソートして結果に追加
+        deta_files.sort(key=lambda x: -x[1])  # 優先度の高い順にソート
+        
+        # 結果に追加
+        for file_name, _ in deta_files:
+            results.append({
+                "title": file_name,
+                "type": "システム問題",
+                "author": "システム",
+                "url": f"/play/?id={file_name}"
+            })
+    except Exception as e:
+        print(f"既存問題検索エラー: {e}")
+
+    # 4. BOOK_RANGES データから、範囲検索のための結果を作成
+    if range_match:
+        start_num, end_num = int(range_match.group(1)), int(range_match.group(2))
+        for book_id, ranges in BOOK_RANGES.items():
+            for range_item in ranges:
+                if (start_num == range_item["start"] and end_num == range_item["end"]) or \
+                   (start_num <= range_item["start"] and end_num >= range_item["end"]) or \
+                   (start_num >= range_item["start"] and start_num <= range_item["end"]) or \
+                   (end_num >= range_item["start"] and end_num <= range_item["end"]):
+                    # 範囲が重なる場合、結果に追加
+                    results.append({
+                        "title": f"{book_id} {range_item['label']}",
+                        "type": "範囲検索",
+                        "author": "システム",
+                        "url": f"/play/?id={book_id}&start={range_item['start']}&end={range_item['end']}"
+                    })
+
+    # 5. Mondai_stats テーブルから人気の問題を取得して追加
+    try:
+        async with async_session() as session:
+            stmt = sa_select(MondaiStats).filter(
+                MondaiStats.mondai_name.ilike(f'%{query}%')
+            ).order_by(MondaiStats.usage_count.desc()).limit(10)
+            
+            result = await session.execute(stmt)
+            popular_problems = result.scalars().all()
+            
+            for problem in popular_problems:
+                # 既に追加されていなければリストに追加
+                if not any(r["title"] == problem.mondai_name for r in results):
+                    results.append({
+                        "title": problem.mondai_name,
+                        "type": "人気の問題",
+                        "author": "システム",
+                        "url": f"/play/?id={problem.mondai_name}"
+                    })
+    except Exception as e:
+        print(f"統計情報検索エラー: {e}")
+
+    # 重複を削除し、最大50件に制限
+    unique_titles = set()
+    filtered_results = []
+    for item in results:
+        if item["title"] not in unique_titles and len(filtered_results) < 50:
+            unique_titles.add(item["title"])
+            filtered_results.append(item)
+    
+    return filtered_results
 @app.post("/api/search/word/")
 async def search_word(data: wordData):
     """
@@ -1120,11 +1399,11 @@ async def search_word(data: wordData):
             "definition": "単語が指定されていません。",
             "success": False
         }
-    
+
     try:
-        prompt = f"""
-        以下の単語「{word}」について詳しく説明してください。
-        
+        # Corrected indentation for the prompt f-string
+        prompt = f"""以下の単語「{word}」について詳しく説明してください。
+
         以下の情報を含めてください：
         1. 基本的な定義と意味
         2. 実際の使用例（例文を2-3つ）
@@ -1133,10 +1412,9 @@ async def search_word(data: wordData):
         5. 「{data.mondai}」の文脈に関連した説明
 
         回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
-        また、HTMLタグは使用せず、マークダウン形式で回答してください。
-        """
+        また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt,"gemini-2.0-flash-lite")
+        response = await reqAI(prompt, "gemini-2.0-flash-lite")
         return {
             "word": word,
             "definition": response,
@@ -1153,30 +1431,27 @@ async def search_word(data: wordData):
 
 @app.get("/api/gen/speak/{word}")
 async def gen_speak(word: str):
+    # データディレクトリの作成
+    audio_dir = "./data/audio"
+    os.makedirs(audio_dir, exist_ok=True)
+    
     # ファイルチェック
-    filename = f"./data/audio/{xxhash.xxh64(word).hexdigest()}.mp3"
+    filename = f"{audio_dir}/{xxhash.xxh64(word).hexdigest()}.mp3"
 
     if os.path.exists(filename):
-        return FileResponse(filename)
+        return FileResponse(filename, media_type="audio/mpeg", filename=f"{word}.mp3")
     
-    lang = "ja" if re.search(r'[--]', word) else "en"
-    
+    lang = "ja" if re.search(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]', word) else "en"
+
     try:
         tts = gTTS(text=word, lang=lang, slow=True)
-        
         audio_bytes = BytesIO()
         tts.write_to_fp(audio_bytes)
         audio_data = audio_bytes.getvalue()
-
         # ファイルに保存
         with open(filename, "wb") as f:
             f.write(audio_data)
-        
-        return Response(
-            content=audio_data,
-            media_type="audio/mpeg",
-            headers={"Content-Disposition": f"attachment; filename={word}.mp3"}
-        )
+        return FileResponse(filename, media_type="audio/mpeg", filename=f"{word}.mp3")
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -1190,12 +1465,11 @@ async def listening_mode(word:str):
     """
 
     # 1. 単語から文章を生成
-    prompt = f"""
-    "{word}" という単語を使って、リスニング問題文を生成して下さい。
-    中学生レベルの英語で比較的簡単な、文法的に正しい文章を作成してください。
-    5単語から10単語程度の長さで、自然な文章を生成してください。
-    出力形式は、リスニング用の問題文のみです。
-    """
+    # Corrected indentation for the prompt f-string
+    prompt = f"""「{word}」という単語を使って、リスニング問題文を生成して下さい。
+中学生レベルの英語で比較的簡単な、文法的に正しい文章を作成してください。
+5単語から10単語程度の長さで、自然な文章を生成してください。
+出力形式は、リスニング用の問題文のみです。"""
     sentence = await reqAI(prompt)
 
     try:
@@ -1218,69 +1492,6 @@ async def listening_mode(word:str):
             status_code=500,
             detail=f"音声生成に失敗しました: {str(e)}"
         )
-
-@app.get("/api/get/category_stats/{id}/{password}")
-async def get_category_stats(id: str, password: str):
-    """
-    ユーザーのカテゴリー別統計情報を取得するエンドポイント
-    """
-    if await DB.password(id) != password:
-        return {"message": "password is wrong"}
-    
-    # カテゴリーごとのマッピング
-    category_mapping = {
-        "ITパスポート": ["it", "management", "strategy", "technology", "r04", "r05", "r06"],
-        "プログラミング": ["prog", "proghard", "re"],
-        "ビジネス": ["bizinesu", "hardbizinesu", "excelmondai"],
-        "データベース": ["detabase"],
-        "エクセル関数": ["excel2"],
-        "その他": ["for", "mail"]
-    }
-    
-    # カテゴリー別統計データを初期化
-    category_stats = {}
-    
-    try:
-        # ユーザーの全解答履歴を取得
-        all_answers = await DB.get_all_answers(id)
-        
-        # カテゴリーごとに統計を集計
-        for category_name, subject_list in category_mapping.items():
-            correct_count = 0
-            total_count = 0
-            weak_areas = []
-            
-            # 各科目の正答数と総数を集計
-            for subject in subject_list:
-                subject_answers = [ans for ans in all_answers if ans["subject"] == subject]
-                if not subject_answers:
-                    continue
-                
-                # 科目ごとの正答率を計算
-                subject_correct = sum(1 for ans in subject_answers if ans["result"])
-                subject_total = len(subject_answers)
-                subject_rate = (subject_correct / subject_total * 100) if subject_total > 0 else 0
-                
-                # 正答率が60%未満の科目を苦手分野として記録
-                if subject_rate < 60 and subject_total >= 5:  # 最低5問以上解いている場合のみ
-                    weak_areas.append(subject)
-                
-                correct_count += subject_correct
-                total_count += subject_total
-            
-            # カテゴリーの統計情報を記録
-            if total_count > 0:
-                category_stats[category_name] = {
-                    "correct": correct_count,
-                    "total": total_count,
-                    "weakAreas": weak_areas
-                }
-        
-        return {"categories": category_stats}
-        
-    except Exception as e:
-        print(f"Error in get_category_stats: {e}")
-        return {"message": "internal server error"}
 
 @app.post("/api/generate/questions")
 async def generate_questions(data: GenerateQuestionsData):
@@ -1314,32 +1525,29 @@ async def generate_questions(data: GenerateQuestionsData):
 def generate_question_prompt(text, type, count):
     """問題タイプに応じたプロンプトを生成する"""
     # 問題タイプに応じたプロンプトを返す
-    base_prompt = f"""
-    以下の文章から{count}個の問題と回答を作成してください。
+    # Corrected indentation for the prompt f-strings
+    base_prompt = f"""以下の文章から{count}個の問題と回答を作成してください。
     問題と回答は明確で、文章の内容に基づいたものにしてください。
-    
+
     文章:
-    {text}
-    """
-    
+    {text}"""
+
     type_prompts = {
         "basic": "基本的な質問と回答のペアを作成してください。",
         "multiple-choice": "4つの選択肢から選ぶ問題を作成してください。正解の選択肢を明示してください。",
         "true-false": "○×（真偽）の問題を作成してください。",
         "mixed": "様々なタイプの問題（基本問題、選択問題、○×問題）をバランス良く混ぜて作成してください。"
     }
-    
-    format_instruction = """
-    以下の形式でJSONとして出力してください：
+
+    format_instruction = """以下の形式でJSONとして出力してください：
     [
         {
             "question": "問題文",
             "answer": "回答"
         },
         ...
-    ]
-    """
-    
+    ]"""
+
     return base_prompt + "\n" + type_prompts.get(type, type_prompts["mixed"]) + "\n" + format_instruction
 
 def parse_gemini_response(response_text):
@@ -1560,8 +1768,8 @@ async def get_advice(data: Data):
     else:
         overall_accuracy = 0
 
-    prompt = f"""
-        #目的
+    # Corrected indentation for the prompt f-string
+    prompt = f"""#目的
         学習アドバイザーの専門家として、
         以下の学習データを分析して
         今後の具体的な学習方法などについてアドバイスをしてください。
@@ -1577,17 +1785,16 @@ async def get_advice(data: Data):
 
         #学習継続性
         {continuity_text}
-        
+
         #成長停滞分野
         {stagnant_text}
 
         #学習データ
         直近の学習動向(10日以内)
         {daily_stats_text}
-        
+
         学習カテゴリ(30日以内)
-        {category_stats_text}
-    """
+        {category_stats_text}"""
 
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
@@ -1597,6 +1804,63 @@ async def get_advice(data: Data):
         return {"advice": advice}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating advice: {str(e)}")
+
+# 教材ごとの範囲データを定義
+
+def make_ranges(start, end, step, label_offset=0):
+    """
+    範囲リストを生成するユーティリティ関数
+    start: 開始番号
+    end: 終了番号
+    step: ステップ幅
+    label_offset: ラベルの開始番号調整（必要な場合のみ）
+    """
+    ranges = []
+    s_list = list(range(start, end + 1, step))
+    e_list = s_list[1:] + [end]
+    for s, e in zip(s_list, e_list):
+        ranges.append({"start": s, "end": e, "label": f"{s}-{e}"})
+    return ranges
+
+BOOK_RANGES = {
+    "leap": make_ranges(1, 1935, 50),
+    "systemeitango": make_ranges(1, 1500, 100),
+    "target1000": make_ranges(1, 1000, 50),
+    "target1200": make_ranges(1, 1200, 50),
+    "target1400": make_ranges(1, 1400, 50),
+    "target1900": make_ranges(1, 1900, 100),
+}
+
+@app.get("/api/get/ranges/{book_id}")
+async def get_ranges(book_id: str):
+    """
+    教材IDに基づいて、その教材の問題範囲リストを返すAPI
+    例: /api/get/ranges/target1200 で target1200 の範囲リストを取得
+    """
+    return BOOK_RANGES.get(book_id, [])
+
+@app.get("/api/get/range_progress/{book_id}")
+async def get_range_progress(request: Request, book_id: str, start: int = Query(...), end: int = Query(...)):
+    """
+    指定範囲の学習進捗を取得するエンドポイント
+    """
+    userid = request.cookies.get("id")
+    if not userid:
+        raise HTTPException(status_code=401, detail="未ログイン")
+    # 指定問題セットのプログレスデータを取得
+    progress = await DB.get_progress_data(userid, book_id)
+    answered = progress.get("answeredQuestions", [])
+    # 範囲内の学習済み数をカウント（1始まり）
+    learned = sum(1 for idx in answered if start <= idx + 1 <= end)
+    total = end - start + 1
+    return {"learned": learned, "total": total}
+
+@app.get("/select/")
+async def select_page(request: Request):
+    """
+    問題範囲を選択するページ
+    """
+    return templates.TemplateResponse("select.html", {"request": request})
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
