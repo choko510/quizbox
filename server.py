@@ -8,6 +8,7 @@ import re
 from contextlib import asynccontextmanager
 from typing import List, Union
 import base64
+import urllib.parse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query
@@ -23,10 +24,11 @@ from gtts import gTTS
 from io import BytesIO
 import aiohttp
 
-from sqlalchemy import Column, Integer, String, Float, func, case
+from sqlalchemy import Column, Integer, String, Float, func, case, desc
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select as sa_select
 from sqlalchemy.orm import declarative_base, sessionmaker
+
 
 load_dotenv()
 
@@ -289,28 +291,43 @@ class DB:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
-                # 覚えた単語数を取得
-                learned_words_count = await DB.get_learned_words_count(id)
-                
                 return {
                     "correct": user.correct,
                     "bad": user.bad,
-                    "learned_words": learned_words_count,
                     "progress_data": json.loads(user.progress_data) if user.progress_data else {}
                 }
             return None
 
     @staticmethod
-    async def get_mondai(userid:str,name: str):
+    async def get_mondai(userid:str, name: str):
         async with async_session() as session:
-            result = await session.execute(sa_select(Mondai).filter_by(userid=userid, name=name))
-            mondai = result.scalar_one_or_none()
-            if mondai:
-                return json.loads(mondai.mondai)
+            
+            # 対象のレコード数を事前にカウント
+            count_query = sa_select(func.count()).select_from(Mondai).filter_by(userid=userid, name=name)
+            count_result = await session.execute(count_query)
+            record_count = count_result.scalar_one()
+
+            # 複数レコードに対応
+            if record_count > 1:
+                # 複数ある場合は最初のレコードを使用
+                result = await session.execute(
+                    sa_select(Mondai).filter_by(userid=userid, name=name).limit(1)
+                )
+                mondai = result.scalar_one_or_none()
+                if mondai:
+                    return json.loads(mondai.mondai)
+            else:
+                # 1件または0件の場合は従来通り
+                result = await session.execute(sa_select(Mondai).filter_by(userid=userid, name=name))
+                mondai = result.scalar_one_or_none()
+                if mondai:
+                    return json.loads(mondai.mondai)
+            
             return None
 
     @staticmethod
     async def get_mondai_userids(userid: str):
+        userid = urllib.parse.unquote(userid)
         async with async_session() as session:
             result = await session.execute(sa_select(Mondai).filter_by(userid=userid))
             mondai_list = result.scalars().all()
@@ -395,20 +412,30 @@ class DB:
                 return None
     
     @staticmethod
+    @staticmethod
     async def delete_mondai(name: str, userid: str):
         """
         問題を削除する
         """
         async with async_session() as session:
+            
+            # 対象のレコード数を事前にカウント
+            count_query = sa_select(func.count()).select_from(Mondai).filter_by(name=name, userid=userid)
+            count_result = await session.execute(count_query)
+            record_count = count_result.scalar_one()
+            
+            # 複数レコードの場合でも全て取得
             result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
-            mondai = result.scalar_one_or_none()
-            if mondai:
-                await session.delete(mondai)
+            mondai_list = result.scalars().all()
+            
+            if mondai_list:
+                # 全ての該当レコードを削除
+                for mondai in mondai_list:
+                    await session.delete(mondai)
                 await session.commit()
                 return True
             else:
                 return False
-            
     @staticmethod
     async def get_progress_summary(id: str):
         """
@@ -497,42 +524,6 @@ class DB:
             return {} # Return empty dict if user not found
             
     @staticmethod
-    async def get_learned_words_count(id: str):
-        """
-        ユーザーが覚えた総単語数をカウントする（最適化版：カラム限定）。
-        各問題セットのサマリデータ (progress_data カラム) から 'learned' の数を合計する。
-        """
-        async with async_session() as session:
-            stmt = sa_select(Account.progress_data).filter_by(userid=id)
-            result = await session.execute(stmt)
-
-            progress_data_str = result.scalar_one_or_none()
-
-            if progress_data_str is None: #ユーザのデータがない場合
-                return 0
-
-            total_learned_words = 0
-
-            try:
-                all_summary_data = json.loads(progress_data_str)
-                if not isinstance(all_summary_data, dict):
-                    print(f"Invalid progress_data format for user {id}: Not a dict.")
-                    return 0
-
-                for summary in all_summary_data.values():
-                    if isinstance(summary, dict):
-                        learned_count = summary.get('learned', 0)
-                        if isinstance(learned_count, int) and learned_count >= 0:
-                            total_learned_words += learned_count
-                return total_learned_words
-            except json.JSONDecodeError as e:
-                print(f"Error decoding progress_data (summary) for user {id}: {e}")
-                return 0
-            except Exception as e: # Catch other potential errors
-                print(f"Unexpected error calculating learned words for {id}: {e}")
-                return 0
-    
-    @staticmethod
     async def update_mondai_stats(mondai_name: str, is_correct: bool):
         """
         問題の統計情報を更新する
@@ -604,18 +595,18 @@ async def root(request: Request):
     userid = request.cookies.get("id")
     
     if userid:
-        try:
-            usermondai = await DB.get_mondai_userids(userid)
-        except:
-            usermondai = []
+        usermondai = await DB.get_mondai_userids(userid)
 
         if usermondai:
             html = """
             <div class="category" data-category="other">
                 <p>作成した問題</p>
             """
+
+            makeuser = urllib.parse.unquote(userid)
+
             for mondai in usermondai:
-                html += f'<a href="/play/?userid={userid}&name={mondai}">{mondai}</a>'
+                html += f'<a href="/play/?userid={makeuser}&name={mondai}">{mondai} <br>作成者:{makeuser}</a>'
 
             html += "</div>"
         else:
@@ -670,6 +661,13 @@ async def select(request: Request):
 @app.get("/listening/")
 async def listening(request: Request):
     return templates.TemplateResponse("listening.html", {"request": request})
+
+@app.get("/flashcard/")
+async def flashcards(request: Request):
+    """
+    単語帳モードのページを表示する
+    """
+    return templates.TemplateResponse("flashcard.html", {"request": request})
 
 @app.get("/dashboard/")
 @app.get("/dashboard")
@@ -759,52 +757,41 @@ async def get_all(data: Data):
 
 @app.get("/api/ranking")
 async def ranking(
-    count: int = Query(20, le=20),
-    sort_by: str = Query("correct", enum=["correct", "accuracy", "total", "learned_words"])
+    count: int = Query(20, ge=1, le=20),
+    sort_by: str = Query("total", enum=["correct", "accuracy", "total"])
 ):
     async with async_session() as session:
-        count = min(count, 20)
-        
-        # ソート基準に応じてクエリを構築
-        if sort_by == "accuracy":
-            # 正答率でソート (correct / (correct + bad))
-            # 0除算を避けるため、correct + bad > 0 の場合のみ計算
-            accuracy_expr = case(
-                (Account.correct + Account.bad > 0, func.cast(Account.correct, Float) / (Account.correct + Account.bad)),
-                else_=0.0
-            ).label("accuracy")
-            query = sa_select(Account, accuracy_expr).order_by(accuracy_expr.desc())
-        elif sort_by == "total":
-            # 合計解答数でソート
-            total_expr = (Account.correct + Account.bad).label("total_answers")
-            query = sa_select(Account, total_expr).order_by(total_expr.desc())
-        else: # sort_by == "correct" (デフォルト)
-            # 正解数でソート
-            query = sa_select(Account).order_by(Account.correct.desc())
 
-        # 上位N件を取得
+        columns_to_select = [Account.userid, Account.correct, Account.bad]
+
+        total_expr = (Account.correct + Account.bad)
+
+        accuracy_expr = case(
+            (total_expr > 0, func.cast(Account.correct, Float) / total_expr),
+            else_=0.0
+        )
+
+        base_query = sa_select(*columns_to_select).where(total_expr > 0)
+
+        if sort_by == "accuracy":
+            query = base_query.order_by(desc(accuracy_expr))
+        elif sort_by == "total":
+            query = base_query.order_by(desc(total_expr))
+        else:
+            query = base_query.order_by(desc(Account.correct))
+
         result = await session.execute(query.limit(count))
-        
-        # 結果を整形
-        ranking_list = []
-        for row in result:
-            user = row[0] # Accountオブジェクトを取得
-            if user.correct + user.bad > 0: # 解答数が0のユーザーは除外
-                # ソート基準が「覚えた単語数」なら、各ユーザーの覚えた単語数を取得
-                learned_words = 0
-                if sort_by == "learned_words":
-                    learned_words = await DB.get_learned_words_count(user.userid)
-                
-                ranking_list.append({
-                    "userid": user.userid,
-                    "correct": user.correct,
-                    "bad": user.bad,
-                    "learned_words": learned_words
-                })
-        
-        # learned_wordsでソートする場合は、メモリ上でソート
-        if sort_by == "learned_words":
-            ranking_list.sort(key=lambda x: x["learned_words"], reverse=True)
+
+        try:
+            ranking_list = [
+                {"userid": row.userid, "correct": row.correct, "bad": row.bad}
+                for row in result.mappings()
+            ]
+        except AttributeError:
+            ranking_list = [
+                {"userid": row[0], "correct": row[1], "bad": row[2]}
+                for row in result.fetchall()
+            ]
 
     return ranking_list
 
@@ -1038,12 +1025,12 @@ async def edit_mondai(data: MondaiData):
 @app.get("/api/get/mondai/{name}.json")
 async def get_mondai(name: str, start: int = 0, end: int = None):
 
-    path = f"./static/deta/{name}.txt"
+    path = f"./data/mondaiset/{name}.txt"
     
     if not os.path.isfile(path):
         raise HTTPException(status_code=404, detail="Not found")
 
-    start = max(start, 0)
+    start = max(start, 0000)
     results = []
     count = 0
 
@@ -1064,6 +1051,58 @@ async def get_mondai(name: str, start: int = 0, end: int = None):
         raise HTTPException(status_code=404, detail="Not found")
 
     return results
+
+@app.post("/api/get/sentences")
+async def get_sentences(request: Request):
+    try:
+        # Parse JSON request body
+        data = await request.json()
+        words = data.get("words", [])
+        
+        # Validate input
+        if not isinstance(words, list):
+            raise HTTPException(status_code=400, detail="Request must contain a 'words' array")
+            
+        # Limit to 500 words
+        words = words[:500]
+        
+        path = f"./data/sentence.txt"
+        if not os.path.isfile(path):
+            raise HTTPException(status_code=404, detail="Sentence file not found")
+        
+        results = {}
+        
+        # Create a set of lowercase words for efficient search
+        words_lower = {word.lower(): word for word in words}
+        
+        # Load all sentences once
+        all_sentences = []
+        async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+            async for line in f:
+                line = line.strip()
+                if line:
+                    all_sentences.append(line)
+        
+        # Match sentences for each word
+        for word_lower, original_word in words_lower.items():
+            matching_sentences = []
+            
+            # Search for matching sentences
+            for sentence in all_sentences:
+                if word_lower in sentence.lower():
+                    matching_sentences.append(sentence)
+                    # Limit to 5 sentences per word
+                    if len(matching_sentences) >= 5:
+                        break
+            results[original_word] = matching_sentences
+        
+        return {"results": results}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving sentences: {str(e)}"
+        )
 
 @app.get("/api/get/mondai/{userid}/{name}.json")
 async def get_mondai(userid: str, name: str):
@@ -1129,11 +1168,14 @@ async def delete_problem(data: MondaiIdData):
     if await DB.password(data.userid) != data.password:
         return {"message": "password is wrong"}
     
-    success = await DB.delete_mondai(data.name, data.userid)
-    if success:
-        return {"status": "success"}
-    else:
-        return {"status": "failed", "message": "Problem not found"}
+    try:
+        success = await DB.delete_mondai(data.name, data.userid)
+        if success:
+            return {"status": "success"}
+        else:
+            return {"status": "failed", "message": "Problem not found"}
+    except Exception as e:
+        return {"status": "error", "message": f"Error: {str(e)}"}
 
 class DuplicateMondaiData(BaseModel):
     original_name: str
@@ -1150,12 +1192,16 @@ async def duplicate_problem(data: DuplicateMondaiData):
         return {"message": "password is wrong"}
     
     # オリジナルの問題を取得
-    mondai = await DB.get_mondai(data.original_name)
+    mondai = await DB.get_mondai(data.userid, data.original_name)
     if not mondai:
         return {"status": "failed", "message": "Original problem not found"}
     
-    # 新しい名前で保存
+    # 保存前に既存の同名問題を削除（重複を防ぐため）
     try:
+        # 同名の問題を削除
+        await DB.delete_mondai(data.new_name, data.userid)
+        
+        # 新しい名前で保存
         await DB.save_mondai(data.new_name, data.userid, mondai, True)
         return {"status": "success"}
     except Exception as e:
@@ -1260,7 +1306,7 @@ async def search_problems(query: str = Query(..., min_length=1)):
             stmt = sa_select(Mondai).filter(
                 (Mondai.is_public == 1) &
                 ((Mondai.name.ilike(f'%{query}%')) |
-                 (Mondai.mondai.ilike(f'%{query}%')))
+                (Mondai.mondai.ilike(f'%{query}%')))
             ).limit(20)
             
             result = await session.execute(stmt)
@@ -1330,10 +1376,10 @@ async def search_problems(query: str = Query(..., min_length=1)):
         start_num, end_num = int(range_match.group(1)), int(range_match.group(2))
         for book_id, ranges in BOOK_RANGES.items():
             for range_item in ranges:
-                if (start_num == range_item["start"] and end_num == range_item["end"]) or \
-                   (start_num <= range_item["start"] and end_num >= range_item["end"]) or \
-                   (start_num >= range_item["start"] and start_num <= range_item["end"]) or \
-                   (end_num >= range_item["start"] and end_num <= range_item["end"]):
+                if  (start_num == range_item["start"] and end_num == range_item["end"]) or \
+                    (start_num <= range_item["start"] and end_num >= range_item["end"]) or \
+                    (start_num >= range_item["start"] and start_num <= range_item["end"]) or \
+                    (end_num >= range_item["start"] and end_num <= range_item["end"]):
                     # 範囲が重なる場合、結果に追加
                     results.append({
                         "title": f"{book_id} {range_item['label']}",
@@ -1373,6 +1419,7 @@ async def search_problems(query: str = Query(..., min_length=1)):
             filtered_results.append(item)
     
     return filtered_results
+
 @app.post("/api/search/word/")
 async def search_word(data: wordData):
     """

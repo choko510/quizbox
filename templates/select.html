@@ -14,7 +14,7 @@
 <body>
     <div class="main">
         <div class="header-actions">
-            <a href="javascript:history.back()"><i class="fas fa-home"></i> 戻る</a>
+            <a href="javascript:pageback()"><i class="fas fa-home"></i> 戻る</a>
         </div>
         <div class="box1">
             <div id="book-title" class="book-title">教材を読み込み中...</div>
@@ -68,11 +68,10 @@
             <!-- 特殊な範囲アイテム（単語リスト表示） -->
             <div class="special-range-item">
                 <button id="toggle-word-list" class="special-range-button">
-                    <i class="fas fa-list"></i> 単語
+                    <i class="fas fa-list"></i> 単語カード
                 </button>
                 <div class="special-range-text">単語リストを表示します</div>
             </div>
-            
             
             <div id="range-container" class="range-container"></div>
         </div>
@@ -80,6 +79,26 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 
     <script>
+        
+        function pageback() {
+            const referrer = document.referrer;
+            const currentHost = location.hostname;
+            if (referrer) {
+                try {
+                    const referrerHost = new URL(referrer).hostname;
+                    if (referrerHost === currentHost) {
+                        history.back();
+                    } else {
+                        location.href = '../';
+                    }
+                } catch (e) {
+                    location.href = '../';
+                }
+            } else {
+                location.href = '../';
+            }
+        }
+
         // 教材IDと名前のマッピング
         const bookTitles = {
             'leap': 'LEAP',
@@ -121,7 +140,7 @@
             const toggleWordListButton = document.getElementById('toggle-word-list');
             
             toggleWordListButton.addEventListener('click', function() {
-                window.location.href = `/play/?id=${bookId}&tangolist=true`;
+                window.location.href = `/flashcard/?id=${bookId}`;
             });
         });
 

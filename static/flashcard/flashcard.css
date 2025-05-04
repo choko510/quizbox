@@ -1,0 +1,920 @@
+:root {
+    --primary-color: #0066cc;
+    --primary-hover: #0052a3;
+    --secondary-color: #e9f3ff;
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --border-color: #ddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.4s;
+}
+
+body {
+    font-family: 'Noto Sans Japanese', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--light-gray);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    color: var(--text-color);
+}
+
+/* ヘッダースタイル */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: white;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: relative;
+    z-index: 10;
+}
+
+.header-title {
+    font-size: 1.2rem;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.back-button, .settings-button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-speed);
+}
+
+.back-button:hover, .settings-button:hover {
+    color: var(--primary-color);
+}
+
+/* メインコンテナ */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    padding: 20px;
+    padding-bottom: 30px;
+}
+
+/* カードコンテナ */
+.card-container {
+    width: 100%;
+    max-width: 600px;
+    height: 65vh;
+    perspective: 1200px;
+    margin-bottom: 20px;
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+}
+
+.front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.front {
+    background-color: white;
+    z-index: 2;
+}
+
+.back {
+    background-color: var(--secondary-color);
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+}
+
+#word-content, #meaning-content {
+    font-size: 2.5rem;
+    text-align: center;
+    word-break: break-word;
+    margin-bottom: 20px;
+}
+
+/* 発音ボタン */
+.pronunciation-button {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}
+
+.pronunciation-button:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.pronunciation-button:active {
+    transform: scale(0.95);
+}
+
+/* 例文セクション */
+.example-section {
+    width: 100%;
+    margin-top: 20px;
+    display: none; /* デフォルトでは非表示 */
+}
+
+.example-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.example-content {
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: left;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+}
+
+/* 例文アイテム */
+.example-item {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+/* 例文の区切り線 */
+.example-divider {
+    border: 0;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 8px 0;
+}
+
+/* 読み込み中の表示 */
+.loading-examples {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 5px;
+    font-size: 0.9rem;
+}
+
+/* カード状態表示 */
+.card-status {
+    width: 100%;
+    max-width: 600px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    width: 0%; /* 初期状態 */
+    transition: width 0.3s ease;
+}
+
+.progress-indicator {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* コントロールボタン */
+.controls {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.nav-btn, .flip-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}
+
+.nav-btn:hover, .flip-btn:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.nav-btn:active, .flip-btn:active {
+    transform: scale(0.95);
+}
+
+/* 学習状態ボタン */
+.learning-status {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.status-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 70px;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}
+
+.status-btn i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.status-btn span {
+    font-size: 0.9rem;
+}
+
+.status-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.status-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.status-btn.not-learned {
+    background-color: #e74c3c;
+}
+
+.status-btn.learning {
+    background-color: #f39c12;
+}
+
+.status-btn.learned {
+    background-color: #2ecc71;
+}
+
+.status-btn.active {
+    position: relative;
+    overflow: hidden;
+}
+
+.status-btn.active:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+/* 設定パネル */
+.settings-panel {
+    position: fixed;
+    top: 0;
+    right: -300px; /* 初期状態では画面外に配置 */
+    width: 280px;
+    height: 100%;
+    background-color: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    transition: right var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-panel.active {
+    right: 0;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.settings-content {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.settings-group {
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+.settings-group:last-child {
+    border-bottom: none;
+}
+
+.settings-group-title {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.setting-option {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-option:last-child {
+    margin-bottom: 0;
+}
+
+.setting-option label {
+    font-size: 1rem;
+}
+
+/* 設定のチェックボックス */
+.settings-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 40px;
+    height: 20px;
+    background-color: var(--border-color);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.settings-checkbox:checked {
+    background-color: var(--primary-color);
+}
+
+.settings-checkbox:before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: white;
+    top: 1px;
+    left: 1px;
+    transition: transform var(--transition-speed);
+}
+
+.settings-checkbox:checked:before {
+    transform: translateX(20px);
+}
+
+/* オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-speed), visibility var(--transition-speed);
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .card-container {
+        height: 50vh;
+    }
+    
+    #word-content, #meaning-content {
+        font-size: 2rem;
+    }
+    
+    .nav-btn, .flip-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .pronunciation-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-container {
+        height: 45vh;
+    }
+    
+    #word-content, #meaning-content {
+        font-size: 1.6rem;
+    }
+    
+    .header-title {
+        font-size: 1rem;
+    }
+    
+    .example-content {
+        max-height: 80px;
+    }
+}
+
+/* アニメーション */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* 学習状態フィードバックアニメーション */
+/* チェックマークオーバーレイのスタイル */
+.checkmark-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 0.1); /* 少し暗くする背景 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0; /* 初期状態は非表示 */
+    pointer-events: none; /* クリックイベントを透過させる */
+    transition: opacity 0.3s ease-out;
+    z-index: 10; /* カードコンテンツより手前に表示 */
+}
+
+.checkmark-overlay i {
+    font-size: 5rem; /* アイコンサイズ */
+    color: #4CAF50; /* 緑色 */
+    transform: scale(0.5); /* 初期サイズ */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* バウンド効果 */
+}
+
+/* チェックマーク表示時のスタイル (覚えた) */
+.flashcard.show-checkmark .checkmark-overlay {
+    opacity: 1;
+    background-color: rgba(46, 204, 113, 0.2); /* 緑色の背景 */
+}
+
+.flashcard.show-checkmark .checkmark-overlay i {
+    transform: scale(1); /* 通常サイズに戻す */
+}
+
+/* 強化アニメーション (覚えた) */
+@keyframes success-glow {
+    0% { box-shadow: 0 0 0 rgba(46, 204, 113, 0); }
+    50% { box-shadow: 0 0 30px rgba(46, 204, 113, 0.7); }
+    100% { box-shadow: 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+.flashcard.learned-animation {
+    animation: success-glow 1.5s ease-in-out;
+}
+
+/* 復習アニメーション */
+@keyframes learning-pulse {
+    0% { transform: scale(1); background-color: rgba(243, 156, 18, 0); }
+    50% { transform: scale(1.02); background-color: rgba(243, 156, 18, 0.2); }
+    100% { transform: scale(1); background-color: rgba(243, 156, 18, 0); }
+}
+
+.flashcard.show-learning .checkmark-overlay {
+    opacity: 1;
+    background-color: rgba(243, 156, 18, 0.2); /* オレンジ色の背景 */
+}
+
+.flashcard.show-learning .checkmark-overlay i {
+    color: #f39c12; /* オレンジ色のアイコン */
+    transform: scale(1); /* 通常サイズに */
+}
+
+.flashcard.show-learning .checkmark-overlay i:before {
+    content: "\f021"; /* fa-sync-alt アイコン */
+}
+
+.flashcard.learning-animation {
+    animation: learning-pulse 1.2s ease-in-out;
+}
+
+/* まだ覚えていないアニメーション */
+@keyframes not-learned-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
+
+.flashcard.show-not-learned .checkmark-overlay {
+    opacity: 1;
+    background-color: rgba(231, 76, 60, 0.2); /* 赤色の背景 */
+}
+
+.flashcard.show-not-learned .checkmark-overlay i {
+    color: #e74c3c; /* 赤色のアイコン */
+    transform: scale(1); /* 通常サイズに */
+}
+
+.flashcard.show-not-learned .checkmark-overlay i:before {
+    content: "\f00d"; /* fa-times アイコン */
+}
+
+.flashcard.not-learned-animation {
+    animation: not-learned-shake 0.5s ease-in-out;
+}
+
+/* 強化アニメーション全般 */
+.enhanced-feedback .flashcard.show-checkmark .checkmark-overlay {
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+    background-color: rgba(46, 204, 113, 0.2); /* 緑色の背景 */
+}
+
+.enhanced-feedback .flashcard.show-checkmark {
+    animation: success-glow 2s ease-in-out;
+}
+
+/* 学習リストセクション (ページ下部) */
+.list-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    z-index: 100;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(calc(100% - 50px)); /* 最初はヘッダーだけ表示 */
+}
+
+.list-section.expanded {
+    transform: translateY(0); /* 展開時はすべて表示 */
+}
+
+.list-header {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    background-color: var(--secondary-color);
+    text-align: center;
+}
+
+.toggle-list-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 5px 0;
+}
+
+.toggle-list-btn i {
+    transition: transform 0.3s;
+}
+
+.list-section.expanded .toggle-list-btn i {
+    transform: rotate(180deg);
+}
+
+.list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* リストのタブ */
+.list-tabs {
+    display: flex;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto; /* タブが多い場合にスクロール */
+}
+
+.list-tabs .tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #555;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-bottom-color 0.2s;
+    white-space: nowrap; /* タブ名が改行しないように */
+}
+
+.list-tabs .tab-btn:last-child {
+    margin-right: 0;
+}
+
+.list-tabs .tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: bold;
+}
+/* リストセクションのコンテンツ */
+.list-content {
+    padding: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* フィルターセクションのスタイル */
+.list-filter {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+}
+
+.filter-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-right: 10px;
+    color: #555;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.filter-checkbox {
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.filter-option span {
+    font-size: 0.85rem;
+}
+
+.apply-filter-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-left: 10px;
+}
+
+.apply-filter-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* スマホでの表示調整 */
+@media (max-width: 480px) {
+    .list-filter {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-title {
+        margin-bottom: 5px;
+    }
+    
+    .filter-options {
+        margin-bottom: 10px;
+    }
+    
+    .apply-filter-btn {
+        margin-left: 0;
+        align-self: flex-end;
+    }
+    
+    .list-section {
+        max-height: 90vh;
+        transform: translateY(calc(100% - 45px));
+    }
+    
+    .list-container {
+        max-height: calc(90vh - 45px);
+    }
+}
+/* モーダル関連のスタイルはリストセクションで代替 */
+.list-modal,
+.list-modal-header,
+.list-modal-tabs,
+.list-modal-filter,
+.list-modal-content {
+    display: none; /* 非表示にする */
+}
+/* 単語リスト共通スタイル */
+#word-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#word-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#word-list li:last-child {
+    border-bottom: none;
+}
+
+#word-list li:hover {
+    background-color: #f9f9f9;
+}
+
+#word-list .word {
+    font-weight: bold;
+    color: #333;
+    margin-right: 10px;
+}
+
+#word-list .description {
+    color: #666;
+    font-size: 0.9rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; /* 長い説明は省略 */
+    flex-grow: 1; /* 残りの幅を埋める */
+}
+
+/* 学習状態アイコン */
+.state-icon {
+    margin-right: 10px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+}
+
+/* 学習状態によるリスト項目のスタイリング */
+#word-list li.state-learned {
+    background-color: rgba(46, 204, 113, 0.05);
+}
+
+#word-list li.state-learning {
+    background-color: rgba(243, 156, 18, 0.05);
+}
+
+#word-list li.state-not_learned {
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+#word-list li:hover.state-learned {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+#word-list li:hover.state-learning {
+    background-color: rgba(243, 156, 18, 0.1);
+}
+
+#word-list li:hover.state-not_learned {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* オーバーレイ（設定パネルと共通） */
+.overlay.active {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s 0s;
+}
+.overlay { /* 非表示時のスタイル */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
+}

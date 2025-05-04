@@ -9,36 +9,6 @@
     <link rel="stylesheet" href="style.css">
     <title>Quizbox</title>
     <link rel="manifest" href="manifest.json">
-    <style>
-        .progress-container {
-            height: 6px;
-            width: 100%;
-            background-color: #f0f0f0;
-            border-radius: 3px;
-            margin-top: 4px;
-            margin-bottom: 10px;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .progress-learned {
-            background-color: #4caf50;
-            /* 緑色 - 学習済み */
-            height: 100%;
-        }
-
-        .progress-learning {
-            background-color: #ff9800;
-            /* オレンジ色 - 学習中 */
-            height: 100%;
-        }
-
-        .progress-unlearned {
-            background-color: #e0e0e0;
-            /* グレー - 未学習 */
-            height: 100%;
-        }
-    </style>
 </head>
 
 <body>
@@ -103,9 +73,10 @@
 
             <div class="category">
                 <p>授業</p>
-                <a href="play/?id=target1200701750">ターゲット1200 701-750 旧</a>
-                <a href="play/?id=target1200751800">ターゲット1200 751-800 前回</a>
-                <a href="play/?id=target1200801850">ターゲット1200 801-850</a>
+                <a href="play/?id=target1200&start=701&end=750">ターゲット1200 701-750 旧</a>
+                <a href="play/?id=target1200&start=751&end=800">ターゲット1200 751-800 旧</a>
+                <a href="play/?id=target1200&start=801&end=850">ターゲット1200 801-850 前回</a>
+                <a href="play/?id=target1200&start=851&end=900">ターゲット1200 851-900</a>
             </div>
 
             <div class="category">
@@ -238,10 +209,6 @@
                                 <h3 class="score-card__title">正答率</h3>
                                 <p id="ritu" class="score-card__value">0%</p>
                             </div>
-                            <div class="score-card score-card--learned-words">
-                                <h3 class="score-card__title">覚えた単語数</h3>
-                                <p id="learned-words" class="score-card__value">0</p>
-                            </div>
                         </div>
 
                         <div class="chart-container">
@@ -255,8 +222,7 @@
                             <h3>ランキング</h3>
                             <div class="ranking-controls">
                                 <div class="ranking-sort-buttons">
-                                    <button id="sort-total" class="sort-button" data-sort="total">合計解答数</button>
-                                    <button id="sort-learned" class="sort-button active" data-sort="learned_words">覚えた単語数</button>
+                                    <button id="sort-total" class="sort-button active" data-sort="total">合計解答数</button>
                                     <button id="sort-correct" class="sort-button" data-sort="correct">正解数</button>
                                     <button id="sort-accuracy" class="sort-button" data-sort="accuracy">正答率</button>
                                 </div>
@@ -288,43 +254,38 @@
 
                     <!-- アカウント管理タブ -->
                     <div id="account" class="tab-content">
-                        <div class="account-management">
-                            <h3>アカウント管理</h3>
+                        <h3>アカウント管理</h3>
 
-                            <!-- ユーザー名変更フォーム -->
-                            <div class="account-section">
-                                <h4>ユーザー名変更</h4>
-                                <form id="change-name-form">
-                                    <input type="text" id="new-name" placeholder="新しいユーザー名" required>
-                                    <button type="submit">変更</button>
-                                </form>
-                            </div>
+                        <!-- ユーザー名変更フォーム -->
+                        <div class="account-section">
+                            <h4>ユーザー名変更</h4>
+                            <form id="change-name-form">
+                                <input type="text" id="new-name" placeholder="新しいユーザー名" required>
+                                <button type="submit">変更</button>
+                            </form>
+                        </div>
 
-                            <!-- パスワード変更フォーム -->
-                            <div class="account-section">
-                                <h4>パスワード変更</h4>
-                                <form id="change-password-form">
-                                    <input type="password" id="new-password" placeholder="新しいパスワード" required>
-                                    <button type="submit">変更</button>
-                                </form>
-                            </div>
-                            
-                            <!-- ログインフォーム -->
-                            <div class="account-section">
-                                <h4>他のアカウントにログイン</h4>
-                                <form id="login-form">
-                                    <input type="text" id="login-id" placeholder="ユーザー名" required>
-                                    <input type="password" id="login-password" placeholder="パスワード" required>
-                                    <button type="submit">ログイン</button>
-                                </form>
-                            </div>
+                        <!-- パスワード変更フォーム -->
+                        <div class="account-section">
+                            <h4>パスワード変更</h4>
+                            <form id="change-password-form">
+                                <input type="password" id="new-password" placeholder="新しいパスワード" required>
+                                <button type="submit">変更</button>
+                            </form>
+                        </div>
+                        
+                        <!-- ログインフォーム -->
+                        <div class="account-section">
+                            <h4>他のアカウントにログイン</h4>
+                            <form id="login-form">
+                                <input type="text" id="login-id" placeholder="ユーザー名" required>
+                                <input type="password" id="login-password" placeholder="パスワード" required>
+                                <button type="submit">ログイン</button>
+                            </form>
                         </div>
                     </div>
 
                 </main>
-                <footer class="modal__footer">
-                    <button class="modal__btn" data-micromodal-close aria-label="閉じる">閉じる</button>
-                </footer>
             </div>
         </div>
     </div>

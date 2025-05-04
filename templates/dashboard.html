@@ -34,8 +34,7 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active" data-view="overview"><span>概要</span></li>
-                    <li data-view="problems"><span>問題一覧</span></li>
+                    <li class="active" data-view="problems"><span>問題一覧</span></li>
                     <li data-view="statistics"><span>統計</span></li>
                     <li data-view="settings"><span>設定</span></li>
                 </ul>
@@ -44,71 +43,8 @@
 
         <!-- メインコンテンツエリア -->
         <main class="dashboard-main">
-            <!-- 概要ビュー -->
-            <section class="dashboard-view active" id="overview-view">
-                <div class="overview-header">
-                    <h2>ダッシュボード概要</h2>
-                </div>
-                
-                <div class="widget-container">
-                    <!-- 総問題数ウィジェット -->
-                    <div class="widget" id="total-problems-widget">
-                        <div class="widget-header">
-                            <h3>総問題数</h3>
-                            <div class="widget-controls">
-                                <span class="widget-move">⋮</span>
-                            </div>
-                        </div>
-                        <div class="widget-body">
-                            <div class="stat-large" id="total-problems-count">0</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 公開問題数ウィジェット -->
-                    <div class="widget" id="public-problems-widget">
-                        <div class="widget-header">
-                            <h3>公開問題数</h3>
-                            <div class="widget-controls">
-                                <span class="widget-move">⋮</span>
-                            </div>
-                        </div>
-                        <div class="widget-body">
-                            <div class="stat-large" id="public-problems-count">0</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 最近の問題ウィジェット -->
-                    <div class="widget" id="recent-problems-widget">
-                        <div class="widget-header">
-                            <h3>最近作成した問題</h3>
-                            <div class="widget-controls">
-                                <span class="widget-move">⋮</span>
-                            </div>
-                        </div>
-                        <div class="widget-body">
-                            <ul class="recent-problems-list" id="recent-problems-list">
-                                <li class="no-data">問題がありません</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- 正答率ウィジェット -->
-                    <div class="widget" id="accuracy-widget">
-                        <div class="widget-header">
-                            <h3>問題別正答率</h3>
-                            <div class="widget-controls">
-                                <span class="widget-move">⋮</span>
-                            </div>
-                        </div>
-                        <div class="widget-body">
-                            <canvas id="accuracy-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- 問題一覧ビュー -->
-            <section class="dashboard-view" id="problems-view">
+            <section class="dashboard-view active" id="problems-view">
                 <div class="problems-header">
                     <h2>問題一覧</h2>
                     <div class="problem-actions">

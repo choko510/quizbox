@@ -48,12 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function loadDashboardSettings() {
     const defaultSettings = {
-        widgets: {
-            totalProblems: true,
-            publicProblems: true,
-            recentProblems: true,
-            accuracy: true
-        },
         theme: 'light'
     };
     
@@ -86,22 +80,6 @@ function saveDashboardSettings() {
  * ダッシュボード設定を適用する
  */
 function applyDashboardSettings() {
-    // ウィジェット表示設定
-    document.getElementById('show-total-problems').checked = dashboardSettings.widgets.totalProblems;
-    document.getElementById('show-public-problems').checked = dashboardSettings.widgets.publicProblems;
-    document.getElementById('show-recent-problems').checked = dashboardSettings.widgets.recentProblems;
-    document.getElementById('show-accuracy').checked = dashboardSettings.widgets.accuracy;
-    
-    // ウィジェット表示制御
-    document.getElementById('total-problems-widget').style.display = 
-        dashboardSettings.widgets.totalProblems ? 'block' : 'none';
-    document.getElementById('public-problems-widget').style.display = 
-        dashboardSettings.widgets.publicProblems ? 'block' : 'none';
-    document.getElementById('recent-problems-widget').style.display = 
-        dashboardSettings.widgets.recentProblems ? 'block' : 'none';
-    document.getElementById('accuracy-widget').style.display = 
-        dashboardSettings.widgets.accuracy ? 'block' : 'none';
-    
     // テーマ設定
     document.querySelectorAll('.theme-option').forEach(option => {
         option.classList.remove('active');
@@ -112,10 +90,6 @@ function applyDashboardSettings() {
     
     applyTheme(dashboardSettings.theme);
 }
-
-/**
- * テーマを適用する
- */
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('dashboard-theme', theme);
@@ -169,9 +143,6 @@ async function loadUserProblems() {
  * 問題がない場合のメッセージを表示
  */
 function showNoProblemsMessage() {
-    document.getElementById('total-problems-count').textContent = '0';
-    document.getElementById('public-problems-count').textContent = '0';
-    document.getElementById('recent-problems-list').innerHTML = '<li class="no-data">問題がありません</li>';
     document.getElementById('problems-table-body').innerHTML = '<tr class="no-data"><td colspan="5">問題が見つかりません</td></tr>';
     
     // 統計データ初期化
@@ -182,16 +153,6 @@ function showNoProblemsMessage() {
  * ダッシュボードを更新する
  */
 function updateDashboard() {
-    // 問題数表示の更新
-    document.getElementById('total-problems-count').textContent = userProblems.length;
-    
-    // 公開問題数の更新
-    const publicProblems = userProblems.filter(p => p.is_public);
-    document.getElementById('public-problems-count').textContent = publicProblems.length;
-    
-    // 最近の問題一覧の更新
-    updateRecentProblemsList();
-    
     // 問題一覧テーブルの更新
     updateProblemTable();
     
@@ -292,9 +253,70 @@ function updateProblemTable() {
     userProblems.forEach(problem => {
         const row = document.createElement('tr');
         
-        // 問題名
+        // 問題名（編集可能）
         const nameCell = document.createElement('td');
-        nameCell.textContent = problem.name;
+        nameCell.className = 'problem-name-cell';
+        nameCell.setAttribute('data-original-name', problem.name);
+        
+        // 問題名表示要素
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = problem.name;
+        nameSpan.className = 'editable-name';
+        
+        // クリックすると編集モードになる
+        nameSpan.addEventListener('click', (e) => {
+            // すでに編集中なら何もしない
+            if (nameCell.querySelector('input')) return;
+            
+            const currentName = e.target.textContent;
+            
+            // 入力フィールドを作成
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'name-edit-input';
+            
+            // 元のテキストを非表示にして入力フィールドを表示
+            e.target.style.display = 'none';
+            nameCell.appendChild(input);
+            
+            // フォーカスを当てる
+            input.focus();
+            input.select();
+            
+            // Enterキーで保存
+            input.addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newName = input.value.trim();
+                    if (newName && newName !== currentName) {
+                        await renameProblem(problem, newName, nameSpan);
+                    } else {
+                        // 変更がない場合は元に戻す
+                        nameSpan.style.display = '';
+                        input.remove();
+                    }
+                } else if (e.key === 'Escape') {
+                    // キャンセル
+                    nameSpan.style.display = '';
+                    input.remove();
+                }
+            });
+            
+            // フォーカスを失ったときも保存
+            input.addEventListener('blur', async () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    await renameProblem(problem, newName, nameSpan);
+                } else {
+                    // 変更がない場合は元に戻す
+                    nameSpan.style.display = '';
+                    input.remove();
+                }
+            });
+        });
+        
+        nameCell.appendChild(nameSpan);
         row.appendChild(nameCell);
         
         // 問題数
@@ -726,6 +748,108 @@ function closeConfirmModal() {
     document.getElementById('confirm-modal').classList.remove('active');
     currentProblem = null;
 }
+/**
+ * 問題名を変更する
+ */
+async function renameProblem(problem, newName, nameSpan) {
+    const userId = Cookies.get('id');
+    const password = Cookies.get('password');
+    
+    try {
+        // 既存の問題データを取得
+        const originalName = problem.name;
+        
+        // 同名の問題が既に存在するか確認
+        const existingProblem = userProblems.find(p => p.name === newName);
+        if (existingProblem) {
+            showToast(`「${newName}」という名前の問題は既に存在します`, 'error');
+            // 編集をキャンセル
+            const input = nameSpan.parentElement.querySelector('input');
+            if (input) input.remove();
+            nameSpan.style.display = '';
+            return false;
+        }
+        
+        // 既存の問題を複製して名前を変更
+        const response = await fetch('/api/dashboard/duplicate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                original_name: originalName,
+                new_name: newName,
+                userid: userId,
+                password: password
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // 元の問題を削除
+            const deleteResponse = await fetch('/api/dashboard/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: originalName,
+                    userid: userId,
+                    password: password
+                })
+            });
+            
+            const deleteResult = await deleteResponse.json();
+            
+            if (deleteResult.status === 'success') {
+                // 問題名を更新
+                problem.name = newName;
+                
+                // 入力フィールドを削除して表示を更新
+                const input = nameSpan.parentElement.querySelector('input');
+                if (input) input.remove();
+                nameSpan.textContent = newName;
+                nameSpan.style.display = '';
+                
+                // データ属性も更新
+                nameSpan.parentElement.setAttribute('data-original-name', newName);
+                
+                // プレビューボタンのdata属性も更新
+                const previewBtn = document.querySelector(`.preview-button[data-problem-id="${originalName}"]`);
+                if (previewBtn) {
+                    previewBtn.dataset.problemId = newName;
+                }
+                
+                showToast('問題名を変更しました', 'success');
+                return true;
+            } else {
+                showToast('元の問題の削除に失敗しました', 'error');
+                // 編集をキャンセル
+                const input = nameSpan.parentElement.querySelector('input');
+                if (input) input.remove();
+                nameSpan.style.display = '';
+                return false;
+            }
+        } else {
+            showToast('問題名の変更に失敗しました: ' + (result.message || ''), 'error');
+            // 編集をキャンセル
+            const input = nameSpan.parentElement.querySelector('input');
+            if (input) input.remove();
+            nameSpan.style.display = '';
+            return false;
+        }
+    } catch (error) {
+        console.error('問題名の変更に失敗しました:', error);
+        showToast('問題名の変更に失敗しました', 'error');
+        
+        // 編集をキャンセル
+        const input = nameSpan.parentElement.querySelector('input');
+        if (input) input.remove();
+        nameSpan.style.display = '';
+        return false;
+    }
+}
 
 /**
  * 問題の公開状態を切り替える
@@ -1081,17 +1205,11 @@ function setupEventListeners() {
     document.querySelector('#confirm-ok').addEventListener('click', deleteProblem);
     
     // 設定保存
+    // 設定保存
     document.querySelector('#save-settings').addEventListener('click', () => {
-        // ウィジェット表示設定の保存
-        dashboardSettings.widgets.totalProblems = document.getElementById('show-total-problems').checked;
-        dashboardSettings.widgets.publicProblems = document.getElementById('show-public-problems').checked;
-        dashboardSettings.widgets.recentProblems = document.getElementById('show-recent-problems').checked;
-        dashboardSettings.widgets.accuracy = document.getElementById('show-accuracy').checked;
-        
         saveDashboardSettings();
         applyDashboardSettings();
     });
-    
     // テーマ設定
     document.querySelectorAll('.theme-option').forEach(option => {
         option.addEventListener('click', () => {

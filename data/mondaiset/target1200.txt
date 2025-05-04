@@ -1,0 +1,1700 @@
+change|変える
+learn|学ぶ
+help|手伝う，助ける
+need|必要とする
+live|住んでいる
+ask|頼む
+enjoy|楽しむ
+wait|待つ
+cook|調理する
+talk|話す (t-)
+speak|話す (s-)
+meet|会う
+mean|意味する
+buy|買う
+travel|旅行する
+build|建てる
+close|閉じる
+stay|滞在する
+move|動かす
+plan|計画する
+write|書く
+listen|聞く (l-)
+happen|起こる，生じる
+lose|失う，なくす
+stand|立つ，立っている
+grow|育つ
+sound|〜のように聞こえる
+rain|雨が降る
+worry|心配する
+teach|教える
+hope|望む
+hold|持つ，抱える
+life|一生，生涯
+thing|事
+country|国
+example|例
+place|場所
+part|部分
+trip|旅行
+problem|問題
+question|質問
+color|色
+point|要点
+language|言語
+word|単語，語
+health|健康
+report|報告書
+minute|分
+reason|理由
+line|路線
+month|（暦の）月
+week|週
+date|日にち
+event|行事
+future|未来，将来
+design|デザイン
+end|終わり
+computer|コンピューター
+plant|植物
+art|美術
+chance|機会，好機
+history|歴史
+festival|祭り
+season|季節
+fun|楽しみ
+host|主人
+message|伝言
+step|段階
+popular|人気のある
+most|大部分の
+different|違う
+such|そのような
+last|この前の
+same|同じ
+great|すばらしい (g-)
+open|開いている
+own|自分自身の
+kind|親切な
+difficult|難しい
+enough|十分な
+special|特別な
+famous|有名な
+bad|悪い
+short|短い
+useful|役に立つ
+afraid|恐れて
+favorite|お気に入りの
+expensive|高価な
+carry|運ぶ
+break|壊れる，割れる
+arrive|到着する
+fall|落ちる
+miss|がいなくてさみしく思う
+cover|覆う
+catch|捕まえる
+save|救う
+check|点検する
+introduce|紹介する
+join|加わる
+clean|きれいにする
+answer|答える
+throw|投げる
+invite|招待する
+pick|摘み取る
+die|死ぬ
+return|戻る
+fly|飛ぶ
+cut|切る
+hit|襲う，打つ
+excuse|許す
+wash|洗う
+cry|叫ぶ
+borrow|借りる
+kill|殺す
+push|押す
+climb|登る
+laugh|笑う
+smile|ほほえむ
+hurry|急ぐ
+cheer|元気づける
+volunteer|ボランティア
+side|側
+front|前，正面
+concert|コンサート
+fire|火事
+village|村
+lesson|レッスン
+light|明かり
+Internet|インターネット
+weather|天気
+voice|声
+piece|１つ，１枚
+goal|目標
+speech|スピーチ
+fan|ファン
+dream|夢
+mistake|間違い
+meter|メートル
+land|土地
+hundred|百
+thousand|千
+million|百万
+medicine|薬
+uniform|制服
+heat|暑さ
+evening|夕方
+noon|正午
+holiday|休日，祝日
+course|講座
+rule|ルール
+forest|森林
+farm|農場
+treasure|大切な物
+hole|穴
+cloud|雲
+phone|電話
+sorry|すまなく思って
+careful|注意深い
+wonderful|すばらしい (w-)
+heavy|重い
+sick|病気の
+dear|親愛なる
+glad|うれしい
+dark|暗い
+sad|悲しい
+cute|かわいい
+free|暇な
+foreign|外国の
+low|低い
+safe|安全な
+angry|怒った
+lucky|幸運な
+bright|輝いて
+soft|柔らかい
+loud|（音が）大きい
+even|〜でさえ
+back|戻って
+still|まだ，なお
+early|早く
+soon|すぐに，まもなく
+away|離れて
+almost|ほとんど，ほぼ
+together|一緒に
+maybe|もしかすると
+once|１度
+else|ほかに
+ago|〜前に
+straight|まっすぐに
+slowly|ゆっくりと
+suddenly|突然，急に
+until|…するまで
+since|…したときから
+around|〜のあちこちを
+over|〜を超えて
+without|〜なしに
+through|〜の間じゅう
+between|〜の間に (b-)
+during|〜の間に (d-)
+behind|〜の後ろに
+along|〜に沿って
+come from|〜から来ている
+come true|実現する
+cut off|〜を切り取る
+do one’s best|全力を尽くす
+get off|〜を降りる
+get on|〜に乗る
+get to|〜に到着する
+go through|〜を経験する
+grow up|成長する，大人になる
+hear of|〜のことを聞く
+help oneself to|〜を自由にとって食べる［飲む］
+look for|〜を探す
+look forward to|〜を楽しみに待つ
+look like|〜に似ている
+pick up|〜を拾い上げる
+speak to / speak with|〜と話す
+take care of|〜の世話をする
+take off|〜を脱ぐ
+take part in|〜に参加する
+think of|〜を思いつく
+after school|放課後に
+all over|〜の至る所に
+all the time|いつも
+at first|最初は，初めのうちは
+at home|在宅して
+at last|ついに，やっと
+at that time|その時に，当時
+at the same time|同時に
+for a long time|長い間
+for the first time|初めて
+in the end|結局
+in the future|将来
+in this way|このようにして
+more than|〜より多い
+of course|もちろん
+on one’s way to|〜に行く途中で
+over there|あそこに，あそこで
+these days|近ごろ
+a kind of|一種の
+a lot of / lots of|たくさんの
+A such as B|BのようなA
+and so on|など
+here is [are]|これが〜です
+How about ~ ?|〜（して）はいかがですか？
+no longer|もはや〜ない
+not only A but (also) B|AだけでなくBも
+so ~ that …|とても〜なので…
+too ~ to|あまりに〜なので…できない
+used to|以前はよく…した
+would like to|…したいと思う
+create|創造する
+base|基礎を置く
+repair|修理する，修復する
+fail|失敗する
+accept|受け入れる
+belong|属する
+exchange|交換する
+complete|完成させる
+treat|扱う
+cross|横切る
+hide|隠す
+shake|振る
+challenge|挑戦する
+connect|つなぐ
+reply|返事をする
+beat|打ち負かす
+share|分かち合う
+observe|観察する
+mark|しるしをつける
+burn|焦がす，焦げる
+locate|位置している
+fix|修理する，固定する
+suit|に最適である
+destroy|破壊する
+control|抑制する，制御する
+respond|返答する
+depend|当てにする
+forgive|許す
+attack|襲う
+sink|沈む
+appreciate|感謝する
+feed|に食べ物を与える
+success|成功
+mystery|謎，未知のこと
+ceremony|式典，儀式
+schedule|予定，予定表
+damage|損害，悪影響
+model|型，模型
+search|捜索
+project|計画，事業
+form|形態
+scene|場面
+accident|事故
+contact|連絡
+image|イメージ
+trust|信頼，信用
+quality|質，品質
+action|行動
+lack|不足，ないこと
+spot|場所
+truth|真実，本当のこと
+effort|努力
+type|型，タイプ
+site|敷地，土地
+tool|手段，道具
+couple|２つ，２人
+hero|ヒーロー，英雄
+courage|勇気
+board|板，掲示板
+purpose|目的，意図
+waste|無駄，浪費
+shape|形
+technique|技能，技術
+middle|真ん中，中央
+spirit|精神，心
+partner|パートナー
+population|人口
+fever|熱，発熱
+method|方法
+structure|構造
+background|経歴，生い立ち
+combination|組み合わせ
+official|公式の
+flat|平らな
+serious|深刻な
+ordinary|普通の
+private|私的な，個人的な
+major|重大な
+classical|クラシックの
+honest|正直な
+excellent|とても優れた
+whole|全体の
+central|中心の
+ancient|古代の
+fantastic|とてもすばらしい
+regular|定期的な
+basic|基本的な，初歩的な
+huge|巨大な
+empty|空の，空いている
+smart|頭のよい，賢い
+general|大まかな，一般的な
+single|たった１つの
+responsible|責任のある
+fresh|新鮮な
+familiar|熟知している
+native|出生地の，母国の
+instant|即席の
+lovely|すてきな
+clear|明白な
+convenient|都合のよい，便利な
+crazy|夢中で，頭の狂った
+funny|おかしい
+secret|秘密の
+remote|（遠く）離れた
+wake|目を覚ます
+release|解放する
+establish|設立する
+examine|調べる
+celebrate|祝う
+float|漂う，浮く
+recommend|推薦する
+supply|供給する
+disappear|見えなくなる
+apologize|謝る
+paint|塗る
+pull|引く，引っ張る
+print|印刷する
+lift|持ち上げる
+separate|分ける
+melt|溶かす，溶ける
+strike|強く打つ
+blow|吹き飛ばす
+let|させてやる
+roll|転がる，転がす
+recover|回復する
+surround|囲む，取り囲む
+doubt|疑う
+display|展示する，陳列する
+announce|発表する
+support|支持する
+act|行動する
+repeat|繰り返す
+count|数える
+compare|比べる
+shine|輝く
+replace|に取って代わる
+reality|現実
+strength|力，強さ
+era|時代
+area|地域，区域
+respect|尊敬
+pressure|重圧
+pleasure|喜び，楽しみ
+favor|親切な行為
+statue|像
+limit|限度，限界
+bottom|下部，底
+position|立場
+memory|記憶，記憶力
+level|水準，レベル
+figure|数，数値
+direction|方向
+bit|少し，少量
+contrast|対比，差異
+religion|宗教
+harmony|調和，一致
+pattern|模様，図柄
+stage|段階
+degree|程度
+emergency|緊急
+origin|起源
+battle|戦闘
+enemy|敵
+note|メモ
+countryside|田舎
+contest|競技会，コンテスト
+sort|種類
+depth|深さ
+top|最高部，頂上
+theme|テーマ，主題
+sentence|文
+cycle|周期
+concept|概念
+rhythm|リズム
+tradition|伝統
+theory|理論，説
+correct|正しい
+blank|白紙の，空白の
+quiet|静かな
+smooth|滑らかな，すべすべした
+wet|濡れた，湿った
+chief|最高の，最高位の
+raw|生の
+personal|個人の，個人的な
+double|２倍の
+dirty|汚れた
+normal|普通の
+full|いっぱいの
+simple|簡単な
+equal|等しい，同等の
+quick|短時間の，すばやい
+rapid|急速な，急激な
+ideal|理想的な
+rough|大まかな，粗い
+silent|無言の，静かな
+violent|暴力的な
+rich|豊富の，金持ちの
+perfect|完全な，完璧な
+weak|弱い，弱った
+upper|上の方の，高い方の
+inner|内部の，中心部の
+awful|ひどい
+FALSE|間違った
+vivid|鮮やかな
+pure|純粋な
+minor|重要でない，小さい方の
+mild|（天候が）穏やかな
+admire|賞賛する，感嘆する
+drop|落とす
+reflect|映し出す，反射する
+dig|掘る
+beg|懇願する
+freeze|凍る
+adopt|採用する
+measure|測る
+flow|流れる
+fulfill|実現させる
+deliver|配達する
+wrap|包む
+knock|ノックする
+spell|つづる
+rush|急いで行く
+pray|祈る
+reject|拒絶する
+protest|抗議する
+handle|扱う，処理する
+disturb|邪魔する
+gather|集める
+copy|写しをとる
+press|押す
+consist|成り立つ
+assist|手助けする
+kick|蹴る
+link|結びつける，関連づける
+adjust|順応する，適応する
+defend|守る
+shut|閉める，閉じる
+bear|耐える
+task|仕事
+hug|抱擁，ハグ
+clue|手がかり
+percent|パーセント
+dozen|１ダース
+ghost|幽霊
+error|誤り
+trend|流行，トレンド
+thought|考え
+alarm|警報
+sample|見本，試供品
+shadow|影，陰
+shade|陰，日陰
+standard|基準，標準
+hunger|飢え，空腹
+appeal|訴え，要求
+harm|害，危害
+pile|積み重ね
+plenty|たくさん
+edge|端，縁
+poison|毒
+scale|規模，目盛り
+section|節，区分
+attempt|試み
+merit|長所，利点
+trick|いたずら
+second|少しの間，秒
+medium|媒体，手段
+unit|単位
+ambition|願望，野心
+midnight|夜の１２時
+power|力
+principle|信条
+vision|展望
+quarter|4分の1
+luck|運，幸運
+quantity|分量，数量
+fault|責任，罪
+somehow|何とかして
+forever|永遠に
+mostly|主に，たいてい
+forward|前へ，先に
+nowadays|近ごろ，最近では
+ahead|前方に
+apart|離れて
+altogether|まったく，完全に
+throughout|〜の間じゅう
+beyond|〜の向こうに
+toward|〜の方向へ
+within|〜以内に
+above|〜の上方に
+below|〜より下に
+per|〜につき
+except|〜を除いて
+beside|〜のそばに
+unlike|〜と違って
+outside|〜の外に
+inside|〜の中に
+against|〜に反対して
+beneath|〜の下に
+plus|〜を加えて
+across|〜を横切って
+bring back|〜を返す
+carry out|〜を実行する
+date back to|〜にさかのぼる
+find out|知る
+get together|集まる
+give off|〜を発する
+hand in|〜を提出する
+hang up|電話を切る
+hold up|〜を支えている
+live on|〜で暮らしを立てる
+look after|〜の世話をする
+look out|注意する
+look up|〜を調べる
+major in|〜を専攻する
+name after|〜にちなんで名付ける
+put down|〜を書き留める
+see off|〜を見送る
+take a look|ちょっと見る
+take away|〜を片付ける
+take one’s time|…するのに時間をかける
+think of A as B|AをBと見なす
+be about to|…しようとしている
+be born into|〜の家庭に生まれる
+be faced with|〜に直面している
+be good at|〜が上手だ
+be in need of|〜を必要としている
+be made of [from]|〜でできている
+be short of|〜が足りない
+be up to|〜次第である
+be worried about|〜のことを心配している
+by oneself|ひとりで，独力で
+on one’s own|たったひとりで
+above all|とりわけ
+across from|〜の向かい側に
+after all|結局は，やはり
+at a time|１度に
+by accident|偶然
+by mistake|間違って
+day after day|来る日も来る日も
+for free|無料で
+from on|〜以降
+from time to time|時々
+in a hurry|急いで
+in favor of|〜に賛成して
+in order to|…するために
+in the past|昔は，過去に
+in those days|その当時は
+on purpose|故意に，わざと
+over and over|何度も
+upside down|逆さまに
+a large number of|たくさんの
+a series of|一連の，一続きの
+as long as|…である限り
+as soon as|…するとすぐに
+had better|…するべきだ
+more and more|ますます多くの
+not at all|まったく〜ではない
+not A but B|AではなくてB
+the first time|初めて…したとき
+when it comes to|〜のこととなると
+parent|親
+husband|夫
+wife|妻
+kid|子供
+twin|双子（の１人）
+relative|親戚
+cousin|いとこ
+ancestor|先祖
+job|仕事
+work|仕事
+occupation|職業
+career|職業
+businesss|仕事，商売
+interview|面接
+hire|雇う
+retire|退職する，引退する
+clerk|店員
+officer|警官
+engineer|技師，技術者
+artist|芸術家
+director|監督
+actor|俳優
+nurse|看護師
+secretary|秘書
+agent|代行業者
+civil|民間の
+mayor|市長
+chairperson|議長，委員長
+professor|教授
+principal|校長
+expert|専門家
+leader|指導者，リーダー
+queen|女王
+prince|王子
+royal|国王の
+slave|奴隷
+hall|会館，ホール
+office|事務所，会社
+bank|銀行
+apartment|アパート
+library|図書館
+gym|体育館，ジム
+museum|博物館，美術館
+theater|劇場
+studio|スタジオ，（映画）撮影所
+stadium|競技場，スタジアム
+temple|寺院
+shrine|聖堂，神社
+castle|城
+tower|塔
+entrance|入口，玄関
+exit|出口
+architecture|建築
+avenue|大通り，〜街
+block|１区画，ブロック
+corner|曲がり角
+intersection|交差点
+zone|地帯，区域
+square|広場，正方形
+market|市場
+path|小道
+slope|坂
+traffic|交通，交通量
+drive|（車を）運転する
+ride|乗る
+railroad|鉄道
+subway|地下鉄
+automobile|自動車
+engine|エンジン
+wheel|ハンドル
+license|免許，免許証
+airport|空港
+flight|定期航空便，フライト
+port|港
+canal|運河
+key|鍵
+stair|階段
+upstairs|上の階に［で］
+floor|床
+shelf|棚
+roof|屋根
+ladder|はしご
+yard|庭
+closet|クローゼット
+refrigerator|冷蔵庫
+shower|シャワー
+housework|家事
+plastic|プラスチックの
+plate|皿
+glass|グラス
+garbage|生ゴミ，ごみ
+trash|ごみ，紙くず
+dust|ほこり
+trap|わな
+brush|ブラシ，はけ
+comb|くし
+blanket|毛布
+sheet|紙，紙の１枚
+label|ラベル
+envelope|封筒
+fashion|ファッション
+style|スタイル
+formal|正式の
+tight|きつい
+loose|ゆったりした
+wear|着ている，身につけている
+clothes|衣服，衣類
+dress|衣服を着せる
+costume|衣装，仮装
+tie|結ぶ
+sew|縫う，縫い付ける
+frame|フレーム
+button|ボタン
+ring|指輪
+jewel|宝石
+wallet|財布
+mobile|携帯電話
+portable|持ち運びできる
+umbrella|傘
+silk|絹，絹糸
+cotton|綿
+leather|革
+feather|羽，羽毛
+meal|食事
+supper|夕食
+snack|軽食
+dessert|デザート
+diet|ダイエット
+chopstick|箸
+bite|噛む
+flavor|風味，味
+delicious|とてもおいしい
+bitter|苦い
+sour|酸っぱい
+recipe|調理法，レシピ
+mix|混ぜる
+pour|注ぐ，かける
+fry|炒める，揚げる
+boil|ゆでる，煮る
+steam|蒸す
+bake|（パンなどを）焼く
+harvest|収穫，収穫物
+vegetable|野菜
+meat|肉
+wheat|小麦
+flour|小麦粉
+honey|ハチミツ
+salt|塩
+menu|メニュー
+choice|選択
+service|サービス，応対
+tip|チップ
+cancel|取り消す，中止する
+culture|文化
+hobby|趣味
+amusement|楽しみ
+entertainment|娯楽
+collect|集める，収集する
+exhibit|展示する
+instrument|楽器
+tune|（音楽の）調子
+film|映画
+cartoon|（子供向けの）アニメ
+comic|漫画
+photograph|写真
+portrait|肖像画
+magic|手品
+tour|旅行，ツアー
+journey|旅行
+sightseeing|観光
+adventure|冒険
+explore|探検する
+wander|歩き回る，ぶらつく
+camp|キャンプ
+tourist|観光客
+passenger|乗客
+guide|ガイド，案内人
+vacation|休暇
+souvenir|お土産
+pack|荷物を詰める
+win|勝つ
+victory|勝利
+record|記録
+score|得点，スコア
+prize|賞
+award|賞，賞金
+race|競争，人種
+match|試合
+tournament|トーナメント
+professional|プロの
+athlete|運動選手
+coach|コーチ，指導員
+rival|ライバル，競争相手
+train|訓練する，トレーニングする
+exercise|運動する
+practice|練習する
+indoor|屋内の，室内の
+flag|旗，国旗
+nature|自然
+climate|気候
+forecast|予報，予測
+temperature|温度，気温
+wind|風
+breeze|そよ風
+storm|嵐
+thunder|雷，雷鳴
+wave|波
+ray|光線
+sunlight|日光
+sunshine|日差し，日なた
+sunset|日没，夕焼け
+landscape|風景，景色
+continent|大陸
+ocean|海，大洋
+island|島
+ground|地面
+cave|洞窟
+bay|湾，入り江
+coast|海岸，沿岸
+shore|岸
+horizon|地平線，水平線
+valley|谷，盆地
+desert|砂漠
+sand|砂
+mud|泥
+rock|岩，岩石
+environment|環境
+recycle|再処理する，リサイクルする
+pollution|汚染，公害
+disaster|災害
+earthquake|地震
+flood|洪水
+rescue|救助する
+creature|生き物，動物
+species|種
+wild|野生の
+wildlife|野生動物
+insect|昆虫
+dinosaur|恐竜
+hunt|狩りをする
+bark|吠える
+nest|巣
+wood|森
+bush|茂み
+branch|枝
+root|根
+grass|芝生，草
+leaf|葉
+bloom|開花
+seed|種
+human|人間の
+person|人，人間
+people|人々
+crowd|群衆，人混み
+generation|世代
+male|男性の，雄の
+female|女性の，雌の
+gender|ジェンダー，性
+neighbor|隣人
+stranger|（その土地に）不案内な人
+birth|誕生
+childhood|子供時代
+youth|青年時代
+teenager|13歳から19歳までの若者
+adult|大人，成人
+junior|年少者
+senior|年長者，高齢者
+elderly|年配の
+dead|死んでいる
+age|年齢
+physical|身体の，肉体の
+condition|状態，体調
+function|機能，働き
+sight|視力
+weight|体重
+fat|太った
+thin|やせた
+slim|ほっそりした，スリムな
+ugly|醜い，不格好な
+thirsty|喉の渇いた
+tear|涙
+sweat|汗
+hospital|病院
+ambulance|救急車
+wheelchair|車椅子
+patient|患者
+disease|病気
+illness|病気
+ill|病気で，気分が悪い
+pain|痛み
+injure|傷つける，痛める
+headache|頭痛
+cancer|癌
+breathe|呼吸する
+touch|触れる
+pat|（手のひらで）軽くたたく
+shout|叫ぶ，大声で話す
+scream|金切り声を出す
+whisper|ささやく
+bow|おじぎをする
+bend|かがむ
+forehead|額
+cheek|頬
+lip|唇
+tooth|歯
+throat|喉
+shoulder|肩
+chest|胸
+elbow|肘
+finger|（手の）指
+thumb|（手の）親指
+nail|爪
+toe|（足の）指，つま先
+ankle|足首
+skin|皮膚，肌
+brain|脳
+heart|心臓
+stomach|胃
+blood|血液
+bone|骨
+muscle|筋肉
+emotion|感情
+mind|心，精神
+mental|心の，精神の
+pleasant|楽しい
+suffer|苦しむ
+upset|取り乱して，動転して
+nervous|心配して，緊張して
+lonely|孤独な，ひとりぼっちの
+shocked|ショックを受けた
+stress|ストレス
+mad|怒って
+anger|怒り
+joy|喜び
+relaxed|くつろいだ
+fear|恐怖
+panic|パニック
+character|性格
+humor|ユーモア
+frank|率直な
+cheerful|元気な，陽気な
+friendly|親切な，好意的な
+gentle|優しい
+calm|落ち着いた
+lively|元気な，活発な
+shy|恥ずかしがりの
+strict|厳しい，厳格な
+positive|前向きの，積極的な
+negative|後ろ向きの，消極的な
+active|活動的な，活発な
+lazy|怠惰な
+communication|コミュニケーション，意思伝達
+greet|挨拶する
+conversation|会話
+chat|おしゃべりする
+text|メッセージを送る
+e-mail|Eメール
+address|住所，アドレス
+translate|翻訳する
+argue|口論する，言い争う
+claim|主張する
+insist|強く主張する
+praise|ほめる，賞賛する
+debate|討論，ディベート
+blame|非難する
+joke|冗談
+pronounce|発音する
+express|言い表す
+state|はっきりと述べる
+define|定義する
+describe|特徴を述べる
+refer|言及する
+predict|予測する，予言する
+comment|論評，コメント
+term|用語，専門用語
+publish|出版する
+novel|小説
+fiction|フィクション，作り話
+essay|小論文，エッセイ
+newspaper|新聞
+magazine|雑誌
+journal|専門誌
+article|記事
+title|題名，タイトル
+poem|詩
+tale|話，物語
+chapter|章
+education|教育
+knowledge|知識
+intelligent|知能の高い
+logic|論理
+talent|才能
+master|習得する
+solve|解く，解決する
+review|復習する，論評する
+textbook|教科書
+dictionary|辞書
+lecture|講義
+subject|科目
+mathematics|数学
+biology|生物学
+elementary|初等の
+college|大学
+university|総合大学
+scholar|学者
+enter|入学する，入る
+attend|出席する
+absent|欠席の
+graduate|卒業する
+grade|成績，評点
+quiz|小テスト
+homework|宿題
+science|科学
+chemical|化学の
+experiment|実験
+element|元素
+oxygen|酸素
+technology|科学技術
+advance|進歩
+machine|機械
+automatic|自動の
+invent|発明する
+operate|操作する
+artificial|人工の
+web|ウェブ
+material|材料，原料
+resource|資源
+energy|エネルギー
+electricity|電気，電力
+battery|バッテリー，電池
+oil|石油
+gas|ガス
+coal|石炭
+metal|金属
+steel|鋼鉄
+nuclear|核の，原子力の
+universe|宇宙
+planet|惑星
+astronaut|宇宙飛行士
+earth|地球，地面
+cash|現金
+earn|（お金を）得る
+reward|報酬
+income|収入
+budget|予算
+tax|税金
+consume|消費する
+benefit|利益，恩恵
+wealth|富，財産
+price|価格
+cheap|安い
+reasonable|（値段が）手頃な
+sale|特売
+charge|（サービスへの）料金
+advertisement|広告
+commercial|営利的な，商業的な
+trade|貿易，取引
+import|輸入する
+export|輸出する
+factory|工場
+agriculture|農業
+society|社会
+community|地域社会
+organization|組織，団体
+committee|委員会
+charity|慈善事業
+citizen|国民，市民
+duty|義務
+law|法律
+judge|裁判官
+court|法廷，裁判所
+guard|警戒，見張り
+arrest|逮捕する
+punish|罰する
+crime|犯罪
+murder|殺人，殺人事件
+shoot|（銃で）撃つ
+steal|盗む
+rob|奪う
+thief|泥棒
+victim|犠牲者
+drug|薬物
+poverty|貧困
+government|政府
+policy|政策，方針
+nation|国家
+capital|首都
+international|国際的な，国家間の
+global|全世界の，地球全体の
+election|選挙
+vote|投票をする
+president|大統領
+liberty|自由
+fight|戦う
+war|戦争，戦争状態
+military|軍の，軍隊の
+army|軍隊，陸軍
+soldier|兵士
+weapon|武器，兵器
+bomb|爆弾
+break out|突然起こる，勃発する
+come across|〜に偶然会う，〜をふと見つける
+come out|発売される
+come up with|〜を思いつく
+count on [upon]|〜に頼る，〜を当てにする
+cut down [back] on|〜を減らす
+die out|（消えて）なくなる，絶滅する
+drop in [on]|ちょっと訪れる
+feel free to|自由に…する
+get along (with)|仲よくやっている
+get out of|〜から逃れる
+get over|〜から回復する，立ち直る
+get through|〜を切り抜ける
+give way (to)|譲歩する，屈する
+go along with|〜に賛成する，を支持する
+head for|〜に向かう
+keep [bear] in mind|〜を心に留めておく
+keep [stay] in touch (with)|連絡を取り続ける
+learn (how) to|…できるようになる
+look back (on)|回想する，振り返る
+look into|〜を調査する
+look over|〜をざっと調べる，〜に目を通す
+look up to|〜を尊敬する
+make a difference (to)|影響がある，重要である
+make [earn] a living|生計を立てる
+make up|〜を構成する
+pass away|亡くなる
+point out|〜を指摘する
+put off|〜を延期する
+put together|〜を組み立てる，まとめ上げる
+put up with|〜を我慢する
+run after|〜を追いかける
+run away (from)|逃げる
+run out of|〜を使い果たす
+stand for|〜を意味する，〜の略称である
+stand out|ずば抜けている
+take A for B|AをBだと思う
+take place|起こる，行われる
+take up|〜を始める
+work on|〜に取り組む
+all at once|（予期せず）突然
+all the way|はるばる，ずっと
+along with|〜と一緒に，〜に加えて
+at least|少なくとも
+at (the) most|せいぜい，多くても
+by way of|〜を通って
+for some time|かなり長い間
+face to face (with)|面と向かって
+first of all|まず第一に
+in advance|あらかじめ，〜前に
+in all|全部で
+in place of|〜の代わりに
+in return (for)|お返しに
+in the long run|長い目で見れば
+in time (for)|間に合うように，遅れずに
+on sale|販売されて
+on time|時間通りに，定刻に
+one by one|１つずつ，１人ずつ
+out of the question|論外で，不可能で
+side by side (with)|（横に）並んで
+become|になる
+turn|になる，変わる
+remain|のままである
+smell|のにおいがする
+taste|の味がする
+take|連れて行く，持って行く
+put|置く，入れる
+set|置く，配置する
+spread|広げる
+fold|折る，折りたたむ
+show|見せる，示す
+give|与える，あげる
+choose|選ぶ
+pay|支払う
+leave|残しておく
+offer|申し出る
+bring|持ってくる，連れてくる
+send|送る
+pass|手渡す
+sell|売る
+draw|描く，引く
+owe|にお金を借りている
+lend|貸す
+envy|うらやむ
+make|（ある状態）にする
+find|見つける、気づく
+keep|保つ
+call|と呼ぶ
+know|知っている
+understand|理解する，わかる
+believe|信じる，信用する
+notice|気づく
+exist|存在する
+discuss|について議論する
+agree|意見が一致する
+disagree|意見が異なる
+raise|上げる
+rise|上がる
+approach|近づく，接近する
+complain|不平［苦情］を言う
+lie|横たわる，ある
+lay|横たえる，置く
+marry|と結婚する
+order|命じる
+demand|要求する
+request|頼む，要請する
+seem|のように思える
+appear|のように見える［思える］
+prove|と判明する
+tell|伝える，言う
+expect|予期［予想］する
+warn|に警告［注意］する
+forbid|禁ずる
+feel|感じる
+hear|が聞こえる
+watch|（じっと）見る
+decide|決める
+manage|何とかやり遂げる
+promise|約束する
+afford|の余裕がある
+pretend|ふりをする
+refuse|断る，拒否する
+consider|よく考える
+stop|やめる
+finish|終える
+avoid|避ける
+imagine|想像する
+escape|逃れる，免れる
+quit|やめる
+dislike|嫌う
+start|始める，出発する
+begin|始める
+continue|続ける
+prefer|の方を好む
+hate|ひどく嫌う，憎む
+try|試みる
+remember|覚えている，思い出す
+forget|忘れる
+regret|後悔する
+air|空気，大気
+cloth|布，布地
+paper|紙
+iron|鉄，鉄分
+audience|聴衆，観客
+police|警察官
+staff|スタッフ，職員
+furniture|家具
+stuff|（漠然と）物，こと
+baggage|手荷物
+information|情報
+ability|能力
+advice|助言，忠告
+beauty|美，美しさ
+death|死
+freedom|自由
+peace|平和
+customer|（店の）客，顧客
+guest|（招待）客，ゲスト
+habit|（個人の）習慣，癖
+custom|（社会的）慣習，風習
+fee|（入場・加入などの）料金，会費
+fare|（交通機関の）運賃，料金
+appointment|（面会の）約束，（医者などの）予約
+idea|考え，アイデア
+fact|事実，現実
+feeling|気持ち，感情
+evidence|証拠
+other|もう一方
+another|別の物［人］
+each|それぞれ
+both|両方
+either|（二者のうち）どちらか，どちらでも
+neither|（二者のうち）どちらも…ない
+none|どれ［誰］も…ない
+something|何か
+anything|何も（〜ない），何か，何でも
+nothing|何も〜ない
+everything|すべての物［こと］
+everyone|みんな，誰でも
+someone|誰か，ある人
+anyone|誰か，誰も（〜ない），誰でも
+nobody|誰も〜ない
+main|主な，主要な
+daily|毎日の，日々の
+alone|ただ１人で
+aware|気づいて
+awake|目が覚めて
+asleep|眠って
+alive|生きて（いる）
+alike|似ている，同様な
+right|右の，正しい
+present|現在の，出席して
+certain|ある〜，確信して
+interested|興味を持って
+surprised|驚いて
+tired|飽きて，うんざりして
+pleased|喜んで
+satisfied|満足して
+bored|退屈して，うんざりして
+excited|興奮して，わくわくして
+confused|困惑［混乱］して
+scared|怖がって
+able|できる
+likely|ありそうな
+sure|確信して
+ready|準備［用意］のできた
+eager|熱望して
+polite|礼儀正しい，丁寧な
+clever|利口な
+brave|勇敢な
+wise|賢明な，賢い
+rude|失礼な
+silly|愚かな，ばかげた
+foolish|愚かな，ばかげた
+stupid|愚かな，ばかげた
+careless|不注意な
+important|重要な
+necessary|必要な
+proper|正当な，当然な
+strange|奇妙な，不思議な
+wrong|間違った
+few|（可算名詞の前で）ほとんどない
+little|（不可算名詞の前で）ほとんどない
+late|遅れた／遅く，遅れて
+far|遠い方の／遠くに［へ］
+hard|難しい，困難な／懸命に，熱心に
+fast|速い，素早い／速く
+deep|深い／深く
+direct|直接の／直接に，まっすぐ
+well|健康で／十分に，よく
+wide|広い／大きく，すっかり
+pretty|かわいい／かなり
+sharp|鋭い，とがった／ちょうど，きっかり
+just|たった今，ちょうど（〜したばかり）
+already|もう，すでに
+recently|（ここ）最近
+lately|（ここ）最近
+yet|まだ（〜ない）
+ever|これまでに，かつて
+twice|２度，２回
+only|だけ，しか（〜ない）
+always|いつも，必ず
+sometimes|時々
+usually|たいてい，ふつうは
+nearly|ほとんど，ほぼ
+hardly|（程度が）ほとんど〜ない
+while|…している間
+unless|…でない限り，もし…でなければ
+nor|もまた（…ない）
+whatever|何が［を］…しようとも
+whichever|どちらが［を］…しようとも
+whenever|…するときはいつでも，…するたびに
+wherever|…する所ならどこでも
+cause|を引き起こす
+allow|を可能にする
+enable|を可能にする
+prevent|を妨げる，中止させる
+force|を強いる
+cost|（金額・費用が）かかる
+remind|に思い出させる
+believe in|〜の存在を信じる
+bring out|〜を引き出す
+bring up|〜を育てる
+call for|〜を必要とする
+call off|〜を中心する，取り消す
+decide on [upon]|〜に決める
+feel like (-ing)|…したい気がする
+give up (-ing)|…することをやめる，諦める
+go on (-ing)|…し続ける
+have [be] nothing to do with|〜と何も関係がない
+lie in [with]|（責任・問題などが）〜にある
+make it|うまくいく，成功する
+make oneself understood|自分の考えが（相手に）通じる
+pass on|伝える，渡す
+put away|〜を片付ける
+put on|〜を身につける，着る
+show up|（人が）現れる，やって来る
+take [have] a walk|散歩する
+take time (to do)|（…するのに）時間がかかる
+tell A from B|AとBを区別する
+throw away|〜を捨てる
+try on|〜を試着する
+turn A into B|AをBに変える
+turn off|〜を切る，消す
+turn on|〜をつける
+turn out to be|〜であることがわかる
+turn over|〜をひっくり返す
+be known for|〜のことで有名だ
+be unable to|…することができない
+be used to (-ing)|…することに慣れている
+be willing to|…してもかまわない，…する気がある
+as ~ as ever|相変わらず〜で
+as usual|いつものように
+as well|〜もまた，同じように
+at a loss|途方に暮れて，困って
+at present|現在，目下
+at the age of|〜歳で
+before long|間もなく，ほどなく
+for a while|しばらくの間
+for sure [certain]|確かに
+for the sake of|〜のために
+in a [one] way|ある意味で
+in danger of|〜の恐れがあって
+in (actual) fact|実際には
+in turn|順番に，交替で
+little by little|少しずつ
+no doubt|きっと
+one after another [the other]|次々と
+right away [off]|直ちに，すぐに
+so far|これまでのところ
+the other day|先日
+to one’s surprise|〜が驚いたことに
+as [so] far as|…する限りは
+as many [much] as|〜も多くの
+both A and B|AもBも
+either A or B|AかBのどちらか
+each other|お互い
+every other|〜ごとに，〜おきに
+something is wrong with|〜はどこか調子が悪い
+What is ~ like?|〜はどのようなもの［人］ですか
+spend|費やす，使う
+increase|増える
+decrease|減る
+improve|改善する，向上させる
+provide|提供［供給］する
+include|含む
+develop|発達［発展］させる
+receive|受け取る，受ける
+explain|説明する
+lead|至る，導く
+perform|うまくいく，機能する
+realize|気づく，認識する
+produce|引き起こす，もたらす
+participate|参加する
+suggest|示す，暗示する
+encourage|促進する，奨励する
+apply|当てはまる
+affect|影響する
+recognize|わかる，識別する
+require|要求する
+maintain|維持する
+tend|…する傾向がある，…しがちである
+contain|含む
+represent|表す，象徴する
+reach|に届く，達する
+mention|話に出す，言及する
+focus|集中する，焦点を合わせる
+rent|（有料で）借りる
+guess|推測する
+add|加える
+delay|遅らせる
+select|選び出す
+system|（体系的）方法，方式
+experience|経験，体験
+activity|活動
+program|計画，プログラム
+care|注意
+situation|状況，事態
+research|研究，調査
+passage|（本・音楽などの）一節
+factor|要因，要素
+value|価値
+influence|影響，影響力
+author|著者，作者
+role|役割
+average|平均
+friendship|交友関係
+view|意見，考え
+result|結果
+surface|外見，うわべ
+rate|割合，比率
+process|過程
+topic|話題，トピック
+variety|種類
+risk|危険，リスク
+amount|量，合計
+skill|技能，技術
+period|期間
+center|中心
+sense|感覚
+opportunity|機会
+effect|影響，効果
+public|大衆，一般の人々
+transportation|交通機関
+atmosphere|雰囲気
+attention|注意，注意力
+space|場所，空間
+behavior|振る舞い，行儀
+object|物，物体
+company|会社
+field|分野，領域
+following|次の，以下の
+various|さまざまな，多様な
+several|いくつかの
+local|地元の，現地の
+related|関連して
+possible|可能な
+similar|似ている，同様の
+concerned|心配して
+available|利用できる，手に入る
+dry|雨の少ない，乾燥した
+past|過ぎたばかりの，この前の
+modern|近代的な，最新の
+unique|特有の
+common|よくある，普通の
+prepare|準備［用意］する
+regard|（〜と）思う，考える
+occur|（予期せず）起こる
+suppose|だと思う，考える
+serve|（食事を）出す
+wonder|だろうかと思う
+reduce|減らす
+promote|促進する
+survive|生き延びる，切り抜ける
+gain|得る
+devide|分ける，分かれる
+attract|引き寄せる
+achieve|達成する
+fit|適する，合致する
+reveal|明らかにする
+wish|願う
+fill|満たす
+hurt|傷つける，害する
+discover|知る，わかる
+indicate|示す
+overcome|克服する，打ち勝つ
+protect|守る，保護する
+remove|取り去る，移動させる
+rely|当てにする，頼る
+bother|わざわざ…する，悩ませる
+seek|追い求める
+matter|重要［問題］だ
+concentrate|集中する，専念する
+react|反応［対応］する
+struggle|奮闘する
+admit|（しぶしぶ）認める
+lock|しまい込む，閉じ込める
+issue|問題，問題点
+relationship|関係
+list|リスト，一覧
+item|１品，１点
+distance|距離
+case|場合
+opinion|意見，見解
+century|世紀
+trouble|困難，困ったこと
+total|合計
+advantage|有利な点，強み
+detail|細部
+moment|時点
+bill|請求書
+rest|残り，休み
+deal|量，取引
+feature|特徴
+survey|調査
+destination|目的地，行き先
+conclusion|結論
+attitude|態度，考え方
+impact|影響，衝撃
+source|源
+row|列，並び
+assistant|助手，補佐
+impression|印象
+noise|騒音
+sign|兆し，表れ
+aim|目的，目標
+occasion|（特定の）時，機会
+relation|関係，関連
+signal|合図
+balance|バランス，均衡
+track|小道
+symbol|象徴，シンボル
+circle|円，仲間
+leisure|余暇，自由な時間
+angle|角度，観点
+comfortable|快適な
+recent|最近の
+real|現実の，実在する
+dangerous|危険な
+current|現在の，今の
+final|最後の
+obvious|明らかな
+fair|妥当な，適正な
+proud|誇りに思って
+anxious|切望して，心配して
+impossible|不可能な
+opposite|反対側の，向かい側の
+terrible|ひどい，恐ろしい
+thick|厚い
+narrow|狭い，細い
+actually|実際に，実は
+especially|特に，とりわけ
+perhaps|もしかしたら
+fortunately|幸運にも
+less|より少なく
+least|最も〜でない
+abroad|外国に［で］
+overseas|海外へ［に，で］
+rather|むしろ
+probably|たぶん
+easily|たやすく，簡単に
+quite|かなり
+exactly|正確に，まさに
+instead|その代わりに
+immediately|直ちに
+somewhere|どこかに［へ，で］
+gradually|徐々に，だんだんと
+simply|単に
+indeed|確かに，本当に
+whether|…かどうか
+also|その上
+moreover|その上，さらに
+besides|その上
+though|でも，だけど
+however|しかしながら
+although|…だけれども，…にもかかわらず
+true|本当の，真実の
+because|なぜなら，…なので
+therefore|したがって，それゆえ
+anyway|いずれにせよ
+bring about|〜を引き起こす，もたらす
+catch up (with)|追いつく
+check out|〜を調べる
+deal with|〜に対処する，処理する
+end up (-ing)|最終的には…することになる
+figure out|〜を理解する，解決する
+fill in|〜に記入する
+get rid of|〜を処分する，取り除く
+have A in common (with B)|（Bと）共通のAを持つ
+keep up with|〜に（遅れずに）ついて行く
+look to A (for B)|Aに（Bを）期待する，当てにする
+make sense|意味をなす，理解しやすい
+make sure|…を確かめる
+make up for|〜の埋め合わせをする，〜を償う
+make up one’s mind|決心する
+never fail to|必ず…する
+result in|〜という結果になる
+set off (for)|出発する
+set out to|…し始める，…しようと試みる
+set up|〜を始める，設立する
+stay up|（寝ないで）起きている
+take advantage of|〜を利用する
+take in|〜をだます
+take over|〜を引き継ぐ
+turn down|〜を拒む，断る
+according to|〜によれば
+at [from] a distance|離れた所に［から］
+by means of|〜によって，〜を用いて
+for a moment|少しの間
+in a [one] sense|ある意味では
+in case of|〜の場合は
+in contrast to [with]|〜とは対照的に
+in one’s opinion [view]|〜の考え［意見］では
+in terms of|〜の観点から
+instead of|〜の代わりに，〜ではなくて
+next to|〜の隣に
+no more than|わずか〜，たった〜
+nothing but|ただ〜だけ
+out of order|故障して，調子が悪い
+regardless of|〜に関係なく，かまわず
+to make matters worse|さらに悪いことに
+with ease|容易に
+a variety of|いろいろな
+as ~ as possible [one can]|できるだけ
+as if [though]|…であるかのように
+by the time|…するまでに
+even if|たとえ…だとしても
+now (that)|今や…だから
+the moment [minute]|…するとすぐに
+by the way|ところで，それはそうと
+as for|〜については，〜はどうかと言えば
+in general|一般に，概して
+on the whole|全体的に見て
+for example [instance]|例えば
+in particular|特に，とりわけ
+that is (to say)|すなわち，より正確に言えば
+in other words|言い換えると，つまり
+to begin [start] with|まず第一に
+in the first place|まず第一に
+in addition|その上，さらに
+A as well as B|BだけでなくAも
+on the other hand|他方では
+in spite of|〜にもかかわらず
+because of|〜のために，〜が原因で
+on account of|〜のために，〜が原因で
+due to|〜のために，〜が原因で
+thanks to|〜のおかげで
+as a result|結果として
+in any case [event]|いずれにしても
+in short|要約すると，手短にいうと

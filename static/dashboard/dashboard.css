@@ -286,6 +286,39 @@ body {
   background-color: var(--hover-bg);
 }
 
+/* 問題名編集のためのスタイル */
+.problem-name-cell {
+  position: relative;
+}
+
+.editable-name {
+  display: inline-block;
+  padding: 2px 4px;
+  border-bottom: 1px dashed transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editable-name:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+.name-edit-input {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  font-size: inherit;
+  font-family: inherit;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+.name-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.3);
+}
+
 .action-buttons {
   display: flex;
   gap: 5px;

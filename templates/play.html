@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <a href="javascript:history.back()" class="back"></a>
+    <a href="javascript:pageback()" class="back"></a>
     <a href="javascript:void(0);" id="settings-btn"
         style="position: fixed; bottom: 10px; right: 10px; font-size: 20px; color: #666; z-index: 10000;"><i
             class="fas fa-cog"></i></a>
@@ -267,7 +267,24 @@
         let reviewStreaks = {}; // { questionIndex: streakCount }
 
 
-        // 音声再生用の関数
+        function pageback() {
+            const referrer = document.referrer;
+            const currentHost = location.hostname;
+            if (referrer) {
+                try {
+                    const referrerHost = new URL(referrer).hostname;
+                    if (referrerHost === currentHost) {
+                        history.back();
+                    } else {
+                        location.href = '../';
+                    }
+                } catch (e) {
+                    location.href = '../';
+                }
+            } else {
+                location.href = '../';
+            }
+        }
 
         // 音声再生用の関数
         function playWord(word) {

@@ -450,3 +450,55 @@ body {
         padding: 6px 12px;
     }
 }
+
+/* 進捗バーのスタイル */
+.progress-container {
+    height: 6px;
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    overflow: hidden;
+}
+
+.progress-learned {
+    background: linear-gradient(90deg, #4caf50,90%, #ff9800);
+    /* 緑色 - 学習済み */
+    height: 100%;
+}
+
+.progress-learning {
+    background: #ff9800;
+    /* オレンジ色 - 学習中 */
+    height: 100%;
+}
+
+.progress-unlearned {
+    background-color: #e0e0e0;
+    /* グレー - 未学習 */
+    height: 100%;
+}
+
+/* レスポンシブ対応 */
+@media screen and (max-width: 767px) {
+    .flashcard-banner {
+        width: 100%;
+        margin: 15px 0;
+    }
+    
+    .flashcard-link {
+        padding: 15px;
+    }
+    
+    .flashcard-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .flashcard-info h3 {
+        font-size: 1.1rem;
+    }
+}

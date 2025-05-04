@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>単語帳モード</title>
+    <link rel="stylesheet" href="flashcard.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <a href="javascript:pageback()" class="back-button" aria-label="戻る">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="header-title">単語帳モード</h1>
+        <div class="header-actions">
+            <button id="settings-btn" class="settings-button" aria-label="設定">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card-container">
+            <div class="flashcard" id="flashcard">
+                <div class="checkmark-overlay" id="checkmark-overlay">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="front">
+                    <div id="word-content"></div>
+                    <button id="pronunciation-btn" class="pronunciation-button" aria-label="発音を聞く">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+                <div class="back">
+                    <div id="meaning-content"></div>
+                    <div id="example-section" class="example-section">
+                        <h3 class="example-title">例文</h3>
+                        <div id="example-content" class="example-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-status">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div class="progress-indicator">
+                <span id="current-index">1</span>/<span id="total-cards">0</span>
+            </div>
+        </div>
+        
+        <div class="learning-status">
+            <button id="not-learned-btn" class="status-btn not-learned">
+                <i class="fas fa-times"></i>
+                <span>まだ</span>
+            </button>
+            <button id="learning-btn" class="status-btn learning">
+                <i class="fas fa-sync-alt"></i>
+                <span>復習</span>
+            </button>
+            <button id="learned-btn" class="status-btn learned">
+                <i class="fas fa-check"></i>
+                <span>覚えた</span>
+            </button>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+            <button id="flip-btn" class="flip-btn"><i class="fas fa-sync-alt"></i></button>
+            <button id="next-btn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+<div id="settings-panel" class="settings-panel">
+    <div class="settings-header">
+        <h2>設定</h2>
+        <button id="close-settings" class="close-button">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="settings-content">
+        <div class="settings-group">
+            <h3 class="settings-group-title">表示設定</h3>
+            <div class="setting-option">
+                <label for="auto-pronunciation">自動発音</label>
+                <input type="checkbox" id="auto-pronunciation" class="settings-checkbox">
+            </div>
+            <div class="setting-option">
+                <label for="show-examples">例文を表示</label>
+                <input type="checkbox" id="show-examples" class="settings-checkbox">
+            </div>
+            <div class="setting-option">
+                <label for="filter-review">復習リストのみ表示</label>
+                <input type="checkbox" id="filter-review" class="settings-checkbox">
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <h3 class="settings-group-title">ボタン動作設定</h3>
+            <div class="setting-option">
+                <label for="auto-next-learned">「覚えた」後に次へ進む</label>
+                <input type="checkbox" id="auto-next-learned" class="settings-checkbox">
+            </div>
+            <div class="setting-option">
+                <label for="auto-flip-not-learned">「まだ」後にカードをめくる</label>
+                <input type="checkbox" id="auto-flip-not-learned" class="settings-checkbox">
+            </div>
+            <div class="setting-option">
+                <label for="auto-next-learning">「復習」後に次へ進む</label>
+                <input type="checkbox" id="auto-next-learning" class="settings-checkbox">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h3 class="settings-group-title">フィードバック設定</h3>
+            <div class="setting-option">
+                <label for="enable-animations">視覚効果を強化</label>
+                <input type="checkbox" id="enable-animations" class="settings-checkbox">
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div id="overlay" class="overlay"></div>
+    
+    <!-- 学習リストセクション (ページ下部) -->
+    <div id="list-section" class="list-section">
+        <div class="list-header">
+            <button id="toggle-list-btn" class="toggle-list-btn">
+                <span>学習リスト</span>
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+        <div class="list-container">
+            <div class="list-tabs">
+                <button class="tab-btn active" data-status="all">すべて (<span id="count-all">0</span>)</button>
+                <button class="tab-btn" data-status="not_learned">覚えていない (<span id="count-not_learned">0</span>)</button>
+                <button class="tab-btn" data-status="learning">復習 (<span id="count-learning">0</span>)</button>
+                <button class="tab-btn" data-status="learned">覚えた (<span id="count-learned">0</span>)</button>
+            </div>
+            <div class="list-filter">
+                <div class="filter-title">フィルター:</div>
+                <div class="filter-options">
+                    <label class="filter-option">
+                        <input type="checkbox" id="filter-not-learned" class="filter-checkbox">
+                        <span>まだ</span>
+                    </label>
+                    <label class="filter-option">
+                        <input type="checkbox" id="filter-learning" class="filter-checkbox">
+                        <span>復習</span>
+                    </label>
+                    <label class="filter-option">
+                        <input type="checkbox" id="filter-learned" class="filter-checkbox">
+                        <span>覚えた</span>
+                    </label>
+                </div>
+                <button id="apply-filter" class="apply-filter-btn">適用</button>
+            </div>
+            <div class="list-content">
+                <ul id="word-list">
+                    <!-- 単語リストがここに表示されます -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="flashcard.js"></script>
+    <script>
+        function pageback() {
+            const referrer = document.referrer;
+            const currentHost = location.hostname;
+            if (referrer) {
+                try {
+                    const referrerHost = new URL(referrer).hostname;
+                    if (referrerHost === currentHost) {
+                        history.back();
+                    } else {
+                        location.href = '../';
+                    }
+                } catch (e) {
+                    location.href = '../';
+                }
+            } else {
+                location.href = '../';
+            }
+        }
+    </script>
+</body>
+</html>

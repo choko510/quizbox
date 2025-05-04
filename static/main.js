@@ -398,7 +398,7 @@ function setupTabs() {
             // タブによって追加のアクションを実行
             switch(tabContentId) {
                 case 'ranking': // ランキングタブの場合
-                    fetchAndDisplayRanking('learned_words'); // 覚えた単語数でソートしたランキングを表示
+                    fetchAndDisplayRanking('total'); // 合計解答数でソートしたランキングを表示
                     break;
                 case 'advice':
                     generateAdvice();
@@ -474,14 +474,7 @@ function updateScoreCards(correct, bad, total, ritu) {
     document.getElementById("total").textContent = total;
     document.getElementById("ritu").textContent = ritu;
     
-    // 覚えた単語数を表示する要素を更新
-    const learnedWordsElement = document.getElementById("learned-words");
-    if (learnedWordsElement) {
-        learnedWordsElement.textContent = correct;
-        console.log("覚えた単語数要素を更新しました:", correct);
-    } else {
-        console.error("覚えた単語数表示要素が見つかりません");
-    }
+    // スコアカードの更新 (覚えた単語数の表示は削除)
 }
 
 // メインダッシュボードのグラフ描画
@@ -644,10 +637,6 @@ async function generateAdvice() {
         
         const aiAdviceData = await aiAdviceResponse.json();
         
-        // カテゴリ統計情報を取得
-        const categoryResponse = await fetch(`api/get/category_stats/${id}/${password}`);
-        const categoryData = await categoryResponse.json();
-        
         // コンテナをクリア
         container.innerHTML = '';
         
@@ -667,58 +656,6 @@ async function generateAdvice() {
             container.appendChild(divider);
         }
         
-        // パスワードエラーの確認
-        if (categoryData.message === "password is wrong") {
-            console.error("認証エラー: パスワードが間違っています");
-            if (!aiAdviceData.advice) { // AIアドバイスがなければエラー表示
-                container.innerHTML = '<p>認証エラー: パスワードが間違っています</p>';
-            }
-            return;
-        }
-        
-        // 空のカテゴリーデータをチェック
-        const categories = categoryData.categories || {};
-        if (Object.keys(categories).length === 0 && !aiAdviceData.advice) {
-            container.innerHTML = '<p>アドバイスを生成するためのデータがありません</p>';
-            return;
-        }
-        
-        // 最も成績の悪いカテゴリーを特定
-        let worstCategory = null;
-        let worstRate = 100;
-        
-        Object.entries(categories).forEach(([category, data]) => {
-            const { correct, total } = data;
-            const rate = total > 0 ? (correct / total) * 100 : 0;
-            
-            if (rate < worstRate && total > 5) { // 最低5問以上解いている場合のみ
-                worstRate = rate;
-                worstCategory = category;
-            }
-        });
-        
-        // アドバイスアイテムを追加
-        if (worstCategory) {
-            const weakAreas = categories[worstCategory].weakAreas;
-            
-            const adviceItem1 = document.createElement('div');
-            adviceItem1.className = 'advice-item';
-            adviceItem1.innerHTML = `
-                <p><strong>重点学習分野:</strong> ${worstCategory}（正答率: ${worstRate.toFixed(1)}%）</p>
-                <p>この分野に重点を置いて学習することで、全体の成績向上が期待できます。</p>
-            `;
-            container.appendChild(adviceItem1);
-            
-            if (weakAreas && weakAreas.length > 0) {
-                const adviceItem2 = document.createElement('div');
-                adviceItem2.className = 'advice-item';
-                adviceItem2.innerHTML = `
-                    <p><strong>特に注目すべき単元:</strong> ${weakAreas.join(', ')}</p>
-                    <p>これらの単元を優先的に復習することをお勧めします。</p>
-                `;
-                container.appendChild(adviceItem2);
-            }
-        }
     } catch (error) {
         console.error('アドバイスデータの生成に失敗しました:', error);
         container.innerHTML = '<p>アドバイスの生成に失敗しました</p>';
@@ -726,7 +663,7 @@ async function generateAdvice() {
 }
 
 // ランキングデータを取得して表示する関数
-async function fetchAndDisplayRanking(sortBy = 'correct') { // デフォルトのソート基準を 'correct' に
+async function fetchAndDisplayRanking(sortBy = 'total') { // デフォルトのソート基準を 'total' に
     // ランキングリスト要素がなければ処理中断
     if (!rankingList) {
         console.error("Ranking list element not found.");
@@ -787,9 +724,6 @@ async function fetchAndDisplayRanking(sortBy = 'correct') { // デフォルト�
             else if (position === 2) positionClass = 'position-2';
             else if (position === 3) positionClass = 'position-3';
             
-            // 覚えた単語数を取得（APIレスポンスから）
-            const learnedWords = user.learned_words !== undefined ? user.learned_words : user.correct;
-            
             html += `
                 <div class="ranking-item">
                     <div class="ranking-position ${positionClass}">${position}</div>
@@ -798,9 +732,6 @@ async function fetchAndDisplayRanking(sortBy = 'correct') { // デフォルト�
                         <div class="ranking-stats">
                             <div class="stat-item total ${currentSortBy === 'total' ? 'highlight' : ''}">
                                 <b>合計: ${total}問</b>
-                            </div>
-                            <div class="stat-item learned-words ${currentSortBy === 'learned_words' ? 'highlight' : ''}">
-                                <i class="fas fa-book"></i> <b>覚えた単語数: ${learnedWords}</b>
                             </div>
                             <div class="stat-item correct ${currentSortBy === 'correct' ? 'highlight' : ''}">
                                 <i class="fas fa-check-circle"></i> 正解数: ${user.correct}
