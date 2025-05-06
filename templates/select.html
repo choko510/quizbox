@@ -148,7 +148,7 @@
         function updateBookTitle(bookId) {
             
             const bookTitle = bookTitles[bookId] || bookId;
-            document.getElementById('book-title').textContent = `${bookTitle} - 範囲選択`;
+            document.getElementById('book-title').textContent = `${bookTitle}`;
             
             // 教材画像の表示
             const bookImage = document.getElementById('book-image');
@@ -170,65 +170,70 @@
                 
             }
             
-            // 指定範囲ごとの進捗を読み込んで表示
             async function loadRangeProgress(bookId, ranges) {
-                let totalLearned = 0;
-                let totalWords = 0;
-                
-                for (const range of ranges) {
-                    try {
-                        const response = await fetch(`/api/get/range_progress/${bookId}?start=${range.start}&end=${range.end}`);
-                        if (!response.ok) continue;
-                        const { learned, total } = await response.json();
+                try {
+                    const rangeParams = ranges.map(r => `${r.start},${r.end}`).join(';');
+                    const response = await fetch(`/api/get/ranges_progress/${bookId}?ranges=${rangeParams}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('進捗データの取得に失敗しました');
+                    }
+                    
+                    const data = await response.json();
+                    const { overall, ranges: rangesData } = data;
+                    
+                    // 範囲ボタンの要素をキーでマップ化して高速アクセスできるようにする
+                    const rangeMap = {};
+                    document.querySelectorAll('.range-item').forEach(item => {
+                        const btn = item.querySelector('button');
+                        const key = `${btn.dataset.start},${btn.dataset.end}`;
+                        rangeMap[key] = item;
+                    });
+                    
+                    // 各範囲の進捗を一括で更新
+                    rangesData.forEach(range => {
+                        const key = `${range.start},${range.end}`;
+                        const item = rangeMap[key];
+                        if (!item) return;
                         
-                        // 全体の学習進捗に加算
-                        totalLearned += learned;
-                        totalWords += total;
+                        const btn = item.querySelector('button');
+                        const textEl = item.querySelector('.progress-text');
+                        const bar = item.querySelector('.progress-value');
                         
-                        const rangeItems = document.querySelectorAll('.range-item');
+                        textEl.textContent = `${range.learned}/${range.total}`;
                         
-                        for (const item of rangeItems) {
-                            const btn = item.querySelector('button');
-                            if (parseInt(btn.dataset.start) === range.start && parseInt(btn.dataset.end) === range.end) {
-                                const textEl = item.querySelector('.progress-text');
-                                textEl.textContent = `${learned}/${total}`;
-                                
-                                const percent = Math.round(learned / total * 100);
-                                const bar = item.querySelector('.progress-value');
-                                bar.style.width = `${percent}%`;
-                                
-                                // 進捗に応じてボタンの色を変更
-                                if (percent === 100) {
-                                    btn.classList.add('completed');
-                                } else if (percent > 0) {
-                                    btn.classList.add('in-progress');
-                                }
-                            }
+                        const percent = Math.round(range.learned / range.total * 100);
+                        bar.style.width = `${percent}%`;
+                        
+                        // 進捗に応じてボタンの色を変更
+                        if (percent === 100) {
+                            btn.classList.add('completed');
+                        } else if (percent > 0) {
+                            btn.classList.add('in-progress');
                         }
-                    } catch (e) {
-                        console.error('進捗取得エラー:', e);
+                    });
+                    
+                    // 全体の進捗を更新
+                    if (overall.total > 0) {
+                        const overallPercent = Math.round(overall.learned / overall.total * 100);
+                        
+                        const overallProgressBar = document.querySelector('.overall-progress-value');
+                        const overallProgressText = document.querySelector('.overall-progress-text');
+                        
+                        if (overallProgressBar && overallProgressText) {
+                            overallProgressBar.style.width = `${overallPercent}%`;
+                            overallProgressText.textContent = `${overallPercent}%`;
+                        }
+                        
+                        // 統計情報を更新
+                        const remainingWords = overall.total - overall.learned;
+                        
+                        document.getElementById('total-words').textContent = overall.total;
+                        document.getElementById('learned-words').textContent = overall.learned;
+                        document.getElementById('remaining-words').textContent = remainingWords;
                     }
-                }
-                
-                // 全体の進捗を表示
-                if (totalWords > 0) {
-                    const overallPercent = Math.round(totalLearned / totalWords * 100);
-                    
-                    // 進捗バーと割合を更新
-                    const overallProgressBar = document.querySelector('.overall-progress-value');
-                    const overallProgressText = document.querySelector('.overall-progress-text');
-                    
-                    if (overallProgressBar && overallProgressText) {
-                        overallProgressBar.style.width = `${overallPercent}%`;
-                        overallProgressText.textContent = `${overallPercent}%`;
-                    }
-                    
-                    // 統計情報を更新
-                    const remainingWords = totalWords - totalLearned;
-                    
-                    document.getElementById('total-words').textContent = totalWords+1;
-                    document.getElementById('learned-words').textContent = totalLearned;
-                    document.getElementById('remaining-words').textContent = remainingWords +1;
+                } catch (e) {
+                    console.error('進捗取得エラー:', e);
                 }
             }
         async function fetchRanges(bookId) {
@@ -267,9 +272,9 @@
         function getMaxRangeForBook(bookId) {
             const maxRanges = {
                 'leap': 1935,
-                'systemeitango': 1500,
+                'systemeitango': 2027,
                 'target1000': 1000,
-                'target1200': 1200,
+                'target1200': 1700,
                 'target1400': 1400,
                 'target1900': 1900
             };

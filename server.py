@@ -1280,7 +1280,6 @@ class wordData(BaseModel):
     mondai: str
 
 @app.get("/api/search")
-@app.get("/api/search")
 async def search_problems(query: str = Query(..., min_length=1)):
     """
     問題を検索するAPIエンドポイント
@@ -1859,9 +1858,9 @@ def make_ranges(start, end, step, label_offset=0):
 
 BOOK_RANGES = {
     "leap": make_ranges(1, 1935, 50),
-    "systemeitango": make_ranges(1, 1500, 100),
+    "systemeitango": make_ranges(1, 2027, 100),
     "target1000": make_ranges(1, 1000, 50),
-    "target1200": make_ranges(1, 1200, 50),
+    "target1200": make_ranges(1, 1700, 50),
     "target1400": make_ranges(1, 1400, 50),
     "target1900": make_ranges(1, 1900, 100),
 }
@@ -1874,21 +1873,48 @@ async def get_ranges(book_id: str):
     """
     return BOOK_RANGES.get(book_id, [])
 
-@app.get("/api/get/range_progress/{book_id}")
-async def get_range_progress(request: Request, book_id: str, start: int = Query(...), end: int = Query(...)):
+@app.get("/api/get/ranges_progress/{book_id}")
+async def get_ranges_progress(request: Request, book_id: str, ranges: str = Query(...)):
     """
-    指定範囲の学習進捗を取得するエンドポイント
+    複数範囲の学習進捗を一括で取得するエンドポイント
     """
     userid = request.cookies.get("id")
     if not userid:
         raise HTTPException(status_code=401, detail="未ログイン")
-    # 指定問題セットのプログレスデータを取得
+    
+    # 指定問題セットのプログレスデータを取得（1回だけ取得）
     progress = await DB.get_progress_data(userid, book_id)
-    answered = progress.get("answeredQuestions", [])
-    # 範囲内の学習済み数をカウント（1始まり）
-    learned = sum(1 for idx in answered if start <= idx + 1 <= end)
-    total = end - start
-    return {"learned": learned, "total": total}
+    answered = set(progress.get("answeredQuestions", []))  # セットに変換して検索を高速化
+
+    ranges_list = []
+    for range_str in ranges.split(';'):
+        if not range_str:
+            continue
+        start, end = map(int, range_str.split(','))
+        
+        # 効率的な検索のためのセット操作
+        # 問題のインデックスは0始まりだが、範囲は1始まりなので調整
+        learned = sum(1 for idx in answered if start <= idx + 1 <= end)
+        total = end - start
+        
+        ranges_list.append({
+            "start": start,
+            "end": end,
+            "learned": learned,
+            "total": total
+        })
+    
+    # 全体の統計も計算して返す
+    total_learned = sum(r["learned"] for r in ranges_list)
+    total_words = sum(r["total"] for r in ranges_list)
+    
+    return {
+        "ranges": ranges_list,
+        "overall": {
+            "learned": total_learned,
+            "total": total_words
+        }
+    }
 
 @app.get("/select/")
 async def select_page(request: Request):
