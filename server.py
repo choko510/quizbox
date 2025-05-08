@@ -412,7 +412,6 @@ class DB:
                 return None
     
     @staticmethod
-    @staticmethod
     async def delete_mondai(name: str, userid: str):
         """
         問題を削除する

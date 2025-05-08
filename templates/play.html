@@ -290,7 +290,7 @@
         function playWord(word) {
             const audioPlayer = document.getElementById('audioPlayer');
             audioPlayer.src = `/api/gen/speak/${encodeURIComponent(word)}`;
-            audioPlayer.play().catch(e => console.error('音声再生エラー:', e));
+            audioPlayer.play().catch(() => {});
         }
 
         function loadQuestions() {
@@ -350,7 +350,7 @@
                         });
                     })
                     .catch(error => {
-                        console.error('カスタム問題の読み込みに失敗しました:', error);
+                        
                     });
             } else {
                 // URLから開始と終了の問題番号を取得
@@ -372,7 +372,7 @@
                         });
                     })
                     .catch(error => {
-                        console.error('APIによる問題の読み込みに失敗しました:', error);
+                        
                     });
             }
         }
@@ -389,7 +389,7 @@
             }
 
             // 最初の問題表示と進捗更新
-            showNextQuestion();
+            await showNextQuestion();
             updateProgressDisplay(); // 進捗表示を更新
             initializeChart();
             populateWordList();
@@ -404,7 +404,7 @@
             // 検索インデックスを事前構築（バックグラウンドで実行）
             setTimeout(() => {
                 buildSearchIndex();
-                console.log("検索インデックスを事前構築しました");
+                
             }, 1000);
         });
 
@@ -440,9 +440,9 @@
         let wrongCount = 0;
         let renzokuseikai = 0;
 
-        function showNextQuestion() {
+        async function showNextQuestion() {
             if (currentIndex === undefined || currentIndex < 0 || currentIndex >= questions.length) {
-                console.error("Invalid currentIndex:", currentIndex);
+                
                 if (questions.length > 0) {
                     currentIndex = 0;
                 } else {
@@ -452,7 +452,7 @@
             }
             const question = questions[currentIndex];
             if (!question) {
-                console.error("Question not found for index:", currentIndex);
+                
                 return;
             }
 
@@ -518,47 +518,65 @@
                 });
             }
 
-            // 2. ハードモード処理 (不正解選択肢の置き換え)
-            let similarWordsUsed = 0;
-            if (isHardMode && !isReversed) { // ハードモードは通常表示の英単語問題のみ適用 (仮)
-                const similarWords = [];
-                questions.forEach((q, index) => {
-                    if (index !== currentIndex) {
-                        const distance = calculateLevenshteinDistance(correctAnswer, q.word);
-                        if (distance === 1 || distance === 2) {
-                            if (q.word !== correctAnswer && !options.includes(q.word) && !similarWords.includes(q.word)) {
-                                similarWords.push(q.word);
+            // 2. ハードモード処理 (文章問題の生成)
+            if (isHardMode && !isReversed) {
+                // ハードモード時は /api/get/sentences から文章を取得して問題にする
+                try {
+                    const response = await fetch('/api/get/sentences', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ words: [correctAnswer] }) // 正解の単語を送信
+                    });
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    const sentenceData = await response.json();
+                    if (sentenceData.results && sentenceData.results[correctAnswer] && sentenceData.results[correctAnswer].length > 0) {
+                        const sentences = sentenceData.results[correctAnswer];
+                        const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences.length)]; // ランダムに1文選択
+                        
+                        // 問題文を書き換え
+                        title.innerHTML = sentenceForQuestion.split("|")[1].replace(correctAnswer,"(     )");
+                        // フォントサイズ調整 (新しい問題文の長さに合わせて)
+                        textlength = sentenceForQuestion.length;
+                        if (screenWidth < 600 || screenHeight < 600) {
+                            if (textlength >= 150) title.style.fontSize = "0.8em";
+                            else if (textlength >= 100) title.style.fontSize = "1em";
+                            else title.style.fontSize = "1.3em";
+                        } else if (screenWidth < 1200 || screenHeight < 800) {
+                            if (textlength >= 150) title.style.fontSize = "1em";
+                            else if (textlength >= 100) title.style.fontSize = "1.2em";
+                            else title.style.fontSize = "1.4em";
+                        } else {
+                            if (textlength >= 150) title.style.fontSize = "1.2em";
+                            else if (textlength >= 100) title.style.fontSize = "1.3em";
+                            else title.style.fontSize = "1.4em";
+                        }
+
+                        // 選択肢は元の単語が正解、他はダミーまたは他の単語
+                        options = [correctAnswer]; // 正解は元の単語
+                        incorrectOptions = []; // 不正解選択肢を初期化
+
+                        // 他の問題の単語を不正解の候補として集める
+                        questions.forEach((q, index) => {
+                            if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
+                                incorrectOptions.push(q.word);
                             }
-                        }
+                        });
+                        // 不正解選択肢が足りない場合、ダミーで補うことも検討
+                        
+                    } else {
+                        // 文章が見つからなかった場合は、通常の選択肢生成ロジックにフォールバック（またはエラー表示）
+                        // この部分は元の不正解選択肢生成ロジックを流用するか、別途定義
                     }
-                });
-                similarWords.sort(() => Math.random() - 0.5); // 似た単語候補をシャッフル
-
-                // 不正解選択肢を似た単語で置き換える (1つまたは2つ)
-                const replaceCount = Math.random() < 0.5 ? 1 : 2; // 1つか2つかランダム
-                let replacedIndices = new Set(); // 置き換え済みの不正解選択肢インデックス
-
-                while (similarWordsUsed < replaceCount && similarWords.length > 0 && incorrectOptions.length > 0) {
-                    const similarWord = similarWords.shift(); // 候補から1つ取り出す
-                    if (similarWord) {
-                        // 置き換える不正解選択肢をランダムに選ぶ (まだ置き換えていないものから)
-                        let incorrectIndexToReplace = -1;
-                        let attempts = 0;
-                        do {
-                            incorrectIndexToReplace = Math.floor(Math.random() * incorrectOptions.length);
-                            attempts++;
-                        } while (replacedIndices.has(incorrectIndexToReplace) && attempts < incorrectOptions.length * 2);
-
-                        if (!replacedIndices.has(incorrectIndexToReplace)) {
-                            console.log(`Hard mode: Replacing "${incorrectOptions[incorrectIndexToReplace]}" with similar word "${similarWord}"`);
-                            incorrectOptions[incorrectIndexToReplace] = similarWord; // 置き換え実行
-                            replacedIndices.add(incorrectIndexToReplace);
-                            similarWordsUsed++;
-                        }
-                    }
+                } catch (error) {
+                    // エラー発生時も通常の選択肢生成ロジックにフォールバック
                 }
-                console.log(`Hard mode: Replaced ${similarWordsUsed} incorrect options with similar words.`);
+            } else if (isHardMode && isReversed) {
+                 // ハードモードかつ問題文と回答文が入れ替わっている場合（説明文から単語を当てる）
+                 // この場合のハードモードの挙動は別途定義が必要。現状は通常の選択肢生成。
             }
+
 
             // 3. 最終的な選択肢リストを作成 (不正解選択肢を追加)
             incorrectOptions.sort(() => Math.random() - 0.5); // 不正解候補をシャッフル
@@ -689,13 +707,13 @@
             updateStudyList();
         }
 
-        function onAnswerClick(e) {
+        async function onAnswerClick(e) {
             document.querySelector('.swiper-button-next').style.display = 'none';
             document.querySelector('.swiper-button-prev').style.display = 'none';
 
             // --- タイマー制御: startが未定義の場合のフォールバック ---
             if (typeof start === 'undefined' || start === null) {
-                console.warn("Timer start time not set. Using current time.");
+                
                 start = performance.now(); // 念のため現在時刻を開始時刻とする
             }
             // --- タイマー制御ここまで ---
@@ -771,7 +789,7 @@
 
                     updateStats();
                     nextIndex();
-                    showNextQuestion();
+                    await showNextQuestion();
                     sendScore("add_correct", accid, password);
                     saveProgressToServer(); // 進捗保存
                     // --- 復習モードの正解処理 ここまで ---
@@ -793,7 +811,7 @@
                     updateProgressDisplay();
                     updateStats();
                     nextIndex();
-                    showNextQuestion();
+                    await showNextQuestion();
                     sendScore("add_correct", accid, password);
                     saveProgressToServer(); // 進捗保存
                     // --- 通常モードの正解処理 ここまで ---
@@ -811,22 +829,28 @@
                     // studyingQuestions.add(currentIndex); // 上で設定済み
                     let question = questions[currentIndex];
                     let questionText, answerText;
+                    const isHardModeCurrent = localStorage.getItem('hard_mode') === 'true';
+
                     if (isReversed) {
                         questionText = question.word;
                         answerText = question.description;
                     } else {
-                        questionText = question.description;
+                        if (isHardModeCurrent) {
+                            questionText = document.getElementById('question').innerHTML; // ハードモード時は表示されている問題文
+                        } else {
+                            questionText = question.description; // 通常モード
+                        }
                         answerText = question.word;
                     }
                     notie.force({
                         type: 'error',
-                        text: '<div class="popup">' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
-                        callback: function () {
+                        callback: async function () {
                             updateProgressDisplay();
                             updateStats();
                             nextIndex(); // 復習モードでも次の問題へ
-                            showNextQuestion();
+                            await showNextQuestion();
                             sendScore("add_bad", accid, password);
                             saveProgressToServer(); // 進捗保存
                         }
@@ -838,23 +862,29 @@
                     // studyingQuestions.add(currentIndex); // 上で設定済み
                     let question = questions[currentIndex];
                     let questionText, answerText;
+                    const isHardModeCurrent = localStorage.getItem('hard_mode') === 'true';
+
                     if (isReversed) {
                         questionText = question.word;
                         answerText = question.description;
                     } else {
-                        questionText = question.description;
+                        if (isHardModeCurrent) {
+                            questionText = document.getElementById('question').innerHTML; // ハードモード時は表示されている問題文
+                        } else {
+                            questionText = question.description; // 通常モード
+                        }
                         answerText = question.word;
                     }
                     notie.force({
                         type: 'error',
-                        text: '<div class="popup">' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
-                        callback: function () {
+                        callback: async function () {
                             updateProgressDisplay();
                             updateStats();
                             // 通常モードの不正解時は同じ問題を表示（nextIndexを呼ばない）
                             // nextIndex(); // この行を削除またはコメントアウト
-                            showNextQuestion();
+                            await showNextQuestion();
                             sendScore("add_bad", accid, password);
                             saveProgressToServer(); // 進捗保存
                         }
@@ -888,7 +918,7 @@
                     currentIndex = undefined; // 問題がない場合
                 }
             }
-            console.log(`Question mode selected: ${savedMode}, initial index: ${currentIndex}`);
+            
         }
 
         function nextIndex() {
@@ -961,7 +991,7 @@
                     currentIndex = 0;
                 }
             }
-            console.log(`Next index selected: ${currentIndex}`);
+            
             updateProgressDisplay();
         }
 
@@ -1009,18 +1039,18 @@
             }).then(response => {
                 if (!response.ok) {
                     // 401 Unauthorized のようなエラーも考慮
-                    console.error('Send score failed:', response.status, response.statusText);
+                    
                     // throw new Error('Network response was not ok ' + response.statusText);
                     return null; // エラー時は null を返すなど
                 }
                 return response.json();
             }).then(data => {
                 if (data) {
-                    console.log('Score update success:', data);
+                    
                 }
                 // saveProgressToServer(); // スコア送信成功時にも保存 (頻繁すぎる可能性あり)
             }).catch((error) => {
-                console.error('Error sending score:', error);
+                
             });
         }
 
@@ -1083,7 +1113,7 @@
             };
 
 
-            console.log("Saving Progress - Summary:", summaryData, "Details:", detailsData);
+            
 
             try {
                 const response = await fetch('/api/save_progress', { // Use relative path
@@ -1106,9 +1136,9 @@
                 }
 
                 const result = await response.json();
-                console.log('Progress saved:', result.message);
+                
             } catch (error) {
-                console.error('Error saving progress:', error);
+                
                 // ユーザーにエラーを通知する（例: notie）
                 // notie.alert({ type: 'error', text: '進捗の保存に失敗しました。', time: 2 });
             }
@@ -1135,7 +1165,7 @@
 
                 if (!detailsResponse.ok) {
                     if (detailsResponse.status === 404) {
-                        console.log(`No progress details found on server for ${mondai}. Starting fresh.`);
+                        
                         answeredQuestions = new Set();
                         questionStats = new Map();
                         studyingQuestions = new Set(); // 初期化
@@ -1148,10 +1178,10 @@
                     const detailsDataResult = await detailsResponse.json();
                     const detailsData = detailsDataResult.progress_details;
                     if (detailsData && Object.keys(detailsData).length > 0) {
-                        console.log(`Applying progress details for ${mondai}:`, detailsData);
+                        
                         applyProgressData(detailsData); // Apply the loaded details
                     } else {
-                        console.log(`No progress details content found on server for ${mondai}. Starting fresh.`);
+                        
                         answeredQuestions = new Set();
                         questionStats = new Map();
                         studyingQuestions = new Set(); // 初期化
@@ -1168,7 +1198,7 @@
                 });
 
                 if (!summaryResponse.ok) {
-                    console.warn(`Could not fetch summary data: ${summaryResponse.statusText}`);
+                    
                 } else {
                     const summaryDataResult = await summaryResponse.json();
                     const summary = summaryDataResult.progress_summary || {};
@@ -1183,7 +1213,7 @@
                 updateProgressDisplay(); // Updates score display
 
             } catch (error) {
-                console.error('Error loading progress data:', error);
+                
                 // Consider showing a user-friendly error message
                 notie.alert({ type: 'error', text: '進捗の読み込みに失敗しました。', time: 2 });
             }
@@ -1309,7 +1339,7 @@
         replaceMondaiCheckbox.checked = localStorage.getItem('replace_mondai') === 'true';
 
         // チェックボックスの変更イベント
-        replaceMondaiCheckbox.addEventListener('change', function () {
+        replaceMondaiCheckbox.addEventListener('change', async function () {
             localStorage.setItem('replace_mondai', this.checked);
 
             // 現在の画面に合わせて更新
@@ -1317,7 +1347,7 @@
 
             if (swiper.activeIndex === 1) {
                 // 問題画面表示中なら問題も更新
-                showNextQuestion();
+                await showNextQuestion();
                 notie.alert({
                     type: 'info', // 'success'から変更
                     text: this.checked ? '問題文と回答文を入れ替えました' : '問題文と回答文を元に戻しました',
@@ -1335,12 +1365,12 @@
         hardmodeCheckbox.checked = localStorage.getItem('hard_mode') === 'true';
 
         // ハードモードチェックボックスの変更イベント
-        hardmodeCheckbox.addEventListener('change', function () {
+        hardmodeCheckbox.addEventListener('change', async function () {
             localStorage.setItem('hard_mode', this.checked);
 
             if (swiper.activeIndex === 1) {
                 // 問題画面表示中なら問題も更新
-                showNextQuestion();
+                await showNextQuestion();
                 notie.alert({
                     type: 'info',
                     text: this.checked ? 'ハードモードを有効にしました' : 'ハードモードを無効にしました',
@@ -1353,12 +1383,12 @@
 
 
         // 出題モード選択のイベントリスナー
-        document.getElementById('random-mode').addEventListener('change', function () {
+        document.getElementById('random-mode').addEventListener('change', async function () {
             if (this.checked) {
                 localStorage.setItem('question_mode_' + mondai, 'random');
                 localStorage.removeItem('current_question_index_' + mondai); // ランダムに切り替えたらインデックスは不要
                 selectQuestionMode(); // モード選択ロジックを呼び出してcurrentIndexを更新
-                showNextQuestion();
+                await showNextQuestion();
                 updateProgressDisplay();
                 notie.alert({
                     type: 'info',
@@ -1369,12 +1399,12 @@
             }
         });
 
-        document.getElementById('sequential-mode').addEventListener('change', function () {
+        document.getElementById('sequential-mode').addEventListener('change', async function () {
             if (this.checked) {
                 localStorage.setItem('question_mode_' + mondai, 'sequential');
                 // 順番モードに切り替えたら、保存されているインデックス（なければ0）から再開
                 selectQuestionMode(); // モード選択ロジックを呼び出してcurrentIndexを更新
-                showNextQuestion();
+                await showNextQuestion();
                 updateProgressDisplay();
                 notie.alert({
                     type: 'info',
@@ -1482,12 +1512,12 @@
             await saveProgressToServer(); // 進捗保存
 
             nextIndex();
-            showNextQuestion();
+            await showNextQuestion();
         }
 
 
         // 不正解時の処理 (入力/手書きモード用)
-        function handleWrongAnswerInput(userAnswer, correctAnswer) {
+        async function handleWrongAnswerInput(userAnswer, correctAnswer) {
             if (typeof start === 'undefined' || start === null) {
                 start = performance.now();
             }
@@ -1531,7 +1561,7 @@
                     await saveProgressToServer(); // 進捗保存
 
                     // 不正解時は同じ問題を表示 (nextIndexを呼ばない)
-                    showNextQuestion();
+                    await showNextQuestion();
                 }
             });
         }
@@ -1601,7 +1631,7 @@
         });
 
         // 復習モード開始ボタンのイベントリスナー
-        document.getElementById('start-review-btn').addEventListener('click', function () {
+        document.getElementById('start-review-btn').addEventListener('click', async function () {
             reviewQuestions = Array.from(studyingQuestions);
             if (reviewQuestions.length === 0) {
                 notie.alert({ type: 'info', text: '復習する問題はありません。', time: 2 });
@@ -1628,7 +1658,7 @@
             document.getElementById('review-count').textContent = reviewQuestions.length;
 
             swiper.slideTo(1); // クイズ画面へ移動
-            showNextQuestion();
+            await showNextQuestion();
             updateProgressDisplay(); // 進捗表示も更新
             notie.alert({ type: 'info', text: '復習モードを開始します。', time: 1.5 });
             // 復習モード開始時もタイマー開始
@@ -1636,14 +1666,14 @@
         });
 
         // 通常モードに戻るボタンのイベントリスナー
-        document.getElementById('exit-review-btn').addEventListener('click', function () {
+        document.getElementById('exit-review-btn').addEventListener('click', async function () {
             isInReviewMode = false;
             document.getElementById('review-mode-indicator').style.display = 'none';
             document.getElementById('exit-review-btn').style.display = 'none';
             notie.alert({ type: 'info', text: '通常モードに戻りました。', time: 1.5 });
             saveProgressToServer(); // 復習モード終了時に進捗保存
             selectQuestionMode(); // 通常のモード選択ロジックを再実行
-            showNextQuestion();
+            await showNextQuestion();
             updateProgressDisplay();
             // 通常モードに戻った時もタイマー開始
             start = performance.now();
