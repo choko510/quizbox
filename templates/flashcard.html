@@ -98,6 +98,28 @@
         </div>
         
         <div class="settings-group">
+            <h3 class="settings-group-title">スワイプガイド</h3>
+            <div class="swipe-guide">
+                <div class="swipe-instruction">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>左：覚えた</span>
+                </div>
+                <div class="swipe-instruction">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>右：復習</span>
+                </div>
+                <div class="swipe-instruction">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>下：まだ</span>
+                </div>
+                <div class="swipe-instruction">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>上：めくる</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-group">
             <h3 class="settings-group-title">ボタン動作設定</h3>
             <div class="setting-option">
                 <label for="auto-next-learned">「覚えた」後に次へ進む</label>
@@ -167,6 +189,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <div id="swipe-indicators" class="swipe-indicators">
+        <div class="swipe-indicator left" id="swipe-left">
+            <i class="fas fa-check"></i>
+            <span>覚えた</span>
+        </div>
+        <div class="swipe-indicator right" id="swipe-right">
+            <i class="fas fa-sync-alt"></i>
+            <span>復習</span>
+        </div>
+        <div class="swipe-indicator bottom" id="swipe-down">
+            <i class="fas fa-times"></i>
+            <span>まだ</span>
+        </div>
+    </div>
     <script src="flashcard.js"></script>
     <script>
         function pageback() {
