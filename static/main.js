@@ -234,6 +234,10 @@ async function handleNameChange(event) {
     }
 }
 
+// API呼び出し状態を追跡するグローバル変数
+let apiDataFetched = false;
+let apiResponseData = null;
+
 document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
     MicroModal.init({
@@ -273,28 +277,56 @@ document.addEventListener('DOMContentLoaded', async function() {
         nameForm.addEventListener('submit', handleNameChange);
     }
 
-    // アプリケーションの初期化完了
-    console.log('アプリケーションの初期化が完了しました');
-// ページ読み込み時に進捗データを取得してプログレスバーを表示
+    // 既存ユーザーの場合、自動ログインを試みる
     const userId = Cookies.get('id');
     const userPassword = Cookies.get('password');
+    
     if (userId && userPassword) {
         try {
+            // api/getを一度だけ呼び出す
             const scoresData = await fetchScores(userId, userPassword);
             if (scoresData) {
-                analyzedata(scoresData); // プログレスバーを表示
+                if (scoresData.message === "password is wrong") {
+                    // パスワードが間違っている場合、新しいアカウントを作成
+                    const newId = Math.random().toString(36).substring(2);
+                    const newPassword = Math.random().toString(36).substring(2);
+                    Cookies.set('id', newId, { expires: 120 });
+                    Cookies.set('password', newPassword, { expires: 120 });
+                    await fetch('api/registration', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: newId,
+                            password: newPassword
+                        })
+                    });
+                } else {
+                    // 正常にデータを取得できた場合
+                    analyzedata(scoresData); // プログレスバーを表示
+                }
             }
         } catch (error) {
-            console.error('ページ読み込み時の進捗データ取得エラー:', error);
+            console.error('自動ログイン/データ取得エラー:', error);
         }
     } else {
         console.log('ログイン情報が見つからないため、進捗バーは表示されません。');
         // 必要であれば、未ログイン状態のプログレスバー表示処理を追加
     }
+    
+    // アプリケーションの初期化完了
+    console.log('アプリケーションの初期化が完了しました');
 });
 
 // APIからスコアデータを取得
+// APIからスコアデータを取得（キャッシュ対応）
 async function fetchScores(id, password) {
+    // すでにデータを取得済みの場合は、キャッシュデータを返す
+    if (apiDataFetched && apiResponseData) {
+        return apiResponseData;
+    }
+    
     const response = await fetch(`api/get`, {
         method: 'POST',
         headers: {
@@ -305,14 +337,23 @@ async function fetchScores(id, password) {
             password: password
         })
     });
+    
     const data = await response.json();
+    
+    // レスポンスデータをキャッシュ
+    apiDataFetched = true;
+    apiResponseData = data;
+    
     if (data.message === "password is wrong") {
-        alert("Invalid password");
-        return;
+        // モーダル内で呼び出された場合のみアラート表示
+        if (document.getElementById('modal-1').getAttribute('aria-hidden') === 'false') {
+            alert("Invalid password");
+        }
+        return data;
     }
+    
     return data;
 }
-
 // リンクの href から 'id' クエリパラメータを取得する関数
 function getProgressKey(href) {
     try {

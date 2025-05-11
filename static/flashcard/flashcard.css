@@ -70,7 +70,7 @@ body {
 .card-container {
     width: 90%;
     max-width: 900px;
-    height: 60vh;
+    height: 55vh;
     perspective: 1200px;
     margin-bottom: 20px;
 }
@@ -83,6 +83,8 @@ body {
     transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
+    will-change: transform;
+    touch-action: none;
 }
 
 .flashcard.flipped {
@@ -634,21 +636,21 @@ body {
 .enhanced-feedback .flashcard.show-checkmark {
     animation: success-glow 2s ease-in-out;
 }
-
-/* 学習リストセクション (ページ下部) */
+/* 学習リストセクション (ページ下部) - 改良版 */
 .list-section {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     background-color: white;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
     z-index: 100;
-    height: 100vh;
+    height: 90vh; /* 最大高さを90vhに制限 */
     display: flex;
     flex-direction: column;
     transform: translateY(calc(100% - 50px)); /* 最初はヘッダーだけ表示 */
+    border-radius: 20px 20px 0 0; /* 上部を丸く */
 }
 
 .list-section.expanded {
@@ -656,19 +658,34 @@ body {
 }
 
 .list-header {
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 12px 20px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: center;
     cursor: pointer;
-    background-color: var(--secondary-color);
+    background-color: white;
     text-align: center;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+}
+
+/* ドラッグインジケータを追加 */
+.list-header:before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
 }
 
 .toggle-list-btn {
     background: none;
     border: none;
-    color: var(--text-color);
+    color: var(--primary-color);
     font-weight: bold;
     font-size: 1rem;
     cursor: pointer;
@@ -677,11 +694,16 @@ body {
     justify-content: center;
     gap: 10px;
     width: 100%;
-    padding: 5px 0;
+    padding: 8px 0;
+    transition: color 0.2s;
+}
+
+.toggle-list-btn:hover {
+    color: var(--primary-hover);
 }
 
 .toggle-list-btn i {
-    transition: transform 0.3s;
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .list-section.expanded .toggle-list-btn i {
@@ -693,124 +715,307 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    /* スクロールバーをカスタマイズ */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 102, 204, 0.3) rgba(0, 0, 0, 0.05);
 }
 
-/* リストのタブ */
+.list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 102, 204, 0.3);
+    border-radius: 3px;
+}
+
+/* リストのタブ - 改良版 */
 .list-tabs {
     display: flex;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border-color);
-    overflow-x: auto; /* タブが多い場合にスクロール */
+    padding: 0;
+    background-color: white;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefoxのスクロールバーを非表示 */
+    -ms-overflow-style: none; /* IEとEdgeのスクロールバーを非表示 */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.list-tabs::-webkit-scrollbar {
+    display: none; /* Chromeのスクロールバーを非表示 */
 }
 
 .list-tabs .tab-btn {
     background: none;
     border: none;
-    padding: 8px 12px;
-    margin-right: 10px;
+    padding: 12px 16px;
+    flex: 1;
+    min-width: 80px;
     cursor: pointer;
     font-size: 0.9rem;
-    color: #555;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-bottom-color 0.2s;
-    white-space: nowrap; /* タブ名が改行しないように */
+    color: #666;
+    position: relative;
+    transition: all 0.3s;
+    text-align: center;
+    white-space: nowrap;
 }
 
-.list-tabs .tab-btn:last-child {
-    margin-right: 0;
+.list-tabs .tab-btn:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background-color: var(--primary-color);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transform: translateX(-50%);
+    border-radius: 3px 3px 0 0;
 }
 
 .list-tabs .tab-btn.active {
     color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
     font-weight: bold;
 }
-/* リストセクションのコンテンツ */
+
+.list-tabs .tab-btn.active:after {
+    width: 70%;
+}
+
+.list-tabs .tab-btn:hover:not(.active) {
+    color: var(--primary-hover);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* タブカウントのスタイル改良 */
+.list-tabs .tab-btn span {
+    display: inline-block;
+    margin-left: 4px;
+    opacity: 0.8;
+    font-size: 0.8rem;
+    transition: all 0.3s;
+}
+
+.list-tabs .tab-btn.active span {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* リストコンテンツ - 改良版 */
 .list-content {
     padding: 0;
     overflow-y: auto;
     flex-grow: 1;
+    background-color: #fafafa; /* 薄いグレー背景 */
 }
 
-/* フィルターセクションのスタイル */
+/* フィルターセクション - 改良版 */
 .list-filter {
     display: flex;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #eee;
+    padding: 12px 20px;
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     flex-wrap: wrap;
+    gap: 8px;
 }
 
 .filter-title {
     font-size: 0.9rem;
     font-weight: bold;
     margin-right: 10px;
-    color: #555;
+    color: #444;
 }
 
 .filter-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     flex-grow: 1;
 }
 
+/* チェックボックス風ボタンに変更 - より明確な状態表示 */
 .filter-option {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    padding: 4px 12px;
+    background-color: #f0f0f0;
+    transition: all 0.2s ease;
     cursor: pointer;
     user-select: none;
+    border: 1px solid #e0e0e0;
+    position: relative;
+    overflow: hidden;
 }
 
-.filter-checkbox {
-    margin-right: 5px;
-    cursor: pointer;
+.filter-option:hover {
+    background-color: #e8e8e8;
+}
+
+/* チェックボックスを非表示にして、選択状態はスタイルで表現 */
+.filter-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .filter-option span {
     font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+/* チェックマークアイコン追加 */
+.filter-option span:before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-right: 0;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+/* チェックされた状態のスタイル */
+.filter-option input[type="checkbox"]:checked + span {
+    font-weight: bold;
+}
+
+.filter-option input[type="checkbox"]:checked + span:before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    opacity: 1;
+}
+
+/* フィルターオプション - 状態別の色分け */
+.filter-option[for="filter-not-learned"] {
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.filter-option[for="filter-not-learned"] input:checked + span {
+    color: #e74c3c;
+}
+
+.filter-option[for="filter-not-learned"] input:checked ~ span:before {
+    background-color: #e74c3c;
+}
+
+.filter-option[for="filter-learning"] {
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+.filter-option[for="filter-learning"] input:checked + span {
+    color: #f39c12;
+}
+
+.filter-option[for="filter-learning"] input:checked ~ span:before {
+    background-color: #f39c12;
+}
+
+.filter-option[for="filter-learned"] {
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.filter-option[for="filter-learned"] input:checked + span {
+    color: #2ecc71;
+}
+
+.filter-option[for="filter-learned"] input:checked ~ span:before {
+    background-color: #2ecc71;
+}
+
+/* チェック状態のフィルター背景 */
+.filter-option input[type="checkbox"]:checked ~ .filter-option {
+    background-color: #f8f8f8;
 }
 
 .apply-filter-btn {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 5px 10px;
+    border-radius: 20px;
+    padding: 6px 14px;
     font-size: 0.85rem;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin-left: 10px;
 }
 
 .apply-filter-btn:hover {
     background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* スマホでの表示調整 */
+.apply-filter-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+/* フィルター状態をもっと明確に */
+.filter-option input[type="checkbox"]:checked + span {
+    position: relative;
+}
+
+.filter-option[for="filter-not-learned"] input:checked {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.filter-option[for="filter-learning"] input:checked {
+    background-color: rgba(243, 156, 18, 0.1);
+}
+
+.filter-option[for="filter-learned"] input:checked {
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+/* スマホでの表示調整 - 改良版 */
 @media (max-width: 480px) {
     .list-filter {
         flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
     }
     
     .filter-title {
-        margin-bottom: 5px;
+        margin-bottom: 4px;
     }
     
     .filter-options {
-        margin-bottom: 10px;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 8px;
     }
     
     .apply-filter-btn {
         margin-left: 0;
         align-self: flex-end;
+        padding: 8px 16px;
     }
     
     .list-section {
         max-height: 90vh;
         transform: translateY(calc(100% - 45px));
+    }
+    
+    .list-tabs .tab-btn {
+        padding: 12px 10px;
+        font-size: 0.85rem;
     }
     
     .list-container {
@@ -825,10 +1030,11 @@ body {
 .list-modal-content {
     display: none; /* 非表示にする */
 }
-/* 単語リスト共通スタイル */
+
+/* 単語リスト改良スタイル - 1列表示 */
 #word-list {
     list-style: none;
-    padding: 0;
+    padding: 4px 8px;
     margin: 0;
 }
 
@@ -836,68 +1042,120 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 10px 12px;
+    background-color: white;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-#word-list li:last-child {
-    border-bottom: none;
+    transition: all 0.2s ease-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid transparent;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 4px;
 }
 
 #word-list li:hover {
-    background-color: #f9f9f9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#word-list li:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 #word-list .word {
     font-weight: bold;
     color: #333;
-    margin-right: 10px;
+    margin-right: 6px;
+    font-size: 1rem;
 }
 
 #word-list .description {
     color: #666;
     font-size: 0.9rem;
     overflow: hidden;
-    word-break: keep-all;
-    flex-grow: 1; /* 残りの幅を埋める */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-grow: 1;
 }
 
-/* 学習状態アイコン */
+/* 学習状態アイコン - よりコンパクトに */
 .state-icon {
-    margin-right: 10px;
+    margin-right: 8px;
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
 }
 
-/* 学習状態によるリスト項目のスタイリング */
+/* 学習状態によるリスト項目のスタイリング - 改良版 */
 #word-list li.state-learned {
-    background-color: rgba(46, 204, 113, 0.05);
+    border-left-color: #2ecc71;
+    background-color: white;
+}
+
+#word-list li.state-learned .state-icon {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
 }
 
 #word-list li.state-learning {
-    background-color: rgba(243, 156, 18, 0.05);
+    border-left-color: #f39c12;
+    background-color: white;
+}
+
+#word-list li.state-learning .state-icon {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
 }
 
 #word-list li.state-not_learned {
-    background-color: rgba(231, 76, 60, 0.05);
+    border-left-color: #e74c3c;
+    background-color: white;
 }
 
-#word-list li:hover.state-learned {
-    background-color: rgba(46, 204, 113, 0.1);
-}
-
-#word-list li:hover.state-learning {
-    background-color: rgba(243, 156, 18, 0.1);
-}
-
-#word-list li:hover.state-not_learned {
+#word-list li.state-not_learned .state-icon {
     background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
 }
+
+/* リップル効果 */
+#word-list li:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+}
+
+#word-list li:active:after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0) translate(-50%, -50%);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20) translate(-50%, -50%);
+        opacity: 0;
+    }
+}
+
+/* スマホ表示の調整は不要になりました */
 
 /* オーバーレイ（設定パネルと共通） */
 .overlay.active {
@@ -1019,7 +1277,8 @@ body {
 
 /* カードドラッグアニメーション */
 .flashcard.dragging {
-    transition: transform 0.1s ease-out;
+    transition: transform 0.05s cubic-bezier(0.1, 0.7, 0.1, 1);
+    will-change: transform; /* パフォーマンス向上 */
 }
 
 .flashcard.dragging-left {
@@ -1033,24 +1292,72 @@ body {
 .flashcard.dragging-down {
     box-shadow: 0 0 20px rgba(231, 76, 60, 0.4);
 }
-
 .flashcard.swiped-left {
     transform: translateX(-150%) rotate(-30deg);
-    transition: all 0.5s ease-out;
+    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* スワイプ中の余計な操作を防止 */
 }
 
 .flashcard.swiped-right {
     transform: translateX(150%) rotate(30deg);
-    transition: all 0.5s ease-out;
+    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* スワイプ中の余計な操作を防止 */
 }
 
 .flashcard.swiped-down {
     transform: translateY(150%);
-    transition: all 0.5s ease-out;
+    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* スワイプ中の余計な操作を防止 */
 }
 
 /* カードが元の位置に戻るアニメーション */
 .flashcard.return-to-center {
     transform: translate(0, 0) rotate(0deg) !important;
-    transition: transform 0.3s ease-out !important;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* スワイプの物理効果を向上させる追加スタイル */
+@keyframes card-pop {
+    0% { transform: scale(0.98); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+    50% { transform: scale(1.01); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+    100% { transform: scale(1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+}
+
+/* 新しいカードが表示されたときのアニメーション */
+.flashcard.new-card-animation {
+    animation: card-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ドラッグ開始時の効果を強化 */
+.flashcard.dragging {
+    transition: transform 0.05s cubic-bezier(0.1, 0.7, 0.1, 1), box-shadow 0.2s ease-out;
+    will-change: transform, box-shadow;
+}
+
+/* スワイプ時のより滑らかなグラデーション効果 */
+.flashcard.dragging-left {
+    box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
+    background-image: linear-gradient(to left, rgba(255,255,255,0), rgba(46, 204, 113, 0.05));
+}
+
+.flashcard.dragging-right {
+    box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
+    background-image: linear-gradient(to right, rgba(255,255,255,0), rgba(243, 156, 18, 0.05));
+}
+
+.flashcard.dragging-down {
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(231, 76, 60, 0.05));
+}
+
+/* スワイプインジケーターの強化 */
+.swipe-indicator.visible {
+    opacity: 1;
+    transform: scale(1.1);
+    transition: opacity 0.2s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.swipe-indicator {
+    transition: opacity 0.2s, transform 0.2s;
+    transform: scale(0.9);
 }

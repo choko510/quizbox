@@ -106,9 +106,17 @@ document.addEventListener('DOMContentLoaded', function() {
     swipeIndicators.classList.add('active');
 
     // Hammerを使ってスワイプ検出を設定
-    const hammer = new Hammer(flashcardElement); // 変数名を変更
-    hammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
-    hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL, threshold: 10 });
+    const hammer = new Hammer(flashcardElement);
+    hammer.get('swipe').set({
+        direction: Hammer.DIRECTION_ALL,
+        threshold: 10,   // 閾値を小さくして感度アップ
+        velocity: 0.3    // 速度の閾値を下げて検知しやすく
+    });
+    hammer.get('pan').set({
+        direction: Hammer.DIRECTION_ALL,
+        threshold: 5,    // より小さな動きから検知
+        pointers: 1      // 1本指でのパン操作のみ
+    });
     hammer.on('swipeleft swiperight swipeup swipedown', handleSwipe);
     hammer.on('panstart panmove panend pancancel', handlePan);
 
@@ -322,6 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // トランスフォームリセット（直接スタイルと一時的なクラスをクリア）
         flashcardElement.style.transform = '';
+        flashcardElement.style.transition = ''; // 追加：トランジションスタイルをリセット
+        flashcardElement.style.boxShadow = ''; // 追加：ボックスシャドウをリセット
         
         // すべてのドラッグ関連クラスを確実に削除
         flashcardElement.classList.remove('dragging', 'dragging-left', 'dragging-right', 'dragging-down');
@@ -407,8 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // カードを表示する関数
-    // カードを表示する関数
+    // カードを表示する関数 - アニメーション強化
     async function showCard(index) {
         // 注意: この関数はフィルタリング後の index (currentIndex) を受け取る
         if (displayableIndices.length === 0 || index === undefined || cards[index] === undefined) {
@@ -416,20 +425,31 @@ document.addEventListener('DOMContentLoaded', function() {
              return;
         }
         
+        // 新しいカードアニメーション用クラスを一旦削除
+        flashcardElement.classList.remove('new-card-animation');
+        
         const card = cards[index];
         wordContent.textContent = card.word || '';
         meaningContent.textContent = card.description || '';
-        // currentIndexDisplay.textContent = index + 1; // updateProgressBar で更新するため不要
         updateProgressBar(); // プログレスバー更新（フィルター考慮済み）
         
         // カードをリセット（裏返っていたら表に戻す）
         if (isFlipped) {
-            flashcardElement.classList.remove('flipped'); // 変数名を変更
+            flashcardElement.classList.remove('flipped');
             isFlipped = false;
+            
+            // めくった後の遅延を追加して視覚的に分かりやすく
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         // 学習状態ボタンの更新
-        updateLearningStatusButtons(index); // この行を追加
+        updateLearningStatusButtons(index);
+        
+        // 新しいカード表示時のアニメーション
+        // アニメーションを実行するため少し遅延させる
+        setTimeout(() => {
+            flashcardElement.classList.add('new-card-animation');
+        }, 50);
         
         // 例文生成（非同期処理）
         generateExampleIfNeeded(card.word);
@@ -438,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (settings.autoPronunciation) {
             setTimeout(() => {
                 playPronunciation(card.word);
-            }, 500); // カードが表示されてから少し遅らせて再生
+            }, 600); // カードが表示されてから少し遅らせて再生
         }
     }
     // 例文を取得する関数
@@ -598,10 +618,41 @@ document.addEventListener('DOMContentLoaded', function() {
         showCard(currentIndex);
     }
 
-    // カードをめくる
+    // カードをめくる - 改良版
     function flipCard() {
-        flashcardElement.classList.toggle('flipped'); // 変数名を変更
+        if (isDragging) return; // ドラッグ中はめくり操作を防止
+        
+        // めくる前に一瞬の遅延を入れてアニメーションを強化
+        if (!isFlipped) {
+            // 表から裏へめくる場合
+            flashcardElement.style.transition = 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            flashcardElement.classList.add('flipped');
+            
+            // 発音ボタンを非表示にするアニメーション
+            if (pronunciationBtn) {
+                pronunciationBtn.style.transition = 'opacity 0.3s ease-out';
+                pronunciationBtn.style.opacity = '0';
+            }
+        } else {
+            // 裏から表へめくる場合
+            flashcardElement.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.175)';
+            flashcardElement.classList.remove('flipped');
+            
+            // 発音ボタンを表示するアニメーション
+            if (pronunciationBtn) {
+                setTimeout(() => {
+                    pronunciationBtn.style.transition = 'opacity 0.3s ease-in';
+                    pronunciationBtn.style.opacity = '1';
+                }, 300); // めくり始めてから表示
+            }
+        }
+        
         isFlipped = !isFlipped;
+        
+        // トランジションをリセット（後で他のトランジションの邪魔をしないように）
+        setTimeout(() => {
+            flashcardElement.style.transition = '';
+        }, 800);
     }
 
     // スワイプ処理
@@ -655,10 +706,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
     // パンジェスチャー処理（ドラッグ中の動作）
     function handlePan(event) {
-        // カードがめくられている場合はドラッグを制限
+        // カードがめくられている場合は特定の方向のみ許可
         if (isFlipped && event.type === 'panstart') {
             // 上方向への動きだけ検出し、カードをめくる操作に使用
             if (event.direction === Hammer.DIRECTION_UP) {
@@ -667,12 +717,18 @@ document.addEventListener('DOMContentLoaded', function() {
             return; // その他のドラッグは無視
         }
         
-        const threshold = 80; // スワイプ判定のしきい値
-        const minDragDistance = isFlipped ? 50 : 20; // カードがめくられている場合は感度を下げる
+        // 値を調整
+        const threshold = 50; // スワイプ判定のしきい値を小さく
+        const minDragDistance = isFlipped ? 40 : 10; // 最小ドラッグ距離を小さく
+        const maxRotation = 20; // 最大回転角度を増加
+        const rotationFactor = 20; // 回転係数を調整
+        const velocityThreshold = 0.3; // 速度の閾値
         
         if (event.type === 'panstart') {
             isDragging = true;
             flashcardElement.classList.add('dragging');
+            // ドラッグ開始時にカードにアクティブ感を与える
+            flashcardElement.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2)';
         }
         
         if (isDragging && event.type === 'panmove') {
@@ -681,71 +737,112 @@ document.addEventListener('DOMContentLoaded', function() {
             const absX = Math.abs(event.deltaX);
             const absY = Math.abs(event.deltaY);
             
-            // 最小ドラッグ距離を下回る場合は動かさない
+            // 最小ドラッグ距離を下回る場合は小さな動きだけ
             if (absX < minDragDistance && absY < minDragDistance) {
                 resetIndicators();
-                flashcardElement.style.transform = '';
+                // 微小な動きでも操作感を与える（縮小係数で抑制）
+                const scaleX = 0.8;
+                const scaleY = 0.8;
+                flashcardElement.style.transform = `translate(${event.deltaX * scaleX}px, ${event.deltaY * scaleY}px)`;
                 return;
             }
             
-            // 方向性の判定をより厳密に
-            const directionRatio = 1.5; // X方向がY方向の1.5倍以上で水平と判定
+            // 方向性の判定をより適切に調整
+            const directionRatio = 1.2; // より自然な方向判定のための比率
             
             if (absX > absY * directionRatio) {
-                // 水平方向の動き
+                // 水平方向の動き - より自然な動きに
+                const progress = Math.min(Math.abs(event.deltaX) / 300, 1); // 進行度を0-1に正規化
+                
                 if (event.deltaX < -threshold) {
                     newDirection = 'left';
-                    swipeLeftIndicator.classList.add('visible');
-                    swipeRightIndicator.classList.remove('visible');
-                    swipeDownIndicator.classList.remove('visible');
-                    flashcardElement.classList.add('dragging-left');
-                    flashcardElement.classList.remove('dragging-right', 'dragging-down');
+                    showSwipeIndicator('left');
                     
-                    // 水平方向のみ移動（垂直方向の移動を抑制）
-                    let rotate = -Math.min(15, Math.abs(event.deltaX) / 15); // 回転角度制限
-                    flashcardElement.style.transform = `translate(${event.deltaX}px, 0px) rotate(${rotate}deg)`;
+                    // 移動量に応じた回転角度の自然な変化
+                    const rotate = -Math.min(maxRotation, Math.abs(event.deltaX) / rotationFactor);
+                    // 横移動だけでなく、少しだけ上に持ち上げる効果を追加
+                    const liftY = -Math.abs(event.deltaX) * 0.1;
+                    // 移動量に応じた影の変化
+                    updateShadowForDirection('left', progress);
+                    
+                    flashcardElement.style.transform = `translate(${event.deltaX}px, ${liftY}px) rotate(${rotate}deg)`;
                 } else if (event.deltaX > threshold) {
                     newDirection = 'right';
-                    swipeRightIndicator.classList.add('visible');
-                    swipeLeftIndicator.classList.remove('visible');
-                    swipeDownIndicator.classList.remove('visible');
-                    flashcardElement.classList.add('dragging-right');
-                    flashcardElement.classList.remove('dragging-left', 'dragging-down');
+                    showSwipeIndicator('right');
                     
-                    // 水平方向のみ移動
-                    let rotate = Math.min(15, Math.abs(event.deltaX) / 15); // 回転角度制限
-                    flashcardElement.style.transform = `translate(${event.deltaX}px, 0px) rotate(${rotate}deg)`;
+                    // 右方向の自然な動き
+                    const rotate = Math.min(maxRotation, Math.abs(event.deltaX) / rotationFactor);
+                    const liftY = -Math.abs(event.deltaX) * 0.1;
+                    updateShadowForDirection('right', progress);
+                    
+                    flashcardElement.style.transform = `translate(${event.deltaX}px, ${liftY}px) rotate(${rotate}deg)`;
                 } else {
-                    // しきい値を超えていない水平方向の微小な動き
+                    // しきい値未満の小さな動き
                     resetIndicators();
-                    let smallX = event.deltaX * 0.5; // 動きを半分に抑制
-                    flashcardElement.style.transform = `translate(${smallX}px, 0px)`;
+                    // 微小な動きでも反応するように
+                    const dampingFactor = 0.7; // 抑制係数
+                    flashcardElement.style.transform = `translate(${event.deltaX * dampingFactor}px, 0px)`;
                 }
             } else if (absY > absX * directionRatio && event.deltaY > threshold) {
-                // 下方向の明確な動き
+                // 下方向の動き - より自然に
                 newDirection = 'down';
-                swipeDownIndicator.classList.add('visible');
-                swipeLeftIndicator.classList.remove('visible');
-                swipeRightIndicator.classList.remove('visible');
-                flashcardElement.classList.add('dragging-down');
-                flashcardElement.classList.remove('dragging-left', 'dragging-right');
+                showSwipeIndicator('down');
                 
-                // 垂直方向のみ移動
-                flashcardElement.style.transform = `translate(0px, ${event.deltaY}px)`;
-            } else if (absY > absX * directionRatio && event.deltaY < -threshold) {
-                // 上スワイプの場合はカードをめくる動作
+                const progress = Math.min(event.deltaY / 250, 1);
+                updateShadowForDirection('down', progress);
+                
+                // 下方向は回転を控えめに
+                const smallRotate = (event.deltaX / 50) * 5; // わずかな左右の動きによる回転
+                flashcardElement.style.transform = `translate(${event.deltaX * 0.2}px, ${event.deltaY}px) rotate(${smallRotate}deg)`;
+            } else if (absY > absX * directionRatio && event.deltaY < -threshold * 1.5) {
+                // 上スワイプの場合はカードをめくる動作 (閾値を少し大きく)
                 if (!isFlipped) {
                     flipCard();
                 }
                 resetCardDragState();
                 return;
             } else {
-                // 方向が明確でない場合は動きを制限
+                // 方向が明確でない場合
                 resetIndicators();
-                flashcardElement.style.transform = ''; // 動きを抑制
+                // いずれの方向にも自然な動きを許可
+                const dampingFactor = 0.5; // 動きの抑制係数
+                flashcardElement.style.transform = `translate(${event.deltaX * dampingFactor}px, ${event.deltaY * dampingFactor}px)`;
             }
             
             dragDirection = newDirection;
+        }
+        
+        // 指定した方向のインジケータのみを表示する関数
+        function showSwipeIndicator(direction) {
+            resetIndicators();
+            
+            if (direction === 'left') {
+                swipeLeftIndicator.classList.add('visible');
+                flashcardElement.classList.add('dragging-left');
+            } else if (direction === 'right') {
+                swipeRightIndicator.classList.add('visible');
+                flashcardElement.classList.add('dragging-right');
+            } else if (direction === 'down') {
+                swipeDownIndicator.classList.add('visible');
+                flashcardElement.classList.add('dragging-down');
+            }
+        }
+        
+        // 影の効果を方向に基づいて更新する関数
+        function updateShadowForDirection(direction, progress) {
+            let shadowColor;
+            
+            if (direction === 'left') {
+                shadowColor = `rgba(46, 204, 113, ${0.3 + progress * 0.3})`; // 緑
+            } else if (direction === 'right') {
+                shadowColor = `rgba(243, 156, 18, ${0.3 + progress * 0.3})`; // オレンジ
+            } else if (direction === 'down') {
+                shadowColor = `rgba(231, 76, 60, ${0.3 + progress * 0.3})`; // 赤
+            }
+            
+            const blurSize = 15 + progress * 15;
+            const spreadSize = 5 + progress * 5;
+            flashcardElement.style.boxShadow = `0 ${blurSize}px ${spreadSize}px ${shadowColor}`;
         }
         
         // インジケータをリセットする関数
@@ -757,36 +854,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if ((event.type === 'panend' || event.type === 'pancancel') && isDragging) {
-            const swipeThreshold = 120; // スワイプとみなす閾値を少し小さく
+            const swipeThreshold = 100; // スワイプとみなす閾値を調整
+            const velocityMultiplier = 2.5; // 速度による動きの増幅係数
             
-            if (dragDirection === 'left' && event.deltaX < -swipeThreshold) {
-                // 左にスワイプ完了: 「覚えた」
-                flashcardElement.classList.add('swiped-left');
+            // 速度を考慮した実効的なデルタを計算（慣性効果の模倣）
+            const effectiveDeltaX = event.deltaX + (event.velocityX * velocityMultiplier * 100);
+            const effectiveDeltaY = event.deltaY + (event.velocityY * velocityMultiplier * 100);
+            
+            // 速度が十分であれば、より小さい移動量でもスワイプと判定
+            const isHighVelocityX = Math.abs(event.velocityX) > velocityThreshold;
+            const isHighVelocityY = Math.abs(event.velocityY) > velocityThreshold;
+            
+            // 左右のスワイプ判定をより柔軟に
+            if ((dragDirection === 'left' && effectiveDeltaX < -swipeThreshold) ||
+                (dragDirection === 'left' && isHighVelocityX && event.deltaX < -swipeThreshold * 0.7)) {
+                // 左にスワイプ完了: 「覚えた」- より大きく飛ばす
+                flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                flashcardElement.style.transform = `translateX(-200%) rotate(-40deg)`;
+                
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'learned');
                     resetCardDragState();
-                }, 300);
-            } else if (dragDirection === 'right' && event.deltaX > swipeThreshold) {
+                }, 500);
+            } else if ((dragDirection === 'right' && effectiveDeltaX > swipeThreshold) ||
+                      (dragDirection === 'right' && isHighVelocityX && event.deltaX > swipeThreshold * 0.7)) {
                 // 右にスワイプ完了: 「復習」
-                flashcardElement.classList.add('swiped-right');
+                flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                flashcardElement.style.transform = `translateX(200%) rotate(40deg)`;
+                
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'learning');
                     resetCardDragState();
-                }, 300);
-            } else if (dragDirection === 'down' && event.deltaY > swipeThreshold) {
+                }, 500);
+            } else if ((dragDirection === 'down' && effectiveDeltaY > swipeThreshold) ||
+                      (dragDirection === 'down' && isHighVelocityY && event.deltaY > swipeThreshold * 0.7)) {
                 // 下にスワイプ完了: 「まだ」
-                flashcardElement.classList.add('swiped-down');
+                flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                flashcardElement.style.transform = `translateY(200%)`;
+                
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'not_learned');
                     resetCardDragState();
-                }, 300);
+                }, 500);
             } else {
-                // スワイプを完了しなかった場合、元の位置にスムーズに戻る
+                // スワイプ未完了 - よりスムーズに戻る
                 flashcardElement.classList.add('return-to-center');
+                // バネのような戻り効果
+                flashcardElement.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                flashcardElement.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                
+                // カードが完全に戻った後にドラッグ状態をリセット
                 setTimeout(() => {
                     resetCardDragState();
-                    flashcardElement.classList.remove('return-to-center');
-                }, 300);
+                    // 影を元に戻す
+                    flashcardElement.style.boxShadow = '';
+                }, 400);
             }
         }
     }

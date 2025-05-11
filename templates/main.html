@@ -133,45 +133,8 @@
                     })
                 });
             })();
-        } else {
-            // 既存ユーザーの場合、自動ログインを試みる
-            const id = Cookies.get('id');
-            const password = Cookies.get('password');
-            (async () => {
-                try {
-                    const response = await fetch('api/get', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            id: id,
-                            password: password
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.message === "password is wrong") {
-                        // パスワードが間違っている場合、新しいアカウントを作成
-                        const newId = Math.random().toString(36).substring(2);
-                        const newPassword = Math.random().toString(36).substring(2);
-                        Cookies.set('id', newId, { expires: 120 });
-                        Cookies.set('password', newPassword, { expires: 120 });
-                        await fetch('api/registration', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                id: newId,
-                                password: newPassword
-                            })
-                        });
-                    }
-                } catch (error) {
-                    console.error('自動ログインエラー:', error);
-                }
-            })();
         }
+        // 注意: 既存ユーザーの自動ログイン処理はmain.jsに移動しました
     </script>
 
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
