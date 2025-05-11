@@ -412,6 +412,7 @@ class DB:
                 return None
     
     @staticmethod
+    @staticmethod
     async def delete_mondai(name: str, userid: str):
         """
         問題を削除する
@@ -1057,49 +1058,49 @@ async def get_sentences(request: Request):
         # Parse JSON request body
         data = await request.json()
         words = data.get("words", [])
-        
-        # Validate input
+
         if not isinstance(words, list):
             raise HTTPException(status_code=400, detail="Request must contain a 'words' array")
-            
-        # Limit to 500 words
+
         words = words[:500]
-        
+
         path = f"./data/sentence.txt"
         if not os.path.isfile(path):
             raise HTTPException(status_code=404, detail="Sentence file not found")
-        
+
         results = {}
+
+        words_map = {word.lower(): word for word in words}
         
-        # Create a set of lowercase words for efficient search
-        words_lower = {word.lower(): word for word in words}
-        
-        # Load all sentences once
-        all_sentences = []
-        async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
-            async for line in f:
-                line = line.strip()
-                if line:
-                    all_sentences.append(line)
-        
-        # Match sentences for each word
-        for word_lower, original_word in words_lower.items():
-            matching_sentences = []
+        if not hasattr(get_sentences, "sentences_cache"):
+            get_sentences.sentences_cache = []
+            async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+                async for line in f:
+                    line = line.strip()
+                    if line:
+                        get_sentences.sentences_cache.append(line)
             
-            # Search for matching sentences
+        all_sentences = get_sentences.sentences_cache
+
+        for word_lower, original_word in words_map.items():
+            matching_sentences = []
+
+            pattern = r"\b" + re.escape(word_lower) + r"\b"
+
             for sentence in all_sentences:
-                if word_lower in sentence.lower():
+                if re.search(pattern, sentence.lower()):
                     matching_sentences.append(sentence)
-                    # Limit to 5 sentences per word
                     if len(matching_sentences) >= 5:
                         break
             results[original_word] = matching_sentences
-        
+
         return {"results": results}
-    
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Error retrieving sentences: {str(e)}"
         )
 

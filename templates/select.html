@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
     <link rel="stylesheet" href="/select/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css">
     <title>範囲選択</title>
     <link rel="manifest" href="/manifest.json">
 </head>
@@ -288,6 +288,7 @@
             container.innerHTML = '';
             
             ranges.forEach(range => {
+                // 通常の問題ボタン
                 const button = document.createElement('button');
                 button.className = 'range-button';
                 button.textContent = range.label;
@@ -298,6 +299,29 @@
                     // 選択された範囲でplay.htmlにリダイレクト
                     window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
                 });
+                
+                // 単語カードボタン（新規追加）
+                const flashcardButton = document.createElement('button');
+                flashcardButton.className = 'flashcard-button';
+                flashcardButton.title = '単語カードで学習';
+                flashcardButton.dataset.start = range.start;
+                flashcardButton.dataset.end = range.end;
+                
+                // アイコンの追加
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-regular fa-cards-blank';
+                flashcardButton.appendChild(icon);
+                
+                // クリックイベント - 単語カードページへリダイレクト
+                flashcardButton.addEventListener('click', function() {
+                    window.location.href = `/flashcard/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                });
+                
+                // ボタンコンテナの作成（新規追加）
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'range-buttons';
+                buttonsContainer.appendChild(button);
+                buttonsContainer.appendChild(flashcardButton);
                 
                 const rangeItem = document.createElement('div');
                 rangeItem.className = 'range-item';
@@ -312,8 +336,8 @@
                     </div>
                     <span class="progress-text">0/${totalCount}</span>`;
 
-                // rangeItemにボタンと進捗コンテナを追加
-                rangeItem.appendChild(button);
+                // rangeItemにボタンコンテナと進捗コンテナを追加
+                rangeItem.appendChild(buttonsContainer);
                 rangeItem.appendChild(progressContainer);
 
                 container.appendChild(rangeItem);

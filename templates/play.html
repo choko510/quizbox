@@ -459,33 +459,34 @@
             const title = document.getElementById('question');
             const isReversed = localStorage.getItem('replace_mondai') === 'true';
             const isHardMode = localStorage.getItem('hard_mode') === 'true'; // ハードモード設定読み込み
-
-            // 問題文表示
-            if (isReversed) {
-                title.innerHTML = question.word;
-                textlength = question.word.length;
-            } else {
-                title.innerHTML = question.description;
-                textlength = question.description.length;
-            }
-
-            // フォントサイズ調整 (既存ロジック)
             screenWidth = window.innerWidth;
             screenHeight = window.innerHeight;
-            if (screenWidth < 600 || screenHeight < 600) {
-                if (textlength >= 150) title.style.fontSize = "0.8em";
-                else if (textlength >= 100) title.style.fontSize = "1em";
-                else title.style.fontSize = "1.3em";
-            } else if (screenWidth < 1200 || screenHeight < 800) {
-                if (textlength >= 150) title.style.fontSize = "1em";
-                else if (textlength >= 100) title.style.fontSize = "1.2em";
-                else title.style.fontSize = "1.4em";
-            } else {
-                if (textlength >= 150) title.style.fontSize = "1.2em";
-                else if (textlength >= 100) title.style.fontSize = "1.3em";
-                else title.style.fontSize = "1.4em";
-            }
 
+            // 問題文表示
+            if(!isHardMode){
+                if (isReversed) {
+                    title.innerHTML = question.word;
+                    textlength = question.word.length;
+                } else {
+                    title.innerHTML = question.description;
+                    textlength = question.description.length;
+                }
+            
+                
+                if (screenWidth < 600 || screenHeight < 600) {
+                    if (textlength >= 150) title.style.fontSize = "0.8em";
+                    else if (textlength >= 100) title.style.fontSize = "1em";
+                    else title.style.fontSize = "1.3em";
+                } else if (screenWidth < 1200 || screenHeight < 800) {
+                    if (textlength >= 150) title.style.fontSize = "1em";
+                    else if (textlength >= 100) title.style.fontSize = "1.2em";
+                    else title.style.fontSize = "1.4em";
+                } else {
+                    if (textlength >= 150) title.style.fontSize = "1.2em";
+                    else if (textlength >= 100) title.style.fontSize = "1.3em";
+                    else title.style.fontSize = "1.4em";
+                }
+            }
             // --- 選択肢生成 ---
             let correctAnswer = isReversed ? question.description : question.word;
             let options = [correctAnswer]; // 正解は必ず含める
@@ -536,7 +537,7 @@
                         const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences.length)]; // ランダムに1文選択
                         
                         // 問題文を書き換え
-                        title.innerHTML = sentenceForQuestion.split("|")[1].replace(correctAnswer,"(     )");
+                        title.innerHTML = sentenceForQuestion.replace("|","<br>").replace(correctAnswer,"(     )");
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
                         if (screenWidth < 600 || screenHeight < 600) {
@@ -563,18 +564,18 @@
                                 incorrectOptions.push(q.word);
                             }
                         });
-                        // 不正解選択肢が足りない場合、ダミーで補うことも検討
                         
-                    } else {
-                        // 文章が見つからなかった場合は、通常の選択肢生成ロジックにフォールバック（またはエラー表示）
-                        // この部分は元の不正解選択肢生成ロジックを流用するか、別途定義
                     }
                 } catch (error) {
-                    // エラー発生時も通常の選択肢生成ロジックにフォールバック
+                    console.error('Error fetching sentences:', error);
+                    // エラーが発生した場合は通常の選択肢生成に戻る
+                    incorrectOptions = [];
+                    questions.forEach((q, index) => {
+                        if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
+                            incorrectOptions.push(q.word);
+                        }
+                    });
                 }
-            } else if (isHardMode && isReversed) {
-                 // ハードモードかつ問題文と回答文が入れ替わっている場合（説明文から単語を当てる）
-                 // この場合のハードモードの挙動は別途定義が必要。現状は通常の選択肢生成。
             }
 
 
