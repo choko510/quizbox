@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentDisplayIndex = 0; // displayableIndices 内での現在のインデックス
     let isDragging = false; // ドラッグ中かどうか
     let dragDirection = null; // ドラッグの方向（'left'、'right'、'down'、または null）
+    let isActionInProgress = false; // アクション処理中フラグ
 
     // ローカルストレージから学習状態を読み込む関数
     function loadLearningStates() {
@@ -671,6 +672,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // スワイプアクションを処理する内部関数
         function handleSwipeAction(swipeType) {
+            if (isActionInProgress) return; // 処理中の場合は何もしない
+            isActionInProgress = true;
+
             switch(swipeType) {
                 case 'swipeleft':
                     // 左スワイプ: 「覚えた」
@@ -679,6 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         saveLearningState(currentIndex, 'learned');
                         resetCardDragState();
                         // 次のカードを表示（自動設定のため saveLearningState 内の処理に任せる）
+                        isActionInProgress = false;
                     }, 300);
                     break;
                 case 'swiperight':
@@ -688,6 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         saveLearningState(currentIndex, 'learning');
                         resetCardDragState();
                         // 次のカードを表示（自動設定のため saveLearningState 内の処理に任せる）
+                        isActionInProgress = false;
                     }, 300);
                     break;
                 case 'swipedown':
@@ -697,11 +703,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         saveLearningState(currentIndex, 'not_learned');
                         resetCardDragState();
                         // 次のカードを表示（自動設定のため saveLearningState 内の処理に任せる）
+                        isActionInProgress = false;
                     }, 300);
                     break;
                 case 'swipeup':
                     // 上スワイプ: カードをめくる
                     flipCard();
+                    isActionInProgress = false; // flipCard は同期的なので即座に解除
+                    break;
+                default:
+                    isActionInProgress = false; // 未知のタイプの場合も解除
                     break;
             }
         }
@@ -868,6 +879,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // 左右のスワイプ判定をより柔軟に
             if ((dragDirection === 'left' && effectiveDeltaX < -swipeThreshold) ||
                 (dragDirection === 'left' && isHighVelocityX && event.deltaX < -swipeThreshold * 0.7)) {
+                if (isActionInProgress) return;
+                isActionInProgress = true;
                 // 左にスワイプ完了: 「覚えた」- より大きく飛ばす
                 flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 flashcardElement.style.transform = `translateX(-200%) rotate(-40deg)`;
@@ -875,9 +888,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'learned');
                     resetCardDragState();
+                    isActionInProgress = false;
                 }, 500);
             } else if ((dragDirection === 'right' && effectiveDeltaX > swipeThreshold) ||
                       (dragDirection === 'right' && isHighVelocityX && event.deltaX > swipeThreshold * 0.7)) {
+                if (isActionInProgress) return;
+                isActionInProgress = true;
                 // 右にスワイプ完了: 「復習」
                 flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 flashcardElement.style.transform = `translateX(200%) rotate(40deg)`;
@@ -885,9 +901,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'learning');
                     resetCardDragState();
+                    isActionInProgress = false;
                 }, 500);
             } else if ((dragDirection === 'down' && effectiveDeltaY > swipeThreshold) ||
                       (dragDirection === 'down' && isHighVelocityY && event.deltaY > swipeThreshold * 0.7)) {
+                if (isActionInProgress) return;
+                isActionInProgress = true;
                 // 下にスワイプ完了: 「まだ」
                 flashcardElement.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 flashcardElement.style.transform = `translateY(200%)`;
@@ -895,6 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     saveLearningState(currentIndex, 'not_learned');
                     resetCardDragState();
+                    isActionInProgress = false;
                 }, 500);
             } else {
                 // スワイプ未完了 - よりスムーズに戻る

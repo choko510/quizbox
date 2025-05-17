@@ -163,8 +163,13 @@ async function onWordClick(event, word) {
 
 // テキストノードから対象となる単語を検出してクリック可能な要素に置き換える
 function processTextNode(node) {
+    if (!node || !node.nodeValue) return;
+    
     const text = node.nodeValue;
     const parent = node.parentNode;
+    
+    // 親ノードが存在しない場合は処理しない
+    if (!parent) return;
     
     // クリック可能とするクラス名のリスト（この要素内の単語を処理する）
     const validParentClasses = ['content'];
@@ -423,167 +428,281 @@ function calculateSimilarity(text1, text2) {
 // 検索インデックス（初回検索時に構築）
 let searchIndex = null;
 
-// 検索インデックスを構築する関数
 function buildSearchIndex() {
     if (searchIndex) return searchIndex; // すでに構築済みならそれを返す
 
     console.log("検索インデックスを構築中...");
     const index = {};
-
-    questions.forEach((question, idx) => {
-        // 検索対象のテキスト（環境によって条件分岐）
-        const title = question.word;
-        const content = question.description;
-
-        // 単語のトークン化（小文字変換）
-        const titleTokens = title.toLowerCase().split(/\s+/);
-        const contentTokens = content.toLowerCase().split(/\s+/);
-
-        [...titleTokens, ...contentTokens].forEach(token => {
-            if (token.length < 2) return; // 短すぎる単語はスキップ
-
-            if (!index[token]) index[token] = new Set();
-            index[token].add(idx);
-
-            // 2-gramのインデックス化
-            const ngrams = generateNgrams(token, 2);
-            ngrams.forEach(ngram => {
-                if (!index[ngram]) index[ngram] = new Set();
-                index[ngram].add(idx);
-            });
-        });
-    });
-
-    // Set を Array に変換して最終化
-    Object.keys(index).forEach(key => {
-        index[key] = Array.from(index[key]);
-    });
-
-    searchIndex = index;
-    console.log("検索インデックスの構築が完了しました");
+    
+    // バッチサイズを設定（一度に処理する量）
+    const BATCH_SIZE = 100;
+    const totalQuestions = questions.length;
+    let processedCount = 0;
+    
+    // インデックス構築を開始する関数
+    function processIndexBatch(startIdx) {
+        const endIdx = Math.min(startIdx + BATCH_SIZE, totalQuestions);
+        
+        // このバッチの問題を処理
+        for (let idx = startIdx; idx < endIdx; idx++) {
+            const question = questions[idx];
+            
+            // nullやundefinedチェック
+            if (!question || !question.word || !question.description) continue;
+            
+            // 検索対象のテキスト
+            const title = question.word;
+            const content = question.description;
+            
+            // 効率的なトークン化
+            // より効率的な正規表現を使用し、重複を削除
+            const allText = `${title} ${content}`.toLowerCase();
+            const tokens = new Set(allText.split(/[\s\.,;:!?()[\]{}'"「」『』]/));
+            
+            // トークンの処理
+            for (const token of tokens) {
+                if (token.length < 2) continue; // 短すぎる単語はスキップ
+                
+                // インデックスエントリの初期化
+                if (!index[token]) index[token] = new Set();
+                index[token].add(idx);
+                
+                // より効率的なn-gramの生成と処理
+                if (token.length > 3) { // 短すぎるトークンはn-gramを生成しない
+                    const ngrams = generateNgrams(token, 2);
+                    for (const ngram of ngrams) {
+                        if (!index[ngram]) index[ngram] = new Set();
+                        index[ngram].add(idx);
+                    }
+                }
+            }
+        }
+        
+        // 処理カウンタを更新
+        processedCount = endIdx;
+        
+        // まだ処理すべき問題があれば、次のバッチを遅延実行
+        if (processedCount < totalQuestions) {
+            // 進捗レポート
+            if (processedCount % 500 === 0) {
+                console.log(`インデックス構築進捗: ${Math.round(processedCount/totalQuestions*100)}%`);
+            }
+            
+            setTimeout(() => processIndexBatch(processedCount), 0);
+        } else {
+            // 全ての処理が終了したら、Set を Array に変換（一度だけ実行）
+            for (const key in index) {
+                if (index[key] instanceof Set) {
+                    index[key] = Array.from(index[key]);
+                }
+            }
+            
+            searchIndex = index;
+            console.log("検索インデックスの構築が完了しました");
+        }
+    }
+    
+    // 最初のバッチ処理を開始
+    processIndexBatch(0);
+    
     return index;
 }
 
 // フィルターと検索処理（検索インデックスを活用して候補を絞る）
 function filterWords() {
+    // 必要なDOM要素を一度だけ取得し再利用
     const searchbox = document.querySelector('.searchbox');
     if (!searchbox) return;
-    const searchword = searchbox.value.toLowerCase().trim();
-
-    // フィルターUI要素の取得（HTMLで定義済み）
+    
     const filterSelect = document.getElementById('answerFilter');
     if (!filterSelect) return;
     
-    const filterValue = filterSelect.value; // フィルター値
-
-    // ローマ字→ひらがな変換
-    const hiraganaSearch = convertRomajiToHiragana(searchword);
-
-    // 検索インデックス構築（初回のみ）
-    const index = buildSearchIndex();
-
     const wordList = document.getElementById('wordList');
     if (!wordList) return;
+    
+    // 変更検出フラグ - UIに変更が必要な場合のみ更新
+    let needsUpdate = false;
+    const lastSearchTerm = searchbox.getAttribute('data-last-search') || '';
+    const lastFilter = searchbox.getAttribute('data-last-filter') || '';
+    
+    // 現在の検索条件
+    const searchword = searchbox.value.toLowerCase().trim();
+    const filterValue = filterSelect.value;
+    
+    // 検索条件に変更がなければ早期リターン
+    if (searchword === lastSearchTerm && filterValue === lastFilter && searchword === '') {
+        return;
+    }
+    
+    // 今回の検索条件を保存
+    searchbox.setAttribute('data-last-search', searchword);
+    searchbox.setAttribute('data-last-filter', filterValue);
+    needsUpdate = true;
+    
+    // リスト要素を取得（一度だけ）
     const lis = wordList.getElementsByTagName('li');
-
-    // 事前に候補インデックスを抽出（検索語がある場合のみ）
+    if (lis.length === 0) return;
+    
+    // 検索バリエーションを事前計算（検索語がある場合のみ）
+    let searchVariants = [];
     let candidateIndices = new Set();
+    
     if (searchword) {
-        const searchVariants = [
+        // ローマ字→ひらがな変換（必要な場合のみ実行）
+        const hiraganaSearch = /[a-zA-Z]/.test(searchword) ? convertRomajiToHiragana(searchword) : '';
+        
+        searchVariants = [
             searchword,
             hiraganaSearch,
             katakanaToHiragana(searchword),
             hiraganaToKatakana(searchword)
-        ];
-        searchVariants.forEach(variant => {
+        ].filter(Boolean); // 空文字列を除去
+        
+        // 検索インデックス取得（すでに構築中なら構築中のものを使用）
+        const index = buildSearchIndex();
+        
+        // 候補インデックスをまとめて抽出
+        for (const variant of searchVariants) {
+            // 完全一致キーワード
             if (index[variant]) {
-                index[variant].forEach(i => candidateIndices.add(i));
-            }
-            // variant の2-gramからも候補を追加
-            generateNgrams(variant, 2).forEach(ngram => {
-                if (index[ngram]) {
-                    index[ngram].forEach(i => candidateIndices.add(i));
+                for (const i of index[variant]) {
+                    candidateIndices.add(i);
                 }
-            });
-        });
+            }
+            
+            // 短い検索語の場合はn-gramは不要
+            if (variant.length <= 2) continue;
+            
+            // n-gramによる部分一致
+            const ngrams = generateNgrams(variant, 2);
+            for (const ngram of ngrams) {
+                if (index[ngram]) {
+                    for (const i of index[ngram]) {
+                        candidateIndices.add(i);
+                    }
+                }
+            }
+        }
     } else {
         // 検索語が空の場合は全件対象
         for (let i = 0; i < lis.length; i++) {
             candidateIndices.add(i);
         }
     }
-
-    // 検索結果の関連度を格納する配列（ハイライト等に利用可能）
-    const resultScores = [];
-
-    // 各リスト項目について処理
-    for (let i = 0; i < lis.length; i++) {
-        const li = lis[i];
-        const title = li.querySelector('.tangotitle').textContent.toLowerCase();
-        const content = li.querySelector('.content').textContent.toLowerCase();
-
-        // 回答状態によるフィルタリング（グローバル変数 answeredQuestions, questionStats を使用）
-        let showByFilter = true;
-        if (filterValue !== 'all') {
-            if (filterValue === 'unanswered') {
-                showByFilter = !answeredQuestions.has(i);
-            } else if (filterValue === 'correct') {
-                showByFilter = questionStats.has(i) && questionStats.get(i).correctAnswers > 0;
-            } else if (filterValue === 'incorrect') {
-                showByFilter = questionStats.has(i) && questionStats.get(i).isWrong;
+    
+    // 表示状態を追跡
+    let visibleCount = 0;
+    
+    // リスト要素をバッチ処理（一度に最大100件）
+    const processBatch = (startIdx, endIdx) => {
+        for (let i = startIdx; i < Math.min(endIdx, lis.length); i++) {
+            const li = lis[i];
+            
+            // 回答状態によるフィルタリング
+            let showByFilter = true;
+            if (filterValue !== 'all') {
+                if (filterValue === 'unanswered') {
+                    showByFilter = !answeredQuestions.has(i);
+                } else if (filterValue === 'correct') {
+                    showByFilter = questionStats.has(i) && questionStats.get(i).correctAnswers > 0;
+                } else if (filterValue === 'incorrect') {
+                    showByFilter = questionStats.has(i) && questionStats.get(i).isWrong;
+                }
+            }
+            
+            // 検索候補に含まれていない場合は非表示
+            if (searchword && !candidateIndices.has(i)) {
+                li.style.display = 'none';
+                continue;
+            }
+            
+            // フィルタリング条件に合わない場合は非表示
+            if (!showByFilter) {
+                li.style.display = 'none';
+                continue;
+            }
+            
+            // 検索語がある場合は検索スコアを計算
+            if (searchword) {
+                // タイトルと内容を一度だけ取得（キャッシュ）
+                const titleElement = li.querySelector('.tangotitle');
+                const contentElement = li.querySelector('.content');
+                
+                if (!titleElement || !contentElement) {
+                    li.style.display = 'none';
+                    continue;
+                }
+                
+                const title = titleElement.textContent.toLowerCase();
+                const content = contentElement.textContent.toLowerCase();
+                
+                let score = 0;
+                
+                // 効率的なスコア計算
+                for (const variant of searchVariants) {
+                    if (title.includes(variant) || content.includes(variant)) {
+                        score = Math.max(score, variant === searchword ? 1.0 : 0.9);
+                        break; // 最高スコアが見つかったら終了
+                    }
+                }
+                
+                // 類似度計算は他の方法で一致しなかった場合のみ実行
+                if (score < 0.2) {
+                    const titleSimilarity = calculateSimilarity(searchword, title);
+                    const contentSimilarity = calculateSimilarity(searchword, content);
+                    score = Math.max(titleSimilarity, contentSimilarity);
+                }
+                
+                const showBySearch = score >= 0.2; // 類似度20%以上で表示
+                
+                if (showBySearch) {
+                    li.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    li.style.display = 'none';
+                }
+            } else {
+                // 検索語がなければ、フィルター条件のみで表示
+                li.style.display = 'block';
+                visibleCount++;
             }
         }
-
-        // 検索語がある場合、候補に含まれていなければ非表示
-        if (searchword && !candidateIndices.has(i)) {
-            li.style.display = 'none';
-            continue;
-        }
-
-        // 検索ロジック（従来の条件を踏襲）
-        let score = 0;
-        if (title.includes(searchword) || content.includes(searchword)) {
-            score = 1.0;
-        } else if (title.includes(hiraganaSearch) || content.includes(hiraganaSearch)) {
-            score = 0.9;
-        } else if (title.includes(katakanaToHiragana(searchword)) ||
-            content.includes(katakanaToHiragana(searchword))) {
-            score = 0.8;
-        } else if (title.includes(hiraganaToKatakana(searchword)) ||
-            content.includes(hiraganaToKatakana(searchword))) {
-            score = 0.8;
+        
+        // まだ処理すべき要素があれば次のバッチを遅延処理
+        if (endIdx < lis.length) {
+            setTimeout(() => processBatch(endIdx, endIdx + 100), 0);
         } else {
-            const titleSimilarity = calculateSimilarity(searchword, title);
-            const contentSimilarity = calculateSimilarity(searchword, content);
-            score = Math.max(titleSimilarity, contentSimilarity);
+            // 全ての処理が完了したら
+            completeBatchProcessing();
         }
-
-        const showBySearch = score >= 0.2; // 類似度20%以上で表示
-        li.style.display = (showBySearch && showByFilter) ? 'block' : 'none';
-
-        if (showBySearch && showByFilter) {
-            resultScores.push({ index: i, score: score });
-        }
-    }
-
-    // 検索結果がない場合のメッセージ処理
-    const noResultMsg = document.getElementById('noResultMessage');
-    if (resultScores.length === 0 && searchword) {
-        if (!noResultMsg) {
-            const msg = document.createElement('div');
-            msg.id = 'noResultMessage';
-            msg.textContent = '検索結果がありません';
-            msg.style.marginTop = '20px';
-            msg.style.textAlign = 'center';
-            msg.style.color = '#999';
-            wordList.parentNode.appendChild(msg);
-        }
-    } else if (noResultMsg) {
-        noResultMsg.remove();
-    }
+    };
     
-    // 検索結果表示後に単語をクリック可能にする
-    setTimeout(makeWordsClickable, 100);
+    // バッチ処理完了後の処理
+    const completeBatchProcessing = () => {
+        // 検索結果がない場合のメッセージ処理
+        const noResultMsg = document.getElementById('noResultMessage');
+        
+        if (visibleCount === 0 && searchword) {
+            if (!noResultMsg) {
+                const msg = document.createElement('div');
+                msg.id = 'noResultMessage';
+                msg.textContent = '検索結果がありません';
+                msg.className = 'no-result-message'; // クラスを使用してスタイルを適用
+                wordList.parentNode.appendChild(msg);
+            }
+        } else if (noResultMsg) {
+            noResultMsg.remove();
+        }
+        
+        // 検索結果表示後に単語をクリック可能にする
+        if (needsUpdate) {
+            // UI更新によるちらつきを防ぐため、表示計算後にまとめてDOMを更新
+            makeWordsClickable();
+        }
+    };
+    
+    // 初回バッチ処理を開始
+    processBatch(0, 100);
 }
 
 // 初期化時およびスライダー変更時に単語をクリック可能にする

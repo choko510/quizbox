@@ -242,8 +242,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
     MicroModal.init({
         onShow: function(modal) {
-            console.log("モーダルを表示しました", modal.id);
-            
             // ランキングモーダル表示時にランキングデータを自動取得
             if (modal.id === 'modal-1') {
                 const activeTab = document.querySelector('.tab.active');
@@ -251,9 +249,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                     fetchAndDisplayRanking();
                 }
             }
-        },
-        onClose: function(modal) {
-            console.log("モーダルを閉じました", modal.id);
         },
         awaitOpenAnimation: true,
         awaitCloseAnimation: true
@@ -358,7 +353,12 @@ async function fetchScores(id, password) {
 function getProgressKey(href) {
     try {
         const url = new URL(href, window.location.origin); // 相対URLも扱えるように基底URLを指定
-        return url.searchParams.get('id');
+        if (url.searchParams.has('id')) {
+            return url.searchParams.get('id');
+        } else if (url.searchParams.has('name')) { 
+            const nameParam = url.searchParams.get("name");
+            return nameParam ? decodeURIComponent(nameParam) : null;
+        }
     } catch (e) {
         console.error('URLの解析に失敗しました:', href, e);
         return null; // エラー時は null を返す
@@ -514,8 +514,6 @@ function updateScoreCards(correct, bad, total, ritu) {
     document.getElementById("bad").textContent = bad;
     document.getElementById("total").textContent = total;
     document.getElementById("ritu").textContent = ritu;
-    
-    // スコアカードの更新 (覚えた単語数の表示は削除)
 }
 
 // メインダッシュボードのグラフ描画
@@ -559,7 +557,6 @@ async function drawMainChart() {
 
         // トータルを計算 (修正後の数値データで計算)
         const totalData = correctData.map((correct, index) => correct + badData[index]);
-        console.log('Chart.jsに渡すデータ:', { labels, correctData, badData, totalData }); // デバッグ用ログ追加
 
         // 既存のチャートがある場合は破棄
         if (window.mainChart instanceof Chart) {

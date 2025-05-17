@@ -228,9 +228,9 @@
                         // 統計情報を更新
                         const remainingWords = overall.total - overall.learned;
                         
-                        document.getElementById('total-words').textContent = overall.total;
+                        document.getElementById('total-words').textContent = overall.total+1;
                         document.getElementById('learned-words').textContent = overall.learned;
-                        document.getElementById('remaining-words').textContent = remainingWords;
+                        document.getElementById('remaining-words').textContent = remainingWords+1;
                     }
                 } catch (e) {
                     console.error('進捗取得エラー:', e);

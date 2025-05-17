@@ -3,10 +3,9 @@ import io
 import json
 import os
 from pathlib import Path
-import random
 import re
 from contextlib import asynccontextmanager
-from typing import List, Union
+from typing import List, Union, Dict, Any, Optional
 import base64
 import urllib.parse
 
@@ -91,20 +90,34 @@ app = FastAPI(lifespan=lifespan)
 
 class DB:
     @staticmethod
-    async def _update_data(user, subject: str, is_correct: bool):
-        nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
-        def safe_load(data):
-            try:
-                d = json.loads(data) if data else {}
-            except json.JSONDecodeError:
-                d = {}
+    def get_today() -> str:
+        """現在の日付を YYYY/MM/DD 形式で返す"""
+        now = datetime.datetime.now()
+        return f"{now.year}/{now.month}/{now.day}"
+        
+    @staticmethod
+    def safe_load_json(data: Optional[str]) -> Dict[str, Any]:
+        """JSON文字列を安全にロードする"""
+        if not data:
+            return {}
+        try:
+            d = json.loads(data)
             return d if isinstance(d, dict) else {}
-        correctdata = safe_load(user.correctdata)
-        baddata = safe_load(user.baddata)
+        except json.JSONDecodeError:
+            return {}
+            
+    @staticmethod
+    async def _update_data(user, subject: str, is_correct: bool):
+        """ユーザーの正解・不正解データを更新する共通処理"""
+        nowtime = DB.get_today()
+        correctdata = DB.safe_load_json(user.correctdata)
+        baddata = DB.safe_load_json(user.baddata)
+        
         if nowtime not in correctdata:
             correctdata[nowtime] = {}
         if nowtime not in baddata:
             baddata[nowtime] = {}
+            
         subject_key = subject if subject else 'other'
         if is_correct:
             user.correct += 1
@@ -112,6 +125,7 @@ class DB:
         else:
             user.bad += 1
             baddata[nowtime][subject_key] = baddata[nowtime].get(subject_key, 0) + 1
+            
         user.correctdata = json.dumps(correctdata)
         user.baddata = json.dumps(baddata)
     
@@ -149,36 +163,8 @@ class DB:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
-                user.correct += 1
-                nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
-                try:
-                    correctdata = json.loads(user.correctdata) if user.correctdata else {}
-                    if not isinstance(correctdata, dict):
-                        correctdata = {}
-                except json.JSONDecodeError:
-                    correctdata = {}
-
-                try:
-                    baddata = json.loads(user.baddata) if user.baddata else {}
-                    if not isinstance(baddata, dict):
-                        baddata = {}
-                except json.JSONDecodeError:
-                    baddata = {}
-
-                # 日付がなければ初期化
-                if nowtime not in correctdata or not isinstance(correctdata[nowtime], dict):
-                    correctdata[nowtime] = {}
-                if nowtime not in baddata or not isinstance(baddata[nowtime], dict):
-                    baddata[nowtime] = {}
-
-                # 科目別のカウントを更新
-                subject_key = subject if subject else 'other'
-                if subject_key not in correctdata[nowtime]:
-                    correctdata[nowtime][subject_key] = 0
-                correctdata[nowtime][subject_key] += 1
-
-                user.correctdata = json.dumps(correctdata)
-                user.baddata = json.dumps(baddata)
+                # _update_dataメソッドを使用して共通処理を実行
+                await DB._update_data(user, subject, True)
                 await session.commit()
                 
                 # 問題の統計データも更新
@@ -191,36 +177,13 @@ class DB:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
             if user:
-                user.bad += 1
-                nowtime = f"{datetime.datetime.now().year}/{datetime.datetime.now().month}/{datetime.datetime.now().day}"
-                try:
-                    correctdata = json.loads(user.correctdata) if user.correctdata else {}
-                    if not isinstance(correctdata, dict):
-                        correctdata = {}
-                except json.JSONDecodeError:
-                    correctdata = {}
-
-                try:
-                    baddata = json.loads(user.baddata) if user.baddata else {}
-                    if not isinstance(baddata, dict):
-                        baddata = {}
-                except json.JSONDecodeError:
-                    baddata = {}
-
-                if nowtime not in correctdata or not isinstance(correctdata[nowtime], dict):
-                    correctdata[nowtime] = {}
-                if nowtime not in baddata or not isinstance(baddata[nowtime], dict):
-                    baddata[nowtime] = {}
-
-                subject_key = subject if subject else 'other'
-                if subject_key not in baddata[nowtime]:
-                    baddata[nowtime][subject_key] = 0
-                baddata[nowtime][subject_key] += 1
-
-                user.correctdata = json.dumps(correctdata)
-                user.baddata = json.dumps(baddata)
+                # _update_dataメソッドを使用して共通処理を実行
+                await DB._update_data(user, subject, False)
                 await session.commit()
-
+                
+                # 問題の統計データも更新
+                if subject:
+                    await DB.update_mondai_stats(subject, False)
     @staticmethod
     async def get_bad(id: str):
         async with async_session() as session:
@@ -235,8 +198,8 @@ class DB:
             user = result.scalar_one_or_none()
             if user:
                 return {
-                    "correct": json.loads(user.correctdata) if user.correctdata else {},
-                    "bad": json.loads(user.baddata) if user.baddata else {}
+                    "correct": DB.safe_load_json(user.correctdata),
+                    "bad": DB.safe_load_json(user.baddata)
                 }
             return None
 
@@ -254,13 +217,8 @@ class DB:
 
             try:
                 # 正解と不正解のデータを取得と検証
-                correct_data = json.loads(user.correctdata) if user.correctdata else {}
-                if not isinstance(correct_data, dict):
-                    correct_data = {}
-
-                bad_data = json.loads(user.baddata) if user.baddata else {}
-                if not isinstance(bad_data, dict):
-                    bad_data = {}
+                correct_data = DB.safe_load_json(user.correctdata)
+                bad_data = DB.safe_load_json(user.baddata)
 
                 # 全ての日付のデータを集計
                 all_answers = []
@@ -294,7 +252,7 @@ class DB:
                 return {
                     "correct": user.correct,
                     "bad": user.bad,
-                    "progress_data": json.loads(user.progress_data) if user.progress_data else {}
+                    "progress_data": DB.safe_load_json(user.progress_data)
                 }
             return None
 
@@ -308,20 +266,16 @@ class DB:
             record_count = count_result.scalar_one()
 
             # 複数レコードに対応
+            query = sa_select(Mondai).filter_by(userid=userid, name=name)
             if record_count > 1:
                 # 複数ある場合は最初のレコードを使用
-                result = await session.execute(
-                    sa_select(Mondai).filter_by(userid=userid, name=name).limit(1)
-                )
-                mondai = result.scalar_one_or_none()
-                if mondai:
-                    return json.loads(mondai.mondai)
-            else:
-                # 1件または0件の場合は従来通り
-                result = await session.execute(sa_select(Mondai).filter_by(userid=userid, name=name))
-                mondai = result.scalar_one_or_none()
-                if mondai:
-                    return json.loads(mondai.mondai)
+                query = query.limit(1)
+            
+            result = await session.execute(query)
+            mondai = result.scalar_one_or_none()
+            
+            if mondai:
+                return json.loads(mondai.mondai)
             
             return None
 
@@ -412,7 +366,6 @@ class DB:
                 return None
     
     @staticmethod
-    @staticmethod
     async def delete_mondai(name: str, userid: str):
         """
         問題を削除する
@@ -445,7 +398,7 @@ class DB:
             # load raw progress data
             result = await session.execute(sa_select(Account).filter_by(userid=id))
             user = result.scalar_one_or_none()
-            raw = json.loads(user.progress_data) if user and user.progress_data else {}
+            raw = DB.safe_load_json(user.progress_data) if user else {}
         summary = {}
         for ps, prog in raw.items():
             total = 0
@@ -476,14 +429,12 @@ class DB:
             if user:
                 try:
                     # 既存のサマリデータを取得・更新
-                    all_summary_data = json.loads(user.progress_data) if user.progress_data else {}
-                    if not isinstance(all_summary_data, dict): all_summary_data = {}
+                    all_summary_data = DB.safe_load_json(user.progress_data)
                     all_summary_data[problem_set] = summary
                     user.progress_data = json.dumps(all_summary_data)
 
                     # 既存の詳細データを取得・更新
-                    all_details_data = json.loads(user.progress_details) if user.progress_details else {}
-                    if not isinstance(all_details_data, dict): all_details_data = {}
+                    all_details_data = DB.safe_load_json(user.progress_details)
                     all_details_data[problem_set] = details
                     user.progress_details = json.dumps(all_details_data)
 
@@ -508,9 +459,7 @@ class DB:
             if user:
                 try:
                     # Load from progress_details column
-                    all_details_data = json.loads(user.progress_details) if user.progress_details else {}
-                    if not isinstance(all_details_data, dict):
-                        all_details_data = {}
+                    all_details_data = DB.safe_load_json(user.progress_details)
 
                     if problem_set:
                         # Return details for the specific problem set
@@ -616,39 +565,54 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(pronpt, model="gemini-2.0-flash"):
+async def reqAI(prompt: str, model: str = "gemini-2.0-flash"):
+    """
+    AIモデルにテキスト生成リクエストを送信する非同期関数
+
+    Parameters:
+    - prompt: 送信するプロンプト文字列
+    - model: 使用するモデル名（デフォルト: gemini-2.0-flash）
+
+    Returns:
+    - 生成されたテキスト
+    
+    Raises:
+    - Exception: 両方のAIプロバイダでリクエストが失敗した場合
+    """
+    # 1. まずGeminiでの生成を試みる
     try:
-        model = genai.GenerativeModel(model)
-        response = await model.generate_content_async(pronpt)
+        gemini_model = genai.GenerativeModel(model)
+        response = await gemini_model.generate_content_async(prompt)
         return response.text
-    except Exception as geminierror:
+    except Exception as gemini_error:
+        # Gemini失敗の詳細をログ出力
+        print(f"Gemini request failed: {str(gemini_error)}")
+        
+        # 2. フォールバック: OpenRouterを使用
         api_key = os.getenv("OPENROUTER_APIKEY")
-        if not api_key or api_key == "":
-            raise Exception(f"Primary AI request failed: {geminierror}. Additionally, OPENROUTER_APIKEY is not set.")
-        
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-        }
-        payload = {
-            "model": "deepseek/deepseek-chat-v3-0324:free",
-            "messages": [{"role": "user", "content": pronpt}],
-        }
-        
+        if not api_key:
+            raise Exception(f"Gemini request failed and OpenRouter API key is not set")
+            
+        # OpenRouterへのリクエスト
         try:
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            payload = {
+                "model": "deepseek/deepseek-chat-v3-0324:free",
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers, json=payload) as response:
-                    # Check if the response status is OK
                     if response.status != 200:
-                        text = await response.text()
-                        raise Exception(f"HTTP {response.status}: {text}")
-                    try:
-                        result = await response.json()
-                    except Exception as json_error:
-                        raise Exception(json_error)
+                        error_text = await response.text()
+                        raise Exception(f"OpenRouter HTTP error {response.status}: {error_text}")
+                        
+                    result = await response.json()
                     return result["choices"][0]["message"]["content"]
-        except Exception as e:
-            raise Exception(e)
+        except Exception as openrouter_error:
+            # 両方の方法が失敗した場合は詳細なエラーメッセージで例外を発生
+            raise Exception(f"AI generation failed: Gemini error: {str(gemini_error)}; OpenRouter error: {str(openrouter_error)}")
 
 @app.get("/play/")
 async def play(request: Request):
@@ -708,13 +672,8 @@ async def add_correct(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    # ユーザーの正解データを更新
+    # ユーザーの正解データを更新（内部でmondai_statsも更新される）
     await DB.add_correct(data.id, data.subject)
-    
-    # 問題の統計データも更新（subjectが問題名と同じと仮定）
-    if data.subject:
-        await DB.update_mondai_stats(data.subject, True)
-        
     return {"message": "add_correct successful"}
 
 @app.post("/api/add_bad")
@@ -722,13 +681,8 @@ async def add_bad(data: AnswerData):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    # ユーザーの不正解データを更新
+    # ユーザーの不正解データを更新（内部でmondai_statsも更新される）
     await DB.add_bad(data.id, data.subject)
-    
-    # 問題の統計データも更新（subjectが問題名と同じと仮定）
-    if data.subject:
-        await DB.update_mondai_stats(data.subject, False)
-        
     return {"message": "add_bad successful"}
 
 @app.post("/api/get_bad")
@@ -864,47 +818,7 @@ async def upload_image(file: UploadFile = File(...)):
     finally:
         await file.close()
 
-@app.post("/api/upload/image")
-async def upload_image(file: UploadFile = File(...)):
-
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File is not an image.")
-    
-    try:
-        contents = await file.read()
-
-        try:
-            img = Image.open(io.BytesIO(contents))
-            img.verify()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid image format or corrupted image.")
-        
-        hash_value = xxhash.xxh64(contents).hexdigest()
-        
-        extension = file.filename.split(".")[-1] if "." in file.filename else "img"
-        new_filename = f"{hash_value}.{extension}"
-
-        with open(f"./upload/img/{new_filename}", "wb") as f:
-            f.write(contents)
-        
-        return JSONResponse(
-            content={
-                "status": "success",
-                "id": hash_value,
-            },
-            status_code=200
-        )
-    except Exception as e:
-        raise HTTPException(
-            content={
-                "status": "failed",
-                "message": f"There was an error uploading the file: {str(e)}"
-            },
-            status_code=500
-        )
-    finally:
-        await file.close()
-
+# BaseModelの定義
 class ImageData(BaseModel):
     id: str
 
@@ -987,27 +901,25 @@ async def process_image(data: Union[ImageData, TextData]):
     image_path = f"./upload/img/{data.id}"
     if not os.path.exists(image_path):
         raise HTTPException(
-            content={"status": "failed", "message": "Image not found"},
-            status_code=404
+            status_code=404,
+            detail="Image not found"
         )
 
     image = Image.open(image_path)
 
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
-
         prompt = "この画像について2,3文で簡単に説明して。"
-
         response = model.generate_content([prompt, image])
 
         return JSONResponse(
-            content={"status": "success", "data":response.text },
+            content={"status": "success", "data": response.text},
             status_code=200
         )
     except Exception as e:
         raise HTTPException(
-            content={"status": "failed", "message": f"Error processing image: {str(e)}"},
-            status_code=500
+            status_code=500,
+            detail=f"Error processing image: {str(e)}"
         )
 
 @app.post("/api/edit/mondai")
@@ -1072,13 +984,32 @@ async def get_sentences(request: Request):
 
         words_map = {word.lower(): word for word in words}
         
+        # 静的キャッシュ変数を定義
         if not hasattr(get_sentences, "sentences_cache"):
             get_sentences.sentences_cache = []
+            
+            # ファイルが大きい場合のパフォーマンス改善策
+            # バッチサイズを大きくして一度に読み込む行数を増やす
+            batch_size = 1000
+            sentences_batch = []
+            
             async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+                batch_count = 0
                 async for line in f:
                     line = line.strip()
                     if line:
-                        get_sentences.sentences_cache.append(line)
+                        sentences_batch.append(line)
+                        batch_count += 1
+                        
+                        # バッチサイズに達したらキャッシュに追加
+                        if batch_count >= batch_size:
+                            get_sentences.sentences_cache.extend(sentences_batch)
+                            sentences_batch = []
+                            batch_count = 0
+                            
+                # 残りのバッチをキャッシュに追加
+                if sentences_batch:
+                    get_sentences.sentences_cache.extend(sentences_batch)
             
         all_sentences = get_sentences.sentences_cache
 
@@ -1105,7 +1036,7 @@ async def get_sentences(request: Request):
         )
 
 @app.get("/api/get/mondai/{userid}/{name}.json")
-async def get_mondai(userid: str, name: str):
+async def get_user_mondai(userid: str, name: str):
     mondai = await DB.get_mondai(userid, name)
 
     if not mondai:
@@ -1151,14 +1082,19 @@ async def toggle_problem_visibility(data: MondaiIdData):
     """
     問題の公開/非公開状態を切り替えるAPI
     """
+    # パスワード検証
     if await DB.password(data.userid) != data.password:
         return {"message": "password is wrong"}
     
+    # 公開状態の切り替え
     result = await DB.toggle_mondai_visibility(data.name, data.userid)
-    if result:
-        return {"status": "success", "is_public": result["is_public"]}
-    else:
-        return {"status": "failed", "message": "Problem not found"}
+    
+    # 結果に基づいて適切なレスポンスを返す
+    return (
+        {"status": "success", "is_public": result["is_public"]}
+        if result else
+        {"status": "failed", "message": "Problem not found"}
+    )
 
 @app.post("/api/dashboard/delete")
 async def delete_problem(data: MondaiIdData):
@@ -1240,9 +1176,7 @@ async def save_progress(data: ProgressData):
     success = await DB.save_progress_data(data.id, data.problem_set, data.summary, data.details)
     if success:
         return {"message": "progress data saved successfully"}
-    else:
-        # Redundant 'else:' removed, corrected indentation
-        return {"message": "failed to save progress data"} # More specific error
+    return {"message": "failed to save progress data"}
 
 class GetProgressData(BaseModel):
     id: str
@@ -1252,30 +1186,28 @@ class GetProgressData(BaseModel):
 @app.post("/api/get_progress")
 async def get_progress(data: GetProgressData):
     """
-    ユーザーの学習進捗データを取得するエンドポイント
+    特定の問題セットに関するユーザーの学習進捗データを取得するエンドポイント
     """
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    # Use the updated DB.get_progress_data which reads from progress_details
+    # 進捗データを取得
     details_data = await DB.get_progress_data(data.id, data.problem_set)
-    # Return under a key like "details_data" or "progress_details" for clarity
     return {"progress_details": details_data}
 
 @app.post("/api/get_all_progress")
 async def get_all_progress(data: Data):
     """
-    ユーザーの全ての問題セットの学習進捗データを取得するエンドポイント
+    ユーザーの全問題セットの学習進捗データを一括で取得するエンドポイント
     """
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    # Use the updated DB.get_progress_data which reads from progress_details
+    # 全問題セットの進捗データを取得
     all_details_data = await DB.get_progress_data(data.id)
-    # Return under a key like "all_details_data" or "all_progress_details"
     return {"all_progress_details": all_details_data}
 
-class wordData(BaseModel):
+class WordData(BaseModel):
     word: str
     mondai: str
 
@@ -1420,7 +1352,7 @@ async def search_problems(query: str = Query(..., min_length=1)):
     return filtered_results
 
 @app.post("/api/search/word/")
-async def search_word(data: wordData):
+async def search_word(data: WordData):
     """
     辞書APIから単語の意味を取得するエンドポイント
     """
@@ -1437,14 +1369,14 @@ async def search_word(data: wordData):
     try:
         # Corrected indentation for the prompt f-string
         prompt = f"""以下の単語「{word}」について詳しく説明してください。
-
+        
         以下の情報を含めてください：
         1. 基本的な定義と意味
         2. 実際の使用例（例文を2-3つ）
         3. 関連する単語や類義語（あれば）
         4. 特定分野での専門的な意味（該当する場合）
         5. 「{data.mondai}」の文脈に関連した説明
-
+        
         回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
@@ -1499,11 +1431,10 @@ async def listening_mode(word:str):
     """
 
     # 1. 単語から文章を生成
-    # Corrected indentation for the prompt f-string
     prompt = f"""「{word}」という単語を使って、リスニング問題文を生成して下さい。
-中学生レベルの英語で比較的簡単な、文法的に正しい文章を作成してください。
-5単語から10単語程度の長さで、自然な文章を生成してください。
-出力形式は、リスニング用の問題文のみです。"""
+        中学生レベルの英語で比較的簡単な、文法的に正しい文章を作成してください。
+        5単語から10単語程度の長さで、自然な文章を生成してください。
+        出力形式は、リスニング用の問題文のみです。"""
     sentence = await reqAI(prompt)
 
     try:
@@ -1559,7 +1490,6 @@ async def generate_questions(data: GenerateQuestionsData):
 def generate_question_prompt(text, type, count):
     """問題タイプに応じたプロンプトを生成する"""
     # 問題タイプに応じたプロンプトを返す
-    # Corrected indentation for the prompt f-strings
     base_prompt = f"""以下の文章から{count}個の問題と回答を作成してください。
     問題と回答は明確で、文章の内容に基づいたものにしてください。
 
@@ -1634,7 +1564,7 @@ async def get_advice(data: Data):
     if not user_data:
         return {"advice": "アドバイスを生成するためのデータがありません"}
     
-    # 日付別の学習統計を取得
+    # 日付別の学習統計を取得（空の辞書をデフォルト値として使用）
     correct_data = user_data.get("correct", {})
     bad_data = user_data.get("bad", {})
     
@@ -1802,7 +1732,6 @@ async def get_advice(data: Data):
     else:
         overall_accuracy = 0
 
-    # Corrected indentation for the prompt f-string
     prompt = f"""#目的
         学習アドバイザーの専門家として、
         以下の学習データを分析して

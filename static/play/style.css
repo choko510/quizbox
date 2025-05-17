@@ -936,3 +936,91 @@ strong {
         font-size: 80%;
     }
 }
+
+/* 追加のユーティリティクラス */
+.hidden-player {
+    display: none;
+}
+
+/* 検索結果メッセージスタイル */
+.no-result-message {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 追加のユーティリティクラス */
+.hidden-player {
+    display: none;
+}
+
+/* 検索結果メッセージスタイル */
+.no-result-message {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* インラインスタイルをクラス化 */
+.settings-btn {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: #666;
+    z-index: 10000;
+}
+
+.review-btn {
+    margin-bottom: 10px;
+    padding: 8px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.review-mode-indicator {
+    display: none;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.exit-review-btn {
+    display: none;
+    position: fixed;
+    bottom: 50px;
+    right: 10px;
+    padding: 8px 15px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 9999;
+}
+
+.result-message {
+    text-align: center;
+}
+
+.modal__footer-centered {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal__header-centered {
+    text-align: center;
+}

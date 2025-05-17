@@ -17,9 +17,7 @@
 
 <body>
     <a href="javascript:pageback()" class="back"></a>
-    <a href="javascript:void(0);" id="settings-btn"
-        style="position: fixed; bottom: 10px; right: 10px; font-size: 20px; color: #666; z-index: 10000;"><i
-            class="fas fa-cog"></i></a>
+    <a href="javascript:void(0);" id="settings-btn" class="settings-btn"><i class="fas fa-cog"></i></a>
     <div class="swiper-container">
         <div class="swiper-wrapper">
 
@@ -52,9 +50,7 @@
                     <div class="resultbox3">
                         <div class="study-title"><i class="fas fa-exclamation-circle"></i>学習中の問題</div>
                         <ul id="study-list"></ul>
-                        <button id="start-review-btn"
-                            style="margin-bottom: 10px; padding: 8px 15px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">間違えた問題を復習する</button>
-
+                        <button id="start-review-btn" class="review-btn">間違えた問題を復習する</button>
                     </div>
                     <div class="resultbox4">
                         <canvas id="performance-chart"></canvas>
@@ -64,8 +60,7 @@
 
             <div class="swiper-slide slide2">
                 <div class="main">
-                    <div id="review-mode-indicator"
-                        style="display: none; color: red; font-weight: bold; text-align: center; margin-bottom: 10px;">
+                    <div id="review-mode-indicator" class="review-mode-indicator">
                         復習モード中 (残り <span id="review-count">0</span> 問)</div>
 
                     <div class="title">
@@ -96,8 +91,7 @@
                 <div id="score">
                     回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
                 </div>
-                <button id="exit-review-btn"
-                    style="display: none; position: fixed; bottom: 50px; right: 10px; padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">通常モードに戻る</button>
+                <button id="exit-review-btn" class="exit-review-btn">通常モードに戻る</button>
 
             </div>
 
@@ -128,9 +122,9 @@
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
             <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
                 <main class="modal__content" id="modal-1-content">
-                    <div id="result-message" style="text-align: center;"></div>
+                    <div id="result-message" class="result-message"></div>
                 </main>
-                <footer class="modal__footer" style="text-align: center;justify-content: center;align-items: center;">
+                <footer class="modal__footer modal__footer-centered">
                     <button class="modal__btn" data-micromodal-close
                         aria-label="Close this dialog window">私は間違えたことを深くお詫び、反省することを誓います。</button>
                 </footer>
@@ -141,7 +135,7 @@
     <div class="modal micromodal-slide" id="settings-modal" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
             <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
-                <header class="modal__header" style="text-align: center;">
+                <header class="modal__header modal__header-centered">
                     <h2 id="settings-modal-title">設定</h2>
                 </header>
                 <main class="modal__content" id="settings-modal-content">
@@ -194,7 +188,7 @@
         </div>
     </div>
 
-    <audio id="audioPlayer" style="display:none;"></audio>
+    <audio id="audioPlayer" class="hidden-player"></audio>
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notie@4.3.1/dist/notie.min.js"></script>
@@ -203,6 +197,7 @@
     <script src="./write.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script>
+        // Swiperの初期化
         const swiper = new Swiper(".swiper-container", {
             direction: "horizontal",
             loop: false,
