@@ -571,42 +571,73 @@ async function drawMainChart() {
                     {
                         label: 'トータル',
                         data: totalData,
-                        borderColor: '#1565c0',
-                        backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                        borderColor: '#2196f3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     },
                     {
                         label: '正解数',
                         data: correctData,
-                        borderColor: '#2e7d32',
-                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     },
                     {
                         label: '不正解数',
                         data: badData,
-                        borderColor: '#c62828',
-                        backgroundColor: 'rgba(198, 40, 40, 0.1)',
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
                 plugins: {
                     legend: {
                         position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
                     },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.raw}`;
+                                return `${context.dataset.label}: ${context.raw}問`;
                             }
                         }
                     }
@@ -621,16 +652,34 @@ async function drawMainChart() {
                                 day: 'MM/DD'
                             }
                         },
+                        grid: {
+                            display: false
+                        },
                         ticks: {
                             maxRotation: 45,
-                            minRotation: 45
+                            minRotation: 45,
+                            font: {
+                                size: 11
+                            }
                         }
                     },
                     y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: '問題数'
+                            text: '問題数',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
                         }
                     }
                 }
