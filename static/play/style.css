@@ -751,6 +751,7 @@ strong {
     
     .main {
         box-shadow: none;
+        height: 65vh;
     }
     
     button {
@@ -779,7 +780,7 @@ strong {
     }
     
     .sp {
-        margin-top: 7%;
+        margin-top: 16%;
     }
     
     .resultbox {

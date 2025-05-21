@@ -807,8 +807,19 @@ async def upload_image(file: UploadFile = File(...)):
         except Exception as e:
             raise HTTPException(status_code=400, detail="Invalid image format or corrupted image.")
         
+        # Create file ID using hash of content and original filename
+        file_id = xxhash.xxh64(contents).hexdigest()
+        
+        # Ensure upload directory exists
+        os.makedirs("upload/img", exist_ok=True)
+        
+        # Save image to disk
+        file_path = f"upload/img/{file_id}"
+        img = Image.open(io.BytesIO(contents))
+        img.save(file_path, format=img.format or "JPEG")
+        
         return JSONResponse(
-            content={"filename": file.filename, "message": "Image uploaded successfully."},
+            content={"id": file_id, "filename": file.filename, "message": "Image uploaded successfully."},
             status_code=200
         )
     except Exception as e:
@@ -821,6 +832,7 @@ async def upload_image(file: UploadFile = File(...)):
 # BaseModelの定義
 class ImageData(BaseModel):
     id: str
+    custom_prompt: Optional[str] = None
 
 class TextData(BaseModel):
     text: List[str]
@@ -905,22 +917,113 @@ async def process_image(data: Union[ImageData, TextData]):
             detail="Image not found"
         )
 
-    image = Image.open(image_path)
-
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        prompt = "この画像について2,3文で簡単に説明して。"
-        response = model.generate_content([prompt, image])
+        # 画像を開く
+        image = Image.open(image_path)
+        
+        question_generation_prompt = f"""
+            あなたは優秀な教育アシスタントです。
+            以下の画像に基づいて、学習者が内容を効率的に覚え、理解を深めるための勉強に活用できる問題を作成してください。
+
+            # 指示概要
+            - 提供されたテキストデータから、重要な情報を問う一問一答形式の問題を作成します。
+            - 特に、テキスト中で強調されていると思われる語句（例えば、OCR前の元画像で赤文字だった箇所や太字だった箇所など、文脈から重要と判断できるキーワードや概念）を中心に出題してください。
+            - 問題文と回答は、提供されたテキストの内容に忠実である必要があります。
+
+            # 問題作成の要件
+            - 各問題文は、簡潔かつ明確にしてください。質問の意図が曖昧にならないように注意してください。
+            - 各回答は、正確かつ簡潔で、学習者にとって分かりやすいものにしてください。
+            - 1つの問題に対して、回答は1つになるようにしてください。
+            - 問題数は、テキストの内容量に応じて適切に調整してください（例：5問～15問程度）。
+
+            # カスタム指示（特に指定がある場合）
+            {data.custom_prompt if data.custom_prompt else "特になし"}
+
+            # 出力形式
+            以下のJSON形式で、問題と回答のリストを返してください。
+            各要素は `question` (問題文) と `answer` (回答) のキーを持つオブジェクトとします。
+
+            例:
+            ```json
+            [
+                {{"question": "経済において基本的な活動とされるものは何と何か？", "answer": "生産と消費"}}
+                {{"question": "財やサービスをつくりだす行為を経済学で何と呼びますか？", "answer": "生産"}}
+                {{"question": "生産に必要な3要素とは何ですか？", "answer": "労働力、土地、資本"}}
+            ]
+            ```
+            """
+
+        model = genai.GenerativeModel("gemini-2.5-flash-preview-05-20")
+
+        question_response_text = await model.generate_content_async([question_generation_prompt, image])
+
+        # JSONパターンを抽出（APIの応答からJSONを抽出）
+        # 応答が直接JSON文字列である場合も考慮
+        questions = []
+        json_str_debug = "" # デバッグ用にJSON文字列を保持
+        try:
+            # まず ```json ... ``` ブロックを探す
+            json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', question_response_text, re.DOTALL)
+            if json_match:
+                json_str_debug = json_match.group(1).strip()
+            else:
+                # ```json ... ``` がなければ、応答全体がJSONかもしれないと仮定
+                json_str_debug = question_response_text.strip()
+            
+            # 稀に "```json" のみが返ってくることがあるので、空文字列チェック
+            if json_str_debug:
+                parsed_json = json.loads(json_str_debug)
+                # json.loads がリストを返すことを期待
+                if isinstance(parsed_json, list):
+                    questions = parsed_json
+                # もし辞書で、その中に 'questions' キーがあればそれを使う (柔軟性のため)
+                elif isinstance(parsed_json, dict) and "questions" in parsed_json and isinstance(parsed_json["questions"], list):
+                    questions = parsed_json["questions"]
+                else:
+                    # 期待する形式でない場合はエラーとして扱う
+                    print(f"Unexpected JSON structure: {parsed_json}")
+            
+        # questions がリストでない、または要素が期待する形式でない場合のフォールバック
+            if not isinstance(questions, list) or not all(isinstance(q, dict) and "question" in q and "answer" in q for q in questions):
+                questions = [
+                    {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
+                    {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
+                ]
+        except json.JSONDecodeError as e:
+            print(f"JSONDecodeError: {e} in response: {json_str_debug}")
+            questions = [
+                {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
+                {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
+            ]
+        except Exception as e: # その他のパースエラー
+            print(f"Error parsing questions: {e}, original text: {question_response_text}")
+            questions = [
+                {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
+                {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
+            ]
+
 
         return JSONResponse(
-            content={"status": "success", "data": response.text},
+            content={
+                "status": "success",
+                "questions": questions
+            },
             status_code=200
         )
     except Exception as e:
+        print(f"Error in image processing: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Error processing image: {str(e)}"
         )
+    finally:
+        # 画像処理後、ファイルを削除
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+                print(f"Successfully deleted image: {image_path}")
+            except Exception as e:
+                print(f"Error deleting image {image_path}: {e}")
 
 @app.post("/api/edit/mondai")
 async def edit_mondai(data: MondaiData):
@@ -1211,7 +1314,7 @@ class WordData(BaseModel):
     word: str
     mondai: str
 
-@app.get("/api/search")
+@app.post("/api/search")
 async def search_problems(query: str = Query(..., min_length=1)):
     """
     問題を検索するAPIエンドポイント
@@ -1760,7 +1863,7 @@ async def get_advice(data: Data):
         {category_stats_text}"""
 
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-pro-vision")
         response = await model.generate_content_async([prompt])
         advice = response.text.replace("\n", "<br>") 
         

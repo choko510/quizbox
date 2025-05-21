@@ -43,6 +43,7 @@
                     <li data-view="create"><span><i class="bi bi-pencil-square"></i> 問題作成</span></li>
                     <li data-view="template"><span><i class="bi bi-file-earmark-text"></i> テンプレート</span></li>
                     <li data-view="import"><span><i class="bi bi-upload"></i> インポート</span></li>
+                    <li data-view="image-create"><span><i class="bi bi-image"></i> 画像から作成</span></li>
                     <li data-view="settings"><span><i class="bi bi-gear"></i> 設定</span></li>
                 </ul>
             </nav>
@@ -259,7 +260,7 @@
                             <h3>画像から作成</h3>
                             <p>アップロードした画像からAIが問題を抽出します</p>
                             <div class="file-input-wrapper">
-                                <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png" />
+                                <input type="file" id="imageLoad" name="image" accept=".jpg, .jpeg, .png, .webp, .gif" multiple />
                                 <label for="imageLoad" class="file-label">画像を選択</label>
                             </div>
                         </div>
@@ -369,6 +370,60 @@
                     </div>
                     
                     <button id="saveSettings" class="save-settings-btn">設定を保存</button>
+                </div>
+            </div>
+            
+            <!-- 画像から作成ビュー -->
+            <div class="editor-view" id="image-create-view">
+                <div class="image-create-container">
+                    <h2>画像から問題を作成</h2>
+                    <p class="description">画像をアップロードすると、AIが画像を分析して問題を生成します。複数の画像を一度にアップロードすることもできます。</p>
+                    
+                    <div class="image-upload-section">
+                        <div class="upload-area" id="imageDropArea">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <p>画像をドラッグ＆ドロップするか、クリックして選択</p>
+                            <input type="file" id="imageUpload" name="image" accept=".jpg, .jpeg, .png, .webp, .gif" multiple />
+                            <button class="browse-btn">ファイルを選択</button>
+                        </div>
+                        <div class="selected-images" id="selectedImagesPreview"></div>
+                    </div>
+                    
+                    <div class="image-generation-options">
+                        <h3>問題生成オプション</h3>
+                        <div class="option-grid">
+                            <div class="option-item">
+                                <label for="imageQuestionType">問題タイプ:</label>
+                                <select id="imageQuestionType" class="form-control">
+                                    <option value="mixed" selected>混合（AIにおまかせ）</option>
+                                    <option value="basic">基本問題</option>
+                                    <option value="multiple-choice">選択問題</option>
+                                    <option value="true-false">○×問題</option>
+                                    <option value="fill-in-the-blank">穴埋め問題</option>
+                                    <option value="short-answer">記述問題</option>
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="imageQuestionCount">問題数 (1問あたり):</label>
+                                <input type="number" id="imageQuestionCount" class="form-control" value="5" min="1" max="10">
+                            </div>
+                        </div>
+                        
+                        <div class="option-item full-width">
+                            <label for="imageCustomPrompt">カスタムプロンプト (任意):</label>
+                            <textarea id="imageCustomPrompt" class="form-control" rows="3" placeholder="例: この画像から、特に〇〇に焦点を当てた問題を作成してください。画像の説明は {description} です。"></textarea>
+                            <small class="form-text text-muted">プロンプト内で `{description}` を使用すると、AIが生成した画像の説明文を埋め込めます。</small>
+                        </div>
+                        
+                        <div class="image-actions">
+                            <button id="generateAllImagesBtn" class="primary-btn" disabled>すべての画像から問題を生成</button>
+                            <button id="clearImagesBtn" class="secondary-btn" disabled>クリア</button>
+                        </div>
+                    </div>
+                    
+                    <div class="image-processing-status" id="imageProcessingStatus">
+                        <!-- 画像処理状況はここに表示 -->
+                    </div>
                 </div>
             </div>
         </main>
@@ -501,31 +556,40 @@
     <!-- 画像から問題自動生成のモーダル -->
     <div class="modal" id="imageGenerateModal">
         <div class="modal-overlay"></div>
-        <div class="modal-container">
+        <div class="modal-container modal-lg"> <!-- modal-lg クラスを追加 -->
             <div class="modal-header">
-                <h2>画像から問題を自動生成</h2>
-                <button class="modal-close">&times;</button>
+                <h3 id="imageGenerateModalTitle">画像から問題を自動生成</h3> <!-- h2 を h3 に変更し、IDを追加 -->
+                <button class="modal-close"><i class="bi bi-x"></i></button> <!-- アイコンに変更 -->
             </div>
             <div class="modal-body">
                 <div class="image-preview-container">
                     <img id="uploadedImagePreview" class="uploaded-image-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="アップロードされた画像">
                 </div>
-                <div class="option-controls modal-controls">
-                    <div class="control-group">
-                        <label for="imageQuestionTypeModal">問題タイプ:</label>
-                        <select id="imageQuestionTypeModal" class="settings-select">
-                            <option value="multiple-choice">選択問題</option>
-                            <option value="true-false">○×問題</option>
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="imageQuestionCountModal">問題数:</label>
-                        <input type="number" id="imageQuestionCountModal" value="3" min="1" max="10" class="number-input">
-                    </div>
+                <!-- form-group でラップしてスタイルを統一 -->
+                <div class="form-group">
+                    <label for="imageQuestionTypeModal">問題タイプ:</label>
+                    <select id="imageQuestionTypeModal" class="form-control"> <!-- class を form-control に変更 -->
+                        <option value="mixed" selected>混合（AIにおまかせ）</option>
+                        <option value="basic">基本問題</option>
+                        <option value="multiple-choice">選択問題</option>
+                        <option value="true-false">○×問題</option>
+                        <option value="fill-in-the-blank">穴埋め問題</option>
+                        <option value="short-answer">記述問題</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="imageQuestionCountModal">問題数:</label>
+                    <input type="number" id="imageQuestionCountModal" class="form-control" value="5" min="1" max="10"> <!-- class を form-control に変更 -->
+                </div>
+                <div class="form-group">
+                    <label for="imageCustomPromptModal">カスタムプロンプト (任意):</label>
+                    <textarea id="imageCustomPromptModal" class="form-control" rows="3" placeholder="例: この画像から、特に〇〇に焦点を当てた問題を3つ作成してください。画像の説明は {description} です。"></textarea>
+                    <small class="form-text text-muted">プロンプト内で `{description}` を使用すると、AIが生成した画像の説明文を埋め込めます。</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="generateImageQuestionsBtn" class="modal-button action-btn">問題を生成</button>
+                <button class="modal-button" id="generateImageQuestionsBtn">問題を生成</button> <!-- action-btn クラスを削除 -->
+                <button class="modal-button secondary hidden" id="skipImageBtn">この画像をスキップ</button> <!-- スキップボタンを追加 -->
                 <button class="modal-cancel">キャンセル</button>
             </div>
         </div>

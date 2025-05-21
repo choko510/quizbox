@@ -41,6 +41,39 @@
     --gray: #a0aec0;
 }
 
+/* ヘッダーとユーザー情報のスタイル修正 */
+.header {
+    position: relative;
+    z-index: 10;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.user-info img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--text-color);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* エディタービューコンテナ */
 .editor-view {
     display: none;
@@ -744,6 +777,262 @@ input:checked + .toggle-slider:before {
     color: var(--primary-color);
 }
 
+/* 画像から作成ビュースタイル */
+.image-create-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.image-create-container h2 {
+    margin-bottom: 10px;
+}
+
+.image-create-container .description {
+    color: var(--text-light);
+    margin-bottom: 25px;
+}
+
+.image-upload-section {
+    margin-bottom: 30px;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: var(--secondary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background-color: var(--hover-bg);
+}
+
+.upload-area i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.upload-area p {
+    margin-bottom: 20px;
+    color: var(--text-light);
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+.browse-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.browse-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.selected-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.image-preview-item {
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+}
+
+.image-preview-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.image-preview-item .remove-image:hover {
+    background-color: rgba(255, 59, 48, 0.7);
+    color: white;
+}
+
+.image-generation-options {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow);
+}
+
+.image-generation-options h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.option-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.option-item {
+    margin-bottom: 15px;
+}
+
+.option-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.option-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.option-item .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.option-item textarea.form-control {
+    min-height: 80px;
+}
+
+.option-item .form-text {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.image-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.primary-btn, .secondary-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.primary-btn:disabled, .secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.secondary-btn {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.secondary-btn:hover {
+    background-color: var(--border-color);
+}
+
+.image-processing-status {
+    margin-top: 20px;
+}
+
+.status-item {
+    background-color: var(--card-bg);
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-pending {
+    color: var(--gray);
+}
+
+.status-processing {
+    color: var(--primary-color);
+}
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-error {
+    color: var(--danger-color);
+}
+
+.status-image-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-action {
+    margin-left: auto;
+}
+
 /* レスポンシブデザイン */
 @media (max-width: 992px) {
     .editor-container {
@@ -804,3 +1093,179 @@ input:checked + .toggle-slider:before {
         align-self: flex-start;
     }
 }
+
+/* --- ここから追加 --- */
+.modal-content {
+    background-color: var(--background-color);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    z-index: 1001;
+    animation: modal-appear 0.3s ease-out;
+}
+
+/* モーダルのサイズバリエーション */
+.modal-content.modal-lg {
+    max-width: 800px; /* 大きなモーダルの幅 */
+}
+
+.modal-content.modal-sm {
+    max-width: 400px; /* 小さなモーダルの幅 */
+}
+
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.4em;
+    color: var(--text-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    cursor: pointer;
+    color: var(--text-color-secondary);
+    padding: 5px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--primary-color);
+}
+
+.modal-body {
+    margin-bottom: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-body .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-body .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.modal-body .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-background);
+    color: var(--text-color);
+    box-sizing: border-box;
+    font-size: 1em; /* フォントサイズを標準化 */
+}
+
+.modal-body .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-light);
+}
+
+.modal-body textarea.form-control {
+    min-height: 80px; /* テキストエリアの最小高さを設定 */
+    resize: vertical; /* 垂直方向のリサイズのみ許可 */
+}
+
+.modal-body .form-text.text-muted {
+    font-size: 0.85em;
+    color: var(--text-color-secondary);
+    margin-top: 5px;
+    display: block;
+}
+
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-button, .modal-cancel {
+    padding: 10px 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    font-size: 1em; /* ボタンのフォントサイズ */
+}
+
+.modal-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.modal-button.secondary { /* セカンダリボタンのスタイル */
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.modal-button.secondary:hover {
+    background-color: var(--border-color);
+}
+
+.modal-cancel {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.modal-cancel:hover {
+    background-color: var(--border-color);
+}
+
+/* 画像生成モーダルのプレビュー */
+.image-preview-container {
+    width: 100%;
+    max-height: 300px; /* プレビューの高さを制限 */
+    overflow: hidden; /* はみ出した部分は隠す */
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--input-background);
+}
+
+#uploadedImagePreview {
+    max-width: 100%;
+    max-height: 100%; /* コンテナの高さに合わせる */
+    object-fit: contain; /* アスペクト比を保ちつつフィット */
+    display: block;
+}
+
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* --- 追加ここまで --- */

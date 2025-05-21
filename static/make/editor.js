@@ -197,10 +197,11 @@ function setupEventListeners() {
     });
     
     // ファイル読み込みイベント
+    // ファイル読み込みイベント
     document.getElementById('txtload').addEventListener('change', handleFileUpload);
     document.getElementById('csvload').addEventListener('change', handleFileUpload);
     document.getElementById('xlsxload').addEventListener('change', handleFileUpload);
-    document.getElementById('imageLoad').addEventListener('change', handleImageUpload);
+    // document.getElementById('imageLoad').addEventListener('change', handleImageUpload); // handleImageUploadで処理するため、ここはコメントアウトまたは削除
     
     // 文章から問題を自動生成するボタン - インラインモードとモーダルモード
     document.getElementById('generateQuestions').addEventListener('click', () => {
@@ -209,25 +210,62 @@ function setupEventListeners() {
     });
     document.getElementById('generateQuestionsModal').addEventListener('click', generateQuestionsFromModal);
     
-// 画像からの問題生成ボタン
-    document.getElementById('generateImageQuestionsBtn').addEventListener('click', generateQuestionsFromImage);
+    // 画像アップロード (新しい複数ファイル対応のハンドラを紐付け)
+    const imageLoadInput = document.getElementById('imageLoad');
+    if (imageLoadInput) {
+        imageLoadInput.addEventListener('change', handleImageUpload); // 修正: 既存のイベントリスナーを置き換えるか、これが唯一のリスナーであることを確認
+    }
     
-    // 画像アップロードとプレビュー
-    document.getElementById('imageLoad').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            // モーダルのプレビュー画像を更新して表示
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const preview = document.getElementById('uploadedImagePreview');
-                preview.src = e.target.result;
-                document.getElementById('imageGenerateModal').classList.add('active');
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
+    // 画像から問題生成ボタン
+    const generateImageQuestionsBtn = document.getElementById('generateImageQuestionsBtn');
+    if (generateImageQuestionsBtn) {
+        // 新しい画像ビューへの移行処理
+        generateImageQuestionsBtn.addEventListener('click', () => {
+            // 画像から作成ビューに切り替え
+            switchView('image-create');
+            
+            // 既存の画像データがあれば処理
+            const imagePreview = document.getElementById('uploadedImagePreview');
+            if (imagePreview && imagePreview.src && !imagePreview.src.includes('data:image/gif;base64,R0lGOD')) {
+                // Base64画像データを取得
+                try {
+                    const base64Data = imagePreview.src.split(',')[1];
+                    const blob = base64ToBlob(base64Data, 'image/jpeg');
+                    
+                    // 新しいファイルオブジェクトを作成
+                    const file = new File([blob], "image-from-modal.jpg", { type: 'image/jpeg' });
+                    
+                    // 新しいビューの処理を呼び出し
+                    setTimeout(() => {
+                        handleImageFiles([file]);
+                    }, 300);
+                } catch(e) {
+                    console.error("モーダル画像の変換エラー:", e);
+                }
+            }
+        });
+    }
 
+    // 画像スキップボタン
+    const skipImageBtn = document.getElementById('skipImageBtn');
+    if (skipImageBtn) {
+        // モーダルを閉じて画像から作成ビューに切り替える
+        skipImageBtn.addEventListener('click', () => {
+            closeActiveModal();
+            switchView('image-create');
+        });
+    }
+    
+    // 画像から作成ビューの初期化を試行
+    try {
+        if (document.getElementById('imageDropArea')) {
+            initializeImageCreateView();
+            console.log('画像から作成ビューを初期化しました');
+        }
+    } catch (e) {
+        console.error('画像ビューの初期化エラー:', e);
+    }
+}
 /**
  * リッチテキストエディタの初期化
  */
@@ -1248,17 +1286,174 @@ function handleFileUpload(event) {
 
 /**
  * 画像アップロード処理
+/**
+ * 画像アップロード処理 - 新しいビュー用
  */
-async function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+let selectedImageFiles = []; // 選択された画像ファイルを保持する配列
+let processingQueue = []; // 処理待ちの画像キュー
+let isProcessing = false; // 処理中フラグ
+
+// 画像作成ビューの初期化
+function initializeImageCreateView() {
+    const dropArea = document.getElementById('imageDropArea');
+    const fileInput = document.getElementById('imageUpload');
+    const browseBtn = dropArea.querySelector('.browse-btn');
+    const imagesPreview = document.getElementById('selectedImagesPreview');
+    const generateBtn = document.getElementById('generateAllImagesBtn');
+    const clearBtn = document.getElementById('clearImagesBtn');
+    const statusContainer = document.getElementById('imageProcessingStatus');
+
+    // ブラウズボタンクリック時のファイル選択
+    browseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
+    });
+
+    // ドラッグ＆ドロップ領域の設定
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('active');
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('active');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('active');
+        handleImageFiles(e.dataTransfer.files);
+    });
+
+    // ファイル選択時の処理
+    fileInput.addEventListener('change', (e) => {
+        handleImageFiles(e.target.files);
+    });
+
+    // クリアボタンの処理
+    clearBtn.addEventListener('click', () => {
+        clearSelectedImages();
+    });
+
+    // 問題生成ボタンの処理
+    generateBtn.addEventListener('click', () => {
+        if (selectedImageFiles.length > 0) {
+            // 処理キューを設定
+            processingQueue = [...selectedImageFiles];
+            // 処理状況表示領域をクリア
+            statusContainer.innerHTML = '';
+            // 処理開始
+            processNextImage();
+        }
+    });
+}
+
+// 画像ファイルの処理
+function handleImageFiles(files) {
+    if (!files || files.length === 0) return;
+
+    // 画像ファイルのみをフィルタリング
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+        showToast('画像ファイルが選択されていません', 'warning');
+        return;
+    }
+
+    // 選択した画像を配列に追加
+    selectedImageFiles = [...selectedImageFiles, ...imageFiles];
+
+    // 画像プレビューを表示
+    updateImagesPreview();
+
+    // ボタンの有効化
+    document.getElementById('generateAllImagesBtn').disabled = false;
+    document.getElementById('clearImagesBtn').disabled = false;
+}
+
+// 画像プレビューの更新
+function updateImagesPreview() {
+    const imagesPreview = document.getElementById('selectedImagesPreview');
+    imagesPreview.innerHTML = '';
+
+    selectedImageFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'image-preview-item';
+            previewItem.innerHTML = `
+                <button class="remove-image" data-index="${index}"><i class="bi bi-x"></i></button>
+                <img src="${e.target.result}" alt="${file.name}" title="${file.name}">
+            `;
+            imagesPreview.appendChild(previewItem);
+
+            // 削除ボタンのイベントリスナーを設定
+            previewItem.querySelector('.remove-image').addEventListener('click', function() {
+                const idx = parseInt(this.dataset.index);
+                removeImage(idx);
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// 選択した画像を削除
+function removeImage(index) {
+    selectedImageFiles.splice(index, 1);
+    updateImagesPreview();
+
+    // 画像がなくなったらボタンを無効化
+    if (selectedImageFiles.length === 0) {
+        document.getElementById('generateAllImagesBtn').disabled = true;
+        document.getElementById('clearImagesBtn').disabled = true;
+    }
+}
+
+// 選択した画像をすべてクリア
+function clearSelectedImages() {
+    selectedImageFiles = [];
+    document.getElementById('selectedImagesPreview').innerHTML = '';
+    document.getElementById('generateAllImagesBtn').disabled = true;
+    document.getElementById('clearImagesBtn').disabled = true;
+    document.getElementById('imageUpload').value = '';
+}
+
+// 次の画像を処理
+async function processNextImage() {
+    if (processingQueue.length === 0 || isProcessing) {
+        if (processingQueue.length === 0) {
+            showToast('すべての画像の処理が完了しました', 'success');
+        }
+        return;
+    }
+
+    isProcessing = true;
+    const currentFile = processingQueue.shift();
+    const statusContainer = document.getElementById('imageProcessingStatus');
     
-    const formData = new FormData();
-    formData.append('file', file);
+    // 処理ステータス表示を追加
+    const statusId = `status-${Date.now()}`;
+    const statusItem = document.createElement('div');
+    statusItem.className = 'status-item';
+    statusItem.id = statusId;
+    statusItem.innerHTML = `
+        <div class="status-icon status-processing"><i class="bi bi-arrow-repeat"></i></div>
+        <div class="status-image-name">${currentFile.name}</div>
+        <div class="status-message">処理中...</div>
+    `;
+    statusContainer.prepend(statusItem);
     
     try {
-        // 画像アップロード
-        showToast('画像をアップロード中...', 'info');
+        // カスタムプロンプトを取得
+        const customPrompt = document.getElementById('imageCustomPrompt').value.trim();
+        const questionType = document.getElementById('imageQuestionType').value;
+        const questionCount = document.getElementById('imageQuestionCount').value;
+        
+        // 画像をアップロード
+        showToast(`${currentFile.name} を処理中...`, 'info');
+        
+        const formData = new FormData();
+        formData.append('file', currentFile);
         
         const uploadResponse = await fetch('/api/upload/image', {
             method: 'POST',
@@ -1267,64 +1462,101 @@ async function handleImageUpload(event) {
         
         const uploadData = await uploadResponse.json();
         
-        if (uploadData.status === 'success') {
-            showToast('画像をAIで解析中...', 'info');
+        if (!uploadResponse.ok || !uploadData.id) {
+            throw new Error(uploadData.detail || 'アップロードに失敗しました');
+        }
+        
+        // 画像を処理して問題を生成
+        const processPayload = { id: uploadData.id };
+        if (customPrompt) {
+            processPayload.custom_prompt = customPrompt;
+        }
+        
+        const processResponse = await fetch('/api/process/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(processPayload)
+        });
             
-            // 画像解析
-            const processResponse = await fetch('/api/process/image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: uploadData.id })
+        const processData = await processResponse.json();
+            
+        if (processResponse.ok && processData.status === 'success' && processData.questions && processData.questions.length > 0) {
+            // 成功表示に更新
+            statusItem.innerHTML = `
+                <div class="status-icon status-success"><i class="bi bi-check-circle"></i></div>
+                <div class="status-image-name">${currentFile.name}</div>
+                <div class="status-message">${processData.questions.length}問の問題を生成しました</div>
+                <div class="status-action">
+                    <button class="view-questions-btn" data-questions='${JSON.stringify(processData)}'>表示</button>
+                </div>
+            `;
+            
+            // 問題を追加
+            const imageDescription = {
+                answer: processData.description,
+                question: `この画像 (${currentFile.name}) について説明してください`,
+                answerHtml: processData.description,
+                questionHtml: `この画像 (${currentFile.name}) について説明してください`,
+                created: new Date().toISOString()
+            };
+                
+            const aiQuestions = processData.questions.map(q => ({
+                answer: q.answer,
+                question: q.question,
+                answerHtml: q.answer,
+                questionHtml: q.question,
+                created: new Date().toISOString()
+            }));
+                
+            const newProblems = [imageDescription, ...aiQuestions];
+            problems = [...problems, ...newProblems];
+                
+            updateProblemList();
+                
+            if (editorSettings.autoSave) {
+                saveProblemsToLocalStorage();
+            }
+            
+            // 表示ボタンのイベントリスナー
+            statusItem.querySelector('.view-questions-btn').addEventListener('click', function() {
+                // 問題の最初のインデックスに移動
+                const startIndex = problems.length - newProblems.length;
+                selectProblem(startIndex);
+                switchView('create');
             });
             
-            const processData = await processResponse.json();
-            
-            if (processData.status === 'success') {
-                // 新しい問題として追加
-                problems.push({
-                    answer: processData.data,
-                    question: '画像の説明は？',
-                    answerHtml: processData.data,
-                    questionHtml: '画像の説明は？',
-                    created: new Date().toISOString()
-                });
-                
-                updateProblemList();
-                selectProblem(problems.length - 1);
-                
-                // 自動保存
-                if (editorSettings.autoSave) {
-                    saveProblemsToLocalStorage();
-                }
-                
-                showToast('画像から問題を作成しました', 'success');
-                
-                // 作成ビューに切り替え
-                switchView('create');
-                
-                // プレビュー表示
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    showImagePreview(e.target.result);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                showToast('画像の解析に失敗しました', 'error');
-            }
+            showToast(`${currentFile.name} の処理が完了しました`, 'success');
         } else {
-            showToast('画像のアップロードに失敗しました', 'error');
+            throw new Error(processData.detail || processData.message || '問題生成に失敗しました');
         }
     } catch (error) {
-        console.error('画像処理エラー:', error);
-        showToast('画像処理中にエラーが発生しました', 'error');
+        console.error(`画像処理エラー (${currentFile.name}):`, error);
+        
+        // エラー表示に更新
+        statusItem.innerHTML = `
+            <div class="status-icon status-error"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="status-image-name">${currentFile.name}</div>
+            <div class="status-message">エラー: ${error.message}</div>
+            <div class="status-action">
+                <button class="retry-btn">再試行</button>
+            </div>
+        `;
+        
+        // 再試行ボタンのイベントリスナー
+        statusItem.querySelector('.retry-btn').addEventListener('click', function() {
+            // キューに戻して再処理
+            processingQueue.unshift(currentFile);
+            statusItem.remove();
+            processNextImage();
+        });
+        
+        showToast(`${currentFile.name} の処理中にエラーが発生しました`, 'error');
+    } finally {
+        isProcessing = false;
+        // 次の画像を処理
+        processNextImage();
     }
 }
-
-/**
- * テキスト生成モーダルを開く
- */
 function openTextGenerateModal() {
     // 現在の値をモーダルに反映
     const text = document.getElementById('aiSourceText').value;
@@ -1529,110 +1761,20 @@ function release() {
 }
 
 /**
- * 画像から問題を自動生成する
+ * 古いモーダルベースの画像アップロード処理 - 互換性のために残す
  */
-async function generateQuestionsFromImage() {
-    // モーダルを閉じる
-    closeActiveModal();
+async function handleImageUpload(event) {
+    // 新しいビューへリダイレクト
+    switchView('image-create');
     
-    // 画像のID取得
-    const imgSrc = document.getElementById('uploadedImagePreview').src;
-    if (!imgSrc || imgSrc.includes('data:image/gif;base64,R0lGOD')) {
-        showToast('画像が選択されていません', 'warning');
-        return;
-    }
-    
-    const type = document.getElementById('imageQuestionTypeModal').value;
-    const count = parseInt(document.getElementById('imageQuestionCountModal').value, 10) || 3;
-    
-    try {
-        // プレビュー画像を処理
-        showToast('画像を解析して問題を生成しています...', 'info');
-        
-        // Base64画像データを処理
-        const base64Data = imgSrc.split(',')[1];
-        const blob = base64ToBlob(base64Data, 'image/jpeg');
-        const formData = new FormData();
-        formData.append('file', blob);
-        
-        // 画像アップロード
-        const uploadResponse = await fetch('/api/upload/image', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const uploadData = await uploadResponse.json();
-        
-        if (uploadData.status === 'success') {
-            // 画像分析
-            const processResponse = await fetch('/api/process/image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: uploadData.id })
-            });
-            
-            const processData = await processResponse.json();
-            
-            if (processData.status === 'success') {
-                // 分析結果のテキストを基に問題生成
-                const response = await fetch('/api/generate/questions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        text: processData.data,
-                        type: type,
-                        count: count
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success' && data.questions && data.questions.length > 0) {
-                    // 生成された問題をエディタに追加
-                    const newProblems = data.questions.map(q => ({
-                        answer: q.answer,
-                        question: q.question,
-                        answerHtml: q.answer,
-                        questionHtml: q.question,
-                        created: new Date().toISOString()
-                    }));
-                    
-                    // 現在の問題リストに追加
-                    problems = [...problems, ...newProblems];
-                    
-                    updateProblemList();
-                    selectProblem(problems.length - newProblems.length);
-                    
-                    // 自動保存
-                    if (editorSettings.autoSave) {
-                        saveProblemsToLocalStorage();
-                    }
-                    
-                    showToast(`${data.questions.length}問の問題を生成しました`, 'success');
-                    
-                    // 作成ビューに切り替え
-                    switchView('create');
-                } else {
-                    showToast('問題の生成に失敗しました', 'error');
-                }
-            } else {
-                showToast('画像の解析に失敗しました', 'error');
-            }
-        } else {
-            showToast('画像のアップロードに失敗しました', 'error');
-        }
-    } catch (error) {
-        console.error('画像からの問題生成エラー:', error);
-        showToast('問題の生成中にエラーが発生しました', 'error');
+    // 選択されたファイルを新しいビューのハンドラに渡す
+    if (event.target.files && event.target.files.length > 0) {
+        handleImageFiles(event.target.files);
     }
 }
 
 /**
- * Base64データをBlobに変換
+ * Base64データをBlobに変換する
  */
 function base64ToBlob(base64, mimeType) {
     const byteString = atob(base64);
