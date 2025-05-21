@@ -811,10 +811,10 @@ async def upload_image(file: UploadFile = File(...)):
         file_id = xxhash.xxh64(contents).hexdigest()
         
         # Ensure upload directory exists
-        os.makedirs("upload/img", exist_ok=True)
-        
+        os.makedirs("./data/upload/img", exist_ok=True)
+
         # Save image to disk
-        file_path = f"upload/img/{file_id}"
+        file_path = f"./data/upload/img/{file_id}"
         img = Image.open(io.BytesIO(contents))
         img.save(file_path, format=img.format or "JPEG")
         
@@ -910,7 +910,7 @@ async def process_image(data: Union[ImageData, TextData]):
         return await process_text(data)
     
     # 画像処理の場合
-    image_path = f"./upload/img/{data.id}"
+    image_path = f"./data/upload/img/{data.id}"
     if not os.path.exists(image_path):
         raise HTTPException(
             status_code=404,

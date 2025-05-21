@@ -2,3 +2,4 @@
 .DS_Store
 *.db
 *.mp3
+data/upload/*
