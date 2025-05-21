@@ -336,10 +336,23 @@
                                     description: item.description,
                                 });
                             } else {
+                                // mondaiフィールドが文字列の場合はパースを試みる
+                                let mondaiData = item.mondai;
+                                if (typeof mondaiData === 'string') {
+                                    try {
+                                        mondaiData = JSON.parse(mondaiData);
+                                    } catch (e) {
+                                        console.error('mondaiのパースに失敗:', e);
+                                        mondaiData = [];
+                                    }
+                                } else if (!Array.isArray(mondaiData)) {
+                                    mondaiData = [];
+                                }
+                                
                                 questions.push({
                                     word: item.word,
                                     description: item.description,
-                                    mondai: item.mondai
+                                    mondai: mondaiData
                                 });
                             }
                         });
@@ -419,7 +432,7 @@
                     ? `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>`
                     : '';
 
-                if (titleHTML.endsWith("か。") || titleHTML.endsWith("答えよ。") || titleHTML.endsWith("答えなさい。")) {
+                if (contentHTML.endsWith("か。") || contentHTML.endsWith("答えよ。") || contentHTML.endsWith("答えなさい。")) {
                     listHTML += `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${titleHTML}</div></li>`;
                 } else {
                     listHTML += `<li><div class="${titleClass}">${titleHTML}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div></li>`;
@@ -486,6 +499,7 @@
             let correctAnswer = isReversed ? question.description : question.word;
             let options = [correctAnswer]; // 正解は必ず含める
             let incorrectOptions = [];
+            let otherOptions = []; // すべてのケースで使用できるように変数を定義
 
             // 1. 不正解選択肢の候補を集める
             if (isReversed) {
@@ -498,18 +512,22 @@
             } else {
                 // 通常モード
                 if (question.mondai) {
-                    // mondaiフィールドあり: 指定の不正解選択肢 + 他の問題の単語
-                    const providedIncorrect = question.mondai || [];
+                    // mondaiフィールドあり: 指定の不正解選択肢を優先使用
+                    const providedIncorrect = Array.isArray(question.mondai) ? question.mondai : [];
+                    
+                    // mondaiの選択肢を優先的に使用（正解との重複を除外）
                     providedIncorrect.forEach(opt => {
                         if (opt !== correctAnswer && !incorrectOptions.includes(opt)) {
                             incorrectOptions.push(opt);
                         }
                     });
                 }
-                // 他の問題の単語も候補に追加 (通常モード共通)
+                
+                // 他の問題の単語も候補に追加 (mondaiの選択肢と区別するため別の配列に)
+                const otherOptions = [];
                 questions.forEach((q, index) => {
                     if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
-                        incorrectOptions.push(q.word);
+                        otherOptions.push(q.word);
                     }
                 });
             }
@@ -575,11 +593,23 @@
 
 
             // 3. 最終的な選択肢リストを作成 (不正解選択肢を追加)
+            // まず、mondaiで指定された選択肢を優先的に追加
             incorrectOptions.sort(() => Math.random() - 0.5); // 不正解候補をシャッフル
             while (options.length < 4 && incorrectOptions.length > 0) {
                 const incorrectOption = incorrectOptions.shift();
                 if (!options.includes(incorrectOption)) { // 重複チェック
                     options.push(incorrectOption);
+                }
+            }
+            
+            // mondaiの選択肢だけでは足りない場合、他の問題から選択肢を追加
+            if (options.length < 4 && otherOptions.length > 0) {
+                otherOptions.sort(() => Math.random() - 0.5); // 他の候補もシャッフル
+                while (options.length < 4 && otherOptions.length > 0) {
+                    const otherOption = otherOptions.shift();
+                    if (!options.includes(otherOption)) { // 重複チェック
+                        options.push(otherOption);
+                    }
                 }
             }
 
