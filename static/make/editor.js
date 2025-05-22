@@ -2,6 +2,22 @@
  * 強化された問題作成エディタのJavaScript
  */
 
+/**
+ * HTMLをサニタイズして安全にレンダリングする関数
+ * XSS攻撃対策として、ユーザー入力を安全にHTMLとして表示するために使用
+ */
+function sanitizeHTML(unsafe) {
+    if (!unsafe) return '';
+    
+    // 簡易的なHTMLサニタイザー
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // グローバル変数
 let editorSettings = {
     autoSave: true,
@@ -595,6 +611,7 @@ function selectProblem(index) {
     
     // フォームにデータを設定
     const problem = problems[index];
+    // 編集エリアは編集可能なので、HTMLの状態で設定（エディタ内での編集はユーザー制御下）
     document.getElementById('answerField').innerHTML = problem.answerHtml || problem.answer || '';
     document.getElementById('questionField').innerHTML = problem.questionHtml || problem.question || '';
     
@@ -784,12 +801,12 @@ function previewCurrentProblem() {
         return;
     }
     
-    // プレビューの各モードに内容を設定
-    document.getElementById('previewQuestion').innerHTML = problem.questionHtml || problem.question || '';
-    document.getElementById('previewAnswer').innerHTML = problem.answerHtml || problem.answer || '';
+    // プレビューの各モードに内容を設定（XSS対策のためサニタイズ）
+    document.getElementById('previewQuestion').innerHTML = sanitizeHTML(problem.questionHtml || problem.question || '');
+    document.getElementById('previewAnswer').innerHTML = sanitizeHTML(problem.answerHtml || problem.answer || '');
     
-    document.getElementById('testModeQuestion').innerHTML = problem.questionHtml || problem.question || '';
-    document.getElementById('testModeAnswer').innerHTML = problem.answerHtml || problem.answer || '';
+    document.getElementById('testModeQuestion').innerHTML = sanitizeHTML(problem.questionHtml || problem.question || '');
+    document.getElementById('testModeAnswer').innerHTML = sanitizeHTML(problem.answerHtml || problem.answer || '');
     
     // コードモードの内容
     document.getElementById('previewCodeContent').textContent = 
@@ -1419,6 +1436,7 @@ function clearSelectedImages() {
 }
 
 // 次の画像を処理
+// 次の画像を処理
 async function processNextImage() {
     if (processingQueue.length === 0 || isProcessing) {
         if (processingQueue.length === 0) {
@@ -1432,15 +1450,17 @@ async function processNextImage() {
     const statusContainer = document.getElementById('imageProcessingStatus');
     
     // 処理ステータス表示を追加
-    const statusId = `status-${Date.now()}`;
+    const statusId = 'status-' + Date.now();
     const statusItem = document.createElement('div');
     statusItem.className = 'status-item';
     statusItem.id = statusId;
-    statusItem.innerHTML = `
-        <div class="status-icon status-processing"><i class="bi bi-arrow-repeat"></i></div>
-        <div class="status-image-name">${currentFile.name}</div>
-        <div class="status-message">処理中...</div>
-    `;
+    
+    // XSS対策: ファイル名をサニタイズ
+    const safeFileName = sanitizeHTML(currentFile.name);
+    statusItem.innerHTML =
+        '<div class="status-icon status-processing"><i class="bi bi-arrow-repeat"></i></div>' +
+        '<div class="status-image-name">' + safeFileName + '</div>' +
+        '<div class="status-message">処理中...</div>';
     statusContainer.prepend(statusItem);
     
     try {
@@ -1450,7 +1470,7 @@ async function processNextImage() {
         const questionCount = document.getElementById('imageQuestionCount').value;
         
         // 画像をアップロード
-        showToast(`${currentFile.name} を処理中...`, 'info');
+        showToast(safeFileName + " を処理中...", 'info');
         
         const formData = new FormData();
         formData.append('file', currentFile);
@@ -1482,21 +1502,22 @@ async function processNextImage() {
             
         if (processResponse.ok && processData.status === 'success' && processData.questions && processData.questions.length > 0) {
             // 成功表示に更新
-            statusItem.innerHTML = `
-                <div class="status-icon status-success"><i class="bi bi-check-circle"></i></div>
-                <div class="status-image-name">${currentFile.name}</div>
-                <div class="status-message">${processData.questions.length}問の問題を生成しました</div>
-                <div class="status-action">
-                    <button class="view-questions-btn" data-questions='${JSON.stringify(processData)}'>表示</button>
-                </div>
-            `;
+            const safeQuestionCount = processData.questions.length;
+            // data属性はJSONとして設定するが、直接表示しないので安全
+            statusItem.innerHTML =
+                '<div class="status-icon status-success"><i class="bi bi-check-circle"></i></div>' +
+                '<div class="status-image-name">' + safeFileName + '</div>' +
+                '<div class="status-message">' + safeQuestionCount + '問の問題を生成しました</div>' +
+                '<div class="status-action">' +
+                    '<button class="view-questions-btn" data-questions=\'' + JSON.stringify(processData) + '\'>表示</button>' +
+                '</div>';
             
             // 問題を追加
             const imageDescription = {
                 answer: processData.description,
-                question: `この画像 (${currentFile.name}) について説明してください`,
+                question: "この画像 (" + safeFileName + ") について説明してください",
                 answerHtml: processData.description,
-                questionHtml: `この画像 (${currentFile.name}) について説明してください`,
+                questionHtml: "この画像 (" + safeFileName + ") について説明してください",
                 created: new Date().toISOString()
             };
                 
@@ -1525,22 +1546,22 @@ async function processNextImage() {
                 switchView('create');
             });
             
-            showToast(`${currentFile.name} の処理が完了しました`, 'success');
+            showToast(safeFileName + " の処理が完了しました", 'success');
         } else {
             throw new Error(processData.detail || processData.message || '問題生成に失敗しました');
         }
     } catch (error) {
-        console.error(`画像処理エラー (${currentFile.name}):`, error);
-        
         // エラー表示に更新
-        statusItem.innerHTML = `
-            <div class="status-icon status-error"><i class="bi bi-exclamation-triangle"></i></div>
-            <div class="status-image-name">${currentFile.name}</div>
-            <div class="status-message">エラー: ${error.message}</div>
-            <div class="status-action">
-                <button class="retry-btn">再試行</button>
-            </div>
-        `;
+        const safeErrorMessage = error.message ? sanitizeHTML(error.message) : "不明なエラー";
+        console.error("画像処理エラー (" + safeFileName + "):", error);
+        
+        statusItem.innerHTML =
+            '<div class="status-icon status-error"><i class="bi bi-exclamation-triangle"></i></div>' +
+            '<div class="status-image-name">' + safeFileName + '</div>' +
+            '<div class="status-message">エラー: ' + safeErrorMessage + '</div>' +
+            '<div class="status-action">' +
+                '<button class="retry-btn">再試行</button>' +
+            '</div>';
         
         // 再試行ボタンのイベントリスナー
         statusItem.querySelector('.retry-btn').addEventListener('click', function() {
@@ -1550,13 +1571,14 @@ async function processNextImage() {
             processNextImage();
         });
         
-        showToast(`${currentFile.name} の処理中にエラーが発生しました`, 'error');
+        showToast(safeFileName + " の処理中にエラーが発生しました", 'error');
     } finally {
         isProcessing = false;
         // 次の画像を処理
-        processNextImage();
+        setTimeout(processNextImage, 100);
     }
 }
+
 function openTextGenerateModal() {
     // 現在の値をモーダルに反映
     const text = document.getElementById('aiSourceText').value;

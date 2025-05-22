@@ -920,7 +920,7 @@ async def process_text(data: TextData):
     except Exception as e:
         print(f"Text processing error: {str(e)}")  # サーバーログにエラーを出力
         return JSONResponse(
-            content={"status": "failed", "message": f"Error processing text: {str(e)}"},
+            content={"status": "failed", "message": "テキスト処理中にエラーが発生しました"},
             status_code=500
         )
 
@@ -1115,14 +1115,14 @@ async def get_mondai(name: str, start: int = 0, end: int = None):
     # 絶対パスを取得して、意図したディレクトリ内にあるか確認
     abs_path = os.path.abspath(path)
     intended_dir = os.path.abspath("./data/mondaiset")
-    if not abs_path.startswith(intended_dir) or not os.path.isfile(path):
+    if not abs_path.startswith(intended_dir) or not os.path.isfile(abs_path):
         raise HTTPException(status_code=404, detail="Not found")
 
     start = max(start, 0000)
     results = []
     count = 0
 
-    # パスインジェクション対策：すでに上で検証済みのパスを使用
+    # パスインジェクション対策：検証済みの絶対パスを使用
     async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
         async for raw in f:
             line = raw.rstrip("\n")
@@ -1295,7 +1295,7 @@ async def delete_problem(data: MondaiIdData):
         else:
             return {"status": "failed", "message": "Problem not found"}
     except Exception as e:
-        return {"status": "error", "message": f"Error: {str(e)}"}
+        return {"status": "error", "message": "問題の削除中にエラーが発生しました"}
 
 class DuplicateMondaiData(BaseModel):
     original_name: str
@@ -1326,7 +1326,7 @@ async def duplicate_problem(data: DuplicateMondaiData):
         return {"status": "success"}
     except Exception as e:
         print(f"Error duplicating problem: {e}")
-        return {"status": "failed", "message": str(e)}
+        return {"status": "failed", "message": "問題の複製中にエラーが発生しました"}
 
 @app.post("/api/dashboard/stats")
 async def get_problem_stats(data: MondaiIdData, request: Request):
@@ -1407,7 +1407,8 @@ async def search_problems(query: str = Query(..., min_length=1)):
     
     # 1. 範囲検索パターンの検出 (例：「801-850」)
     # ReDoS対策：正規表現を改善し、非数字の繰り返しに上限を設定
-    range_match = re.search(r'(\d+)[^\d]{1,30}(\d+)', query)
+    # ReDoS脆弱性対策：バックトラッキングを制限する安全な正規表現
+    range_match = re.search(r'(\d+)[-~〜から]\s*(\d+)', query)
     range_keywords = []
     if range_match:
         start_num, end_num = int(range_match.group(1)), int(range_match.group(2))
@@ -1577,7 +1578,7 @@ async def search_word(data: WordData):
             "word": word,
             "definition": "定義を取得できませんでした。",
             "success": False,
-            "error": str(e)
+            "error": "内部エラーが発生しました"
         }
 
 @app.get("/api/gen/speak/{word}")
@@ -1668,7 +1669,7 @@ async def generate_questions(data: GenerateQuestionsData):
     except Exception as e:
         print(f"Error generating questions: {str(e)}")
         return JSONResponse(
-            content={"status": "failed", "message": f"Error: {str(e)}"},
+            content={"status": "failed", "message": "問題生成中にエラーが発生しました"},
             status_code=500
         )
 
