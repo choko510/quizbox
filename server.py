@@ -1108,16 +1108,22 @@ async def edit_mondai(data: MondaiData):
 @app.get("/api/get/mondai/{name}.json")
 async def get_mondai(name: str, start: int = 0, end: int = None):
 
-    path = f"./data/mondaiset/{name}.txt"
+    # パスインジェクション対策：ファイル名のみを抽出し、ディレクトリトラバーサルを防止
+    safe_name = os.path.basename(name)
+    path = f"./data/mondaiset/{safe_name}.txt"
     
-    if not os.path.isfile(path):
+    # 絶対パスを取得して、意図したディレクトリ内にあるか確認
+    abs_path = os.path.abspath(path)
+    intended_dir = os.path.abspath("./data/mondaiset")
+    if not abs_path.startswith(intended_dir) or not os.path.isfile(path):
         raise HTTPException(status_code=404, detail="Not found")
 
     start = max(start, 0000)
     results = []
     count = 0
 
-    async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+    # パスインジェクション対策：すでに上で検証済みのパスを使用
+    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
         async for raw in f:
             line = raw.rstrip("\n")
             if not line.strip():
@@ -1147,8 +1153,11 @@ async def get_sentences(request: Request):
 
         words = words[:500]
 
+        # ハードコードされたパスだが、一貫性のためにセキュアな方法で処理
         path = f"./data/sentence.txt"
-        if not os.path.isfile(path):
+        abs_path = os.path.abspath(path)
+        intended_dir = os.path.abspath("./data")
+        if not abs_path.startswith(intended_dir) or not os.path.isfile(path):
             raise HTTPException(status_code=404, detail="Sentence file not found")
 
         results = {}
@@ -1164,7 +1173,8 @@ async def get_sentences(request: Request):
             batch_size = 1000
             sentences_batch = []
             
-            async with aiofiles.open(path, mode="r", encoding="utf-8") as f:
+            # 検証済みの絶対パスを使用
+            async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
                 batch_count = 0
                 async for line in f:
                     line = line.strip()
@@ -1187,6 +1197,9 @@ async def get_sentences(request: Request):
         for word_lower, original_word in words_map.items():
             matching_sentences = []
 
+            # 文字列長に制限を設けて、ReDoS脆弱性を軽減
+            if len(word_lower) > 100:  # 合理的な単語の長さ制限
+                word_lower = word_lower[:100]
             pattern = r"\b" + re.escape(word_lower) + r"\b"
 
             for sentence in all_sentences:
@@ -1393,7 +1406,8 @@ async def search_problems(query: str = Query(..., min_length=1)):
     query_lower = query.lower()
     
     # 1. 範囲検索パターンの検出 (例：「801-850」)
-    range_match = re.search(r'(\d+)[^\d]+(\d+)', query)
+    # ReDoS対策：正規表現を改善し、非数字の繰り返しに上限を設定
+    range_match = re.search(r'(\d+)[^\d]{1,30}(\d+)', query)
     range_keywords = []
     if range_match:
         start_num, end_num = int(range_match.group(1)), int(range_match.group(2))

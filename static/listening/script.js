@@ -238,7 +238,7 @@ function clearHistory() {
 // --- 単語リスト読み込み ---
 function getParam(name, url) {
     if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, "\\$&");
+    name = name.replace(/\\/g, "\\\\").replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
         results = regex.exec(url);
     if (!results) return null;
@@ -274,7 +274,7 @@ async function loadWordList() {
         totalWordsEl.textContent = words.length;
         console.log(`Loaded ${words.length} words from ${url}`);
         if (words.length === 0) {
-             showError("単語リストが空、または正しく読み込めませんでした。");
+            showError("単語リストが空、または正しく読み込めませんでした。");
         }
 
     } catch (error) {
@@ -395,7 +395,9 @@ async function showNextQuestion() {
 
     } catch (error) {
         console.error("問題取得/処理エラー:", error);
-        instructionEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>問題の準備に失敗しました。<br>(${error.message})<br>リロードするか管理者にお問い合わせください。</p></div>`;
+        // XSS対策：エラーメッセージをエスケープ
+        const safeErrorMsg = escapeHtml(error.message);
+        instructionEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>問題の準備に失敗しました。<br>(${safeErrorMsg})<br>リロードするか管理者にお問い合わせください。</p></div>`;
         templateSentenceAreaEl.innerHTML = ''; // エラー時はクリア
         playAudioBtn.disabled = true;
         playAudioBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> エラー';
@@ -634,11 +636,11 @@ function filterHistory() {
 function escapeHtml(unsafe) {
     if (typeof unsafe !== 'string') return '';
     return unsafe
-         .replace(/&/g, "&")
-         .replace(/</g, "<")
-         .replace(/>/g, ">")
-         .replace(/"/g, '"')
-         .replace(/'/g, "'");
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
 }
 
 // 検索語をハイライトする関数 (簡易版)
@@ -655,10 +657,12 @@ function highlightSearchTerm(text, term) {
 function showError(message) {
     // 既存のエラー表示に加え、メインエリアにも表示
     const mainArea = document.querySelector('.slide2 .main');
+    // XSS対策：メッセージをエスケープ
+    const safeMessage = escapeHtml(message);
     if (mainArea) {
-        mainArea.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>${message}</p></div>`;
+        mainArea.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>${safeMessage}</p></div>`;
     } else { // フォールバック
-        instructionEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>${message}</p></div>`;
+        instructionEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><p>${safeMessage}</p></div>`;
     }
     // 操作ボタンを無効化
     playAudioBtn.disabled = true;
@@ -669,3 +673,14 @@ function showError(message) {
 // --- グローバルアクセス可能にする関数 ---
 window.playHistoryAudio = playHistoryAudio;
 window.filterHistory = filterHistory;
+
+// HTML特殊文字をエスケープする関数（XSS対策）
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}

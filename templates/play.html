@@ -224,7 +224,7 @@
 
         function getParam(name, url) {
             if (!url) url = window.location.href;
-            name = name.replace(/[\[\]]/g, "\\$&");
+            name = name.replace(/\\/g, "\\\\").replace(/[\[\]]/g, "\\$&");
             var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
                 results = regex.exec(url);
             if (!results) return null;
@@ -313,10 +313,20 @@
                     }
                 });
                 // タイトル領域にもエラーメッセージを表示
+                // XSS対策として、errorMessageをエスケープしてから挿入
+                const escapeHtml = (unsafe) => {
+                    return unsafe
+                         .replace(/&/g, "&amp;")
+                         .replace(/</g, "&lt;")
+                         .replace(/>/g, "&gt;")
+                         .replace(/"/g, "&quot;")
+                         .replace(/'/g, "&#039;");
+                };
+                
                 document.getElementById('question').innerHTML = `
                     <div class="error-message">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>${errorMessage}</p>
+                        <p>${escapeHtml(errorMessage)}</p>
                         <button onclick="window.location.href='../'">トップページへ戻る</button>
                     </div>
                 `;
@@ -565,7 +575,13 @@ loadQuestions().then(async () => {
                         const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences.length)]; // ランダムに1文選択
                         
                         // 問題文を書き換え
-                        title.innerHTML = sentenceForQuestion.replace("|","<br>").replace(correctAnswer,"(     )");
+                        // グローバルな正規表現を使用して、すべての | を <br> に置換
+                        title.innerHTML = sentenceForQuestion.replace(/\|/g,"<br>").replace(new RegExp(escapeRegExp(correctAnswer), "g"),"(     )");
+                        
+                        // 正規表現のエスケープ関数（新たに追加）
+                        function escapeRegExp(string) {
+                            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        }
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
                         if (screenWidth < 600 || screenHeight < 600) {
