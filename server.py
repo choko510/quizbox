@@ -565,13 +565,14 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(prompt: str, model: str = "gemini-2.0-flash"):
+async def reqAI(prompt: str, model: str = "gemini-2.0-flash", images=None):
     """
     AIモデルにテキスト生成リクエストを送信する非同期関数
 
     Parameters:
     - prompt: 送信するプロンプト文字列
     - model: 使用するモデル名（デフォルト: gemini-2.0-flash）
+    - images: 単一の画像または画像リスト（PIL.Image.Image型または画像のパス）
 
     Returns:
     - 生成されたテキスト
@@ -579,16 +580,36 @@ async def reqAI(prompt: str, model: str = "gemini-2.0-flash"):
     Raises:
     - Exception: 両方のAIプロバイダでリクエストが失敗した場合
     """
+    # 入力の準備
+    input_contents = []
+    if prompt:
+        input_contents.append(prompt)
+    
+    if images:
+        if not isinstance(images, list):
+            images = [images]
+        
+        for img in images:
+            if isinstance(img, str) and os.path.exists(img):
+                img = Image.open(img)
+            
+            if img:
+                input_contents.append(img)
+    
     # 1. まずGeminiでの生成を試みる
     try:
         gemini_model = genai.GenerativeModel(model)
-        response = await gemini_model.generate_content_async(prompt)
+        response = await gemini_model.generate_content_async(input_contents)
         return response.text
     except Exception as gemini_error:
         # Gemini失敗の詳細をログ出力
         print(f"Gemini request failed: {str(gemini_error)}")
         
-        # 2. フォールバック: OpenRouterを使用
+        # 画像が含まれている場合はフォールバックできないので直接エラーを返す
+        if images:
+            raise Exception(f"Gemini request with images failed: {str(gemini_error)}")
+        
+        # 2. テキストのみの場合のフォールバック: OpenRouterを使用
         api_key = os.getenv("OPENROUTER_APIKEY")
         if not api_key:
             raise Exception(f"Gemini request failed and OpenRouter API key is not set")
@@ -903,6 +924,40 @@ async def process_text(data: TextData):
             status_code=500
         )
 
+def extract_questions_from_text(text):
+    """テキストから質問と回答のペアを抽出するバックアップ機能"""
+    questions = []
+    
+    # パターン1: 「質問: 回答」形式を検出
+    qa_pairs = re.findall(r'(?:質問|Q)[：:]\s*([^\n]+)(?:\n|$).*?(?:回答|A)[：:]\s*([^\n]+)', text, re.DOTALL)
+    for q, a in qa_pairs:
+        questions.append({"question": q.strip(), "answer": a.strip()})
+    
+    # パターン2: 番号付きリスト形式を検出
+    numbered_items = re.findall(r'(?:^|\n)(\d+)[\.、\)）]\s*([^\n]+)(?:\n|$)', text)
+    if numbered_items and len(numbered_items) >= 2:
+        # 偶数番号が回答、奇数番号が質問と仮定
+        for i in range(0, len(numbered_items), 2):
+            if i+1 < len(numbered_items):
+                _, q_text = numbered_items[i]
+                _, a_text = numbered_items[i+1]
+                questions.append({"question": q_text.strip(), "answer": a_text.strip()})
+    
+    # 最低2つの質問を確保
+    if len(questions) < 2:
+        # テキストを簡単に分割して質問を作成
+        sentences = re.split(r'[。\.!！?？\n]+', text)
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 10]  # 短すぎる文は除外
+        
+        if len(sentences) >= 2:
+            for i, sentence in enumerate(sentences[:2]):
+                questions.append({
+                    "question": f"次の内容について説明してください: {sentence[:30]}...",
+                    "answer": sentence
+                })
+    
+    return questions
+
 @app.post("/api/process/image")
 async def process_image(data: Union[ImageData, TextData]):
     # テキスト処理の場合
@@ -953,9 +1008,12 @@ async def process_image(data: Union[ImageData, TextData]):
             ```
             """
 
-        model = genai.GenerativeModel("gemini-2.5-flash-preview-05-20")
-
-        question_response_text = await model.generate_content_async([question_generation_prompt, image])
+        # reqAI関数を使用して画像処理を実行
+        question_response_text = await reqAI(
+            prompt=question_generation_prompt,
+            model="gemini-2.5-flash-preview-05-20",
+            images=image
+        )
 
         # JSONパターンを抽出（APIの応答からJSONを抽出）
         # 応答が直接JSON文字列である場合も考慮
@@ -982,27 +1040,37 @@ async def process_image(data: Union[ImageData, TextData]):
                 else:
                     # 期待する形式でない場合はエラーとして扱う
                     print(f"Unexpected JSON structure: {parsed_json}")
-            
-        # questions がリストでない、または要素が期待する形式でない場合のフォールバック
-            if not isinstance(questions, list) or not all(isinstance(q, dict) and "question" in q and "answer" in q for q in questions):
-                questions = [
-                    {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
-                    {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
-                ]
         except json.JSONDecodeError as e:
-            print(f"JSONDecodeError: {e} in response: {json_str_debug}")
-            questions = [
-                {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
-                {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
-            ]
-        except Exception as e: # その他のパースエラー
-            print(f"Error parsing questions: {e}, original text: {question_response_text}")
-            questions = [
-                {"question": "この画像に関する説明として正しいものは？", "answer": "画像の内容を確認してください"},
-                {"question": "画像の内容を簡潔に説明してください", "answer": "詳細は画像によります"}
-            ]
-
-
+            print(f"JSONDecodeError: {e} in response: {json_str_debug[:100]}...")
+            questions = extract_questions_from_text(question_response_text)
+        except Exception as e:
+            print(f"Error parsing questions: {type(e).__name__}: {e}")
+            print(f"Original text snippet: {question_response_text[:200]}...")
+            questions = extract_questions_from_text(question_response_text)
+            
+        # 形式検証と代替処理
+        if not isinstance(questions, list):
+            print(f"Invalid response format: expected list, got {type(questions)}")
+            questions = extract_questions_from_text(question_response_text)
+        elif not all(isinstance(q, dict) and "question" in q and "answer" in q for q in questions):
+            print(f"Invalid question format in response: {questions[:3]}...")
+            # 形式が一部正しい場合は、正しい部分だけを抽出
+            valid_questions = [q for q in questions if isinstance(q, dict) and "question" in q and "answer" in q]
+            if valid_questions:
+                questions = valid_questions
+            else:
+                questions = extract_questions_from_text(question_response_text)
+            
+        # 最終的に質問が見つからなかった場合のフォールバック
+        if not questions:
+            return JSONResponse(
+                content={
+                    "status": "failed",
+                    "message": "No questions generated from the image."
+                },
+                status_code=400
+            )
+        
         return JSONResponse(
             content={
                 "status": "success",

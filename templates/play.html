@@ -248,6 +248,19 @@
             }
         }
         const questions = [];  // Initialize questions array
+        // 設定を一元管理するオブジェクト
+        // グローバル設定（問題セット共通）
+        const globalSettings = {
+            replaceMondai: false,    // 問題文と回答文を入れ替えるか
+            hardMode: false,         // ハードモード
+            answerMode: 'choice'    // 回答モード（'choice', 'input', 'handwriting'）
+        };
+        
+        // 問題セット固有の設定
+        const problemSettings = {
+            questionMode: 'sequential', // 出題モード（'random'または'sequential'）
+            currentQuestionIndex: 0     // 順番モードでの現在の問題インデックス
+        };
 
         let answeredQuestions = new Set();
         let maxStreak = 0;
@@ -384,29 +397,31 @@
                     });
             }
         }
+loadQuestions().then(async () => {
+    document.getElementById('total-questions').textContent = questions.length;
 
-        loadQuestions().then(async () => {
-            document.getElementById('total-questions').textContent = questions.length;
+    // 設定を読み込む
+    loadSettings();
+    
+    // 問題の選択方法をモードに応じて設定
+    selectQuestionMode();
 
-            // 問題の選択方法をモードに応じて設定
-            selectQuestionMode();
+    // もしログインしていれば、サーバーから学習進捗データを読み込む
+    if (accid && password) {
+        await loadProgressFromServer();
+    }
 
-            // もしログインしていれば、サーバーから学習進捗データを読み込む
-            if (accid && password) {
-                await loadProgressFromServer();
-            }
+    // 最初の問題表示と進捗更新
+    await showNextQuestion();
+    updateProgressDisplay(); // 進捗表示を更新
+    initializeChart();
+    populateWordList();
 
-            // 最初の問題表示と進捗更新
-            await showNextQuestion();
-            updateProgressDisplay(); // 進捗表示を更新
-            initializeChart();
-            populateWordList();
-
-            // --- タイマー制御: 初期ロード時に問題画面ならタイマー開始 ---
-            if (swiper.activeIndex === 1) {
-                start = performance.now();
-            }
-            // --- タイマー制御ここまで ---
+    // --- タイマー制御: 初期ロード時に問題画面ならタイマー開始 ---
+    if (swiper.activeIndex === 1) {
+        start = performance.now();
+    }
+    // --- タイマー制御ここまで ---
 
 
             // 検索インデックスを事前構築（バックグラウンドで実行）
@@ -465,8 +480,8 @@
             }
 
             const title = document.getElementById('question');
-            const isReversed = localStorage.getItem('replace_mondai') === 'true';
-            const isHardMode = localStorage.getItem('hard_mode') === 'true'; // ハードモード設定読み込み
+            const isReversed = globalSettings.replaceMondai;
+            const isHardMode = globalSettings.hardMode;
             screenWidth = window.innerWidth;
             screenHeight = window.innerHeight;
 
@@ -613,12 +628,35 @@
                 }
             }
 
-            // 4. ダミー選択肢で埋める (もし足りなければ)
-            let dummyCount = 1;
-            while (options.length < 4) {
-                const dummyOption = `ダミー選択肢 ${dummyCount++}`;
-                if (!options.includes(dummyOption)) { // ダミーも重複しないように
-                    options.push(dummyOption);
+            // 4. ダミー選択肢ではなく、他の問題からもっと広く選択肢を選ぶ
+            if (options.length < 4) {
+                // すべての問題から選択肢候補を収集（現在未使用のもの）
+                const allPossibleOptions = [];
+                questions.forEach((q, idx) => {
+                    // 現在の問題と選択肢に既に入っているものを除外
+                    if (idx !== currentIndex) {
+                        // isReversedに応じて、適切なフィールドを選択肢として使用
+                        const optionText = isReversed ? q.description : q.word;
+                        if (!options.includes(optionText)) {
+                            allPossibleOptions.push(optionText);
+                        }
+                    }
+                });
+                
+                // シャッフルして使う
+                allPossibleOptions.sort(() => Math.random() - 0.5);
+                
+                while (options.length < 4 && allPossibleOptions.length > 0) {
+                    options.push(allPossibleOptions.shift());
+                }
+                
+                // それでも足りない場合（問題数が少ない場合など）は末尾に番号付き選択肢を追加
+                let backupCount = 1;
+                while (options.length < 4) {
+                    const backupOption = `選択肢${backupCount++}`;
+                    if (!options.includes(backupOption)) {
+                        options.push(backupOption);
+                    }
                 }
             }
 
@@ -773,7 +811,7 @@
             answeredQuestions.add(currentIndex);
             totalCount++;
 
-            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            const isReversed = globalSettings.replaceMondai;
             const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
 
             if (e.target.textContent === correctAnswer) { // 正解の場合
@@ -855,7 +893,7 @@
                     // studyingQuestions.add(currentIndex); // 上で設定済み
                     let question = questions[currentIndex];
                     let questionText, answerText;
-                    const isHardModeCurrent = localStorage.getItem('hard_mode') === 'true';
+                    const isHardModeCurrent = globalSettings.hardMode;
 
                     if (isReversed) {
                         questionText = question.word;
@@ -888,7 +926,7 @@
                     // studyingQuestions.add(currentIndex); // 上で設定済み
                     let question = questions[currentIndex];
                     let questionText, answerText;
-                    const isHardModeCurrent = localStorage.getItem('hard_mode') === 'true';
+                    const isHardModeCurrent = globalSettings.hardMode;
 
                     if (isReversed) {
                         questionText = question.word;
@@ -926,26 +964,102 @@
                 updateStats(); // 表示更新
             }
         }
-
-        function selectQuestionMode() {
-            // モード選択時に localStorage から現在のインデックスを読み込むように修正
-            const savedMode = localStorage.getItem('question_mode_' + mondai) || 'sequential'; // デフォルトを sequential に変更
-            document.getElementById(savedMode + '-mode').checked = true; // UIに反映
-
-            if (savedMode === 'sequential') {
-                // 保存されている進捗があれば復元、なければ0から開始
-                currentIndex = parseInt(localStorage.getItem('current_question_index_' + mondai) || '0');
-                if (currentIndex >= questions.length || currentIndex < 0) currentIndex = 0; // インデックスが範囲外なら最初から
-            } else {
-                // ランダムモード
-                if (questions.length > 0) {
-                    currentIndex = Math.floor(Math.random() * questions.length);
-                } else {
-                    currentIndex = undefined; // 問題がない場合
-                }
-            }
-            
+// 設定をlocalStorageから読み込む関数
+function loadSettings() {
+    // グローバル設定を読み込む（一括で）
+    try {
+        const savedGlobalSettings = localStorage.getItem('quizbox_global_settings');
+        if (savedGlobalSettings) {
+            const parsedSettings = JSON.parse(savedGlobalSettings);
+            // 有効なプロパティのみをグローバル設定に適用
+            if (parsedSettings.replaceMondai !== undefined) globalSettings.replaceMondai = parsedSettings.replaceMondai;
+            if (parsedSettings.hardMode !== undefined) globalSettings.hardMode = parsedSettings.hardMode;
+            if (parsedSettings.answerMode) globalSettings.answerMode = parsedSettings.answerMode;
         }
+    } catch (e) {
+        console.error('グローバル設定の読み込みエラー:', e);
+        // 個別設定から読み込み（後方互換性）
+        globalSettings.replaceMondai = localStorage.getItem('replace_mondai') === 'true';
+        globalSettings.hardMode = localStorage.getItem('hard_mode') === 'true';
+        globalSettings.answerMode = localStorage.getItem('answer_mode') || 'choice';
+    }
+    
+    // 問題セット固有の設定を読み込む
+    try {
+        // 範囲指定がある場合は、それを含めたキーを生成
+        const startParam = getParam("start");
+        const endParam = getParam("end");
+        let problemSetKey = mondai;
+        
+        if (startParam && endParam) {
+            problemSetKey = `${mondai}_${startParam}_${endParam}`;
+        }
+        
+        const key = `quizbox_problem_settings_${problemSetKey}`;
+        const savedProblemSettings = localStorage.getItem(key);
+        if (savedProblemSettings) {
+            const parsedSettings = JSON.parse(savedProblemSettings);
+            // 有効なプロパティのみを問題セット設定に適用
+            if (parsedSettings.questionMode) problemSettings.questionMode = parsedSettings.questionMode;
+            if (parsedSettings.currentQuestionIndex !== undefined) {
+                problemSettings.currentQuestionIndex = parsedSettings.currentQuestionIndex;
+            }
+        }
+    } catch (e) {
+        console.error('問題セット設定の読み込みエラー:', e);
+        // 個別設定から読み込み（後方互換性）
+        problemSettings.questionMode = localStorage.getItem('question_mode_' + mondai) || 'sequential';
+        problemSettings.currentQuestionIndex = parseInt(localStorage.getItem('current_question_index_' + mondai) || '0');
+    }
+    
+    // UIに設定を反映
+    document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
+    document.getElementById('hardmode').checked = globalSettings.hardMode;
+    document.getElementById(problemSettings.questionMode + '-mode').checked = true;
+    document.getElementById(globalSettings.answerMode + '-mode').checked = true;
+}
+
+// 設定を保存する関数
+function saveSettings() {
+    // グローバル設定を一括で保存
+    localStorage.setItem('quizbox_global_settings', JSON.stringify(globalSettings));
+    
+    // 問題セット固有の設定を一括で保存（範囲指定がある場合はそれも含める）
+    const startParam = getParam("start");
+    const endParam = getParam("end");
+    let problemSetKey = mondai;
+    
+    // start/endパラメータが指定されている場合は、それをキーに含める
+    if (startParam && endParam) {
+        problemSetKey = `${mondai}_${startParam}_${endParam}`;
+    }
+    
+    const key = `quizbox_problem_settings_${problemSetKey}`;
+    localStorage.setItem(key, JSON.stringify(problemSettings));
+}
+
+function selectQuestionMode() {
+    // 問題セット設定から現在のモードを取得
+    const savedMode = problemSettings.questionMode;
+    document.getElementById(savedMode + '-mode').checked = true; // UIに反映
+
+    if (savedMode === 'sequential') {
+        // 保存されている進捗があれば復元、なければ0から開始
+        currentIndex = problemSettings.currentQuestionIndex;
+        if (currentIndex >= questions.length || currentIndex < 0) {
+            currentIndex = 0; // インデックスが範囲外なら最初から
+            problemSettings.currentQuestionIndex = 0; // 設定も更新
+            saveSettings(); // 保存
+        }
+    } else {
+        // ランダムモード
+        if (questions.length > 0) {
+            currentIndex = Math.floor(Math.random() * questions.length);
+        } else {
+            currentIndex = undefined; // 問題がない場合
+        }
+    }
+}
 
         function nextIndex() {
             if (questions.length === 0) return; // 問題がない場合は何もしない
@@ -982,8 +1096,7 @@
                 return; // 通常のモード選択に進まない
             }
 
-            const isSequential = document.getElementById('sequential-mode').checked; // UIの状態を直接確認
-            // const isSequential = (localStorage.getItem('question_mode_' + mondai) ?? 'sequential') === 'sequential'; // localStorageベースの場合
+            const isSequential = problemSettings.questionMode === 'sequential';
 
             let lastIndex = currentIndex;
 
@@ -991,7 +1104,8 @@
                 // 順番モードでは次の問題へ
                 currentIndex = (currentIndex + 1) % questions.length;
                 // 進捗を保存
-                localStorage.setItem('current_question_index_' + mondai, currentIndex.toString());
+                problemSettings.currentQuestionIndex = currentIndex;
+                saveSettings();
 
                 // 最後の問題に達して0に戻ったらランダムモードに切り替えるか、通知を出す
                 if (currentIndex === 0 && lastIndex === questions.length - 1) { // 厳密に一周したかチェック
@@ -1023,7 +1137,7 @@
 
         // 進捗表示を更新する関数
         function updateProgressDisplay() {
-            const isSequential = document.getElementById('sequential-mode').checked; // UIの状態を確認
+            const isSequential = problemSettings.questionMode === 'sequential';
 
             let scoreText = `
                 回答数: ${totalCount}
@@ -1086,7 +1200,14 @@
             const password = Cookies.get('password');
             if (!userId || !password) return; // ID/Passがない場合は保存しない
 
-            const problemSet = mondai || 'default';
+            // 範囲指定がある場合は、問題セット名に範囲も含める
+            let problemSet = mondai || 'default';
+            const startParam = getParam("start");
+            const endParam = getParam("end");
+            
+            if (startParam && endParam) {
+                problemSet = `${mondai}_${startParam}_${endParam}`;
+            }
             const totalQuestions = questions.length;
 
             // 1. 詳細データ (details) を作成
@@ -1097,9 +1218,6 @@
                 performanceHistory: performanceHistory,
                 answerTimes: answerTimes,
                 studyingQuestions: Array.from(studyingQuestions), // Convert Set to Array
-                // 順番モードの情報を保存
-                currentQuestionIndex: parseInt(localStorage.getItem('current_question_index_' + problemSet) || '0'), // ローカルストレージから取得
-                questionMode: localStorage.getItem('question_mode_' + problemSet) || 'sequential', // ローカルストレージから取得
             };
 
             // learned, learning, unlearned の計算ロジックはそのまま
@@ -1185,7 +1303,15 @@
                     body: JSON.stringify({
                         id: accid,
                         password: password,
-                        problem_set: mondai
+                        problem_set: (() => {
+                            // 範囲指定がある場合はそれを含める
+                            const startParam = getParam("start");
+                            const endParam = getParam("end");
+                            if (startParam && endParam) {
+                                return `${mondai}_${startParam}_${endParam}`;
+                            }
+                            return mondai;
+                        })()
                     })
                 });
 
@@ -1245,69 +1371,87 @@
             }
         }
 
+// サーバーから取得した学習進捗データを適用する関数
+function applyProgressData(progressData) {
 
-        // サーバーから取得した学習進捗データを適用する関数
-        function applyProgressData(progressData) {
+    answeredQuestions = new Set(progressData.answeredQuestions || []);
+    maxStreak = progressData.maxStreak || 0;
+    performanceHistory = progressData.performanceHistory || [];
+    answerTimes = progressData.answerTimes || [];
+    studyingQuestions = new Set(progressData.studyingQuestions || []); // studyingQuestionsも復元
 
-            answeredQuestions = new Set(progressData.answeredQuestions || []);
-            maxStreak = progressData.maxStreak || 0;
-            performanceHistory = progressData.performanceHistory || [];
-            answerTimes = progressData.answerTimes || [];
-            studyingQuestions = new Set(progressData.studyingQuestions || []); // studyingQuestionsも復元
-
-            if (progressData.questionStats && typeof progressData.questionStats === 'object') {
-                // questionStats の各エントリを数値キーの Map に変換
-                questionStats = new Map();
-                for (const key in progressData.questionStats) {
-                    if (Object.hasOwnProperty.call(progressData.questionStats, key)) {
-                        // キーを数値に変換、statsオブジェクトをそのまま値としてセット
-                        questionStats.set(parseInt(key), progressData.questionStats[key]);
-                    }
-                }
-            } else {
-                questionStats = new Map();
+    if (progressData.questionStats && typeof progressData.questionStats === 'object') {
+        // questionStats の各エントリを数値キーの Map に変換
+        questionStats = new Map();
+        for (const key in progressData.questionStats) {
+            if (Object.hasOwnProperty.call(progressData.questionStats, key)) {
+                // キーを数値に変換、statsオブジェクトをそのまま値としてセット
+                questionStats.set(parseInt(key), progressData.questionStats[key]);
             }
-
-
-            // 出題順序と現在の問題インデックスを復元し、ローカルストレージにも保存
-            const savedMode = progressData.questionMode || 'sequential'; // デフォルトはsequential
-            localStorage.setItem('question_mode_' + mondai, savedMode);
-            // UIにも反映
-            document.getElementById(savedMode + '-mode').checked = true;
-
-
-            const savedIndex = progressData.currentQuestionIndex !== undefined ? progressData.currentQuestionIndex : 0;
-            // サーバーから取得したインデックスが有効範囲内かチェック
-            if (savedIndex >= 0 && savedIndex < questions.length) {
-                localStorage.setItem('current_question_index_' + mondai, savedIndex.toString());
-                // currentIndex = savedIndex; // selectQuestionMode で設定されるのでここでは不要かも
-            } else {
-                localStorage.setItem('current_question_index_' + mondai, '0'); // 無効なら0にリセット
-                // currentIndex = 0;
-            }
-
-
-            // correctCount, wrongCount, totalCount を questionStats から再計算
-            correctCount = 0;
-            wrongCount = 0;
-            totalCount = 0;
-            if (questionStats.size > 0) {
-                answeredQuestions.forEach(index => {
-                    const stats = questionStats.get(index);
-                    if (stats) { // statsが存在する場合のみ計算
-                        totalCount += stats.attempts || 0;
-                        correctCount += stats.correctAnswers || 0;
-                        wrongCount += (stats.attempts || 0) - (stats.correctAnswers || 0);
-                    }
-                });
-            } else {
-                // questionStatsがない場合（古いデータなど）はansweredQuestionsのサイズをtotalCountとする
-                totalCount = answeredQuestions.size;
-                // この場合、correct/wrongは0のまま（情報がないため）
-            }
-
-            // updateStats(); // この関数を呼び出す loadProgressFromServer の最後で updateStats が呼ばれるので、ここでは不要
         }
+    } else {
+        questionStats = new Map();
+    }
+
+    // ユーザー設定の復元
+    // 問題セット固有の設定を復元
+    if (progressData.questionMode) {
+        problemSettings.questionMode = progressData.questionMode;
+    }
+    
+    if (progressData.currentQuestionIndex !== undefined) {
+        // サーバーから取得したインデックスが有効範囲内かチェック
+        const savedIndex = progressData.currentQuestionIndex;
+        if (savedIndex >= 0 && savedIndex < questions.length) {
+            problemSettings.currentQuestionIndex = savedIndex;
+        } else {
+            problemSettings.currentQuestionIndex = 0; // 無効なら0にリセット
+        }
+    }
+    
+    // グローバル設定も復元
+    if (progressData.replaceMondai !== undefined) {
+        globalSettings.replaceMondai = progressData.replaceMondai;
+    }
+    
+    if (progressData.hardMode !== undefined) {
+        globalSettings.hardMode = progressData.hardMode;
+    }
+    
+    if (progressData.answerMode) {
+        globalSettings.answerMode = progressData.answerMode;
+    }
+    
+    // UIに設定を反映
+    document.getElementById(problemSettings.questionMode + '-mode').checked = true;
+    document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
+    document.getElementById('hardmode').checked = globalSettings.hardMode;
+    document.getElementById(globalSettings.answerMode + '-mode').checked = true;
+    // ローカルストレージにも保存
+// ローカルストレージにも保存
+saveSettings();
+
+// correctCount, wrongCount, totalCount を questionStats から再計算
+correctCount = 0;
+wrongCount = 0;
+totalCount = 0;
+if (questionStats.size > 0) {
+answeredQuestions.forEach(index => {
+    const stats = questionStats.get(index);
+    if (stats) { // statsが存在する場合のみ計算
+        totalCount += stats.attempts || 0;
+        correctCount += stats.correctAnswers || 0;
+        wrongCount += (stats.attempts || 0) - (stats.correctAnswers || 0);
+    }
+});
+} else {
+// questionStatsがない場合（古いデータなど）はansweredQuestionsのサイズをtotalCountとする
+totalCount = answeredQuestions.size;
+// この場合、correct/wrongは0のまま（情報がないため）
+}
+
+// updateStats(); // この関数を呼び出す loadProgressFromServer の最後で updateStats が呼ばれるので、ここでは不要
+}
 
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);
@@ -1361,12 +1505,10 @@
         // 問題文と回答文を入れ換える機能
         const replaceMondaiCheckbox = document.getElementById('replace-mondai');
 
-        // ローカルストレージから設定を読み込む
-        replaceMondaiCheckbox.checked = localStorage.getItem('replace_mondai') === 'true';
-
         // チェックボックスの変更イベント
         replaceMondaiCheckbox.addEventListener('change', async function () {
-            localStorage.setItem('replace_mondai', this.checked);
+            globalSettings.replaceMondai = this.checked;
+            saveSettings();
 
             // 現在の画面に合わせて更新
             populateWordList(); // 単語リスト再表示
@@ -1375,7 +1517,7 @@
                 // 問題画面表示中なら問題も更新
                 await showNextQuestion();
                 notie.alert({
-                    type: 'info', // 'success'から変更
+                    type: 'info',
                     text: this.checked ? '問題文と回答文を入れ替えました' : '問題文と回答文を元に戻しました',
                     time: 1.5
                 });
@@ -1387,12 +1529,10 @@
         // ハードモード機能
         const hardmodeCheckbox = document.getElementById('hardmode');
 
-        // ローカルストレージからハードモード設定を読み込む
-        hardmodeCheckbox.checked = localStorage.getItem('hard_mode') === 'true';
-
         // ハードモードチェックボックスの変更イベント
         hardmodeCheckbox.addEventListener('change', async function () {
-            localStorage.setItem('hard_mode', this.checked);
+            globalSettings.hardMode = this.checked;
+            saveSettings();
 
             if (swiper.activeIndex === 1) {
                 // 問題画面表示中なら問題も更新
@@ -1403,16 +1543,13 @@
                     time: 1.5
                 });
             }
-            // 設定変更をサーバーに保存 (任意)
-            // saveProgressToServer();
         });
-
 
         // 出題モード選択のイベントリスナー
         document.getElementById('random-mode').addEventListener('change', async function () {
             if (this.checked) {
-                localStorage.setItem('question_mode_' + mondai, 'random');
-                localStorage.removeItem('current_question_index_' + mondai); // ランダムに切り替えたらインデックスは不要
+                problemSettings.questionMode = 'random';
+                saveSettings();
                 selectQuestionMode(); // モード選択ロジックを呼び出してcurrentIndexを更新
                 await showNextQuestion();
                 updateProgressDisplay();
@@ -1421,14 +1558,13 @@
                     text: 'ランダム出題モードに切り替えました',
                     time: 1.5
                 });
-                saveProgressToServer(); // 設定変更を保存
             }
         });
 
         document.getElementById('sequential-mode').addEventListener('change', async function () {
             if (this.checked) {
-                localStorage.setItem('question_mode_' + mondai, 'sequential');
-                // 順番モードに切り替えたら、保存されているインデックス（なければ0）から再開
+                problemSettings.questionMode = 'sequential';
+                saveSettings();
                 selectQuestionMode(); // モード選択ロジックを呼び出してcurrentIndexを更新
                 await showNextQuestion();
                 updateProgressDisplay();
@@ -1437,10 +1573,8 @@
                     text: '順番出題モードに切り替えました',
                     time: 1.5
                 });
-                saveProgressToServer(); // 設定変更を保存
             }
         });
-
 
         document.querySelectorAll('input[name="answer-mode"]').forEach(radio => {
             radio.addEventListener('change', function () {
@@ -1448,12 +1582,12 @@
                 const inputArea = document.getElementById('input-area');
                 const handwritingArea = document.getElementById('handwriting-area');
 
-                localStorage.setItem('answer_mode', this.value); // 回答モードも保存
+                globalSettings.answerMode = this.value;
+                saveSettings();
 
                 choiceArea.style.display = 'none';
                 inputArea.style.display = 'none';
                 handwritingArea.style.display = 'none';
-
 
                 if (this.value === 'choice') {
                     choiceArea.style.display = 'block';
@@ -1466,7 +1600,6 @@
                 }
             });
         });
-
         // テキスト回答送信
         document.getElementById('submit-text-answer').addEventListener('click', function () {
             const answer = document.getElementById('text-answer').value.trim();
@@ -1595,7 +1728,7 @@
 
         // テキスト回答の正誤チェック
         function checkTextAnswer(answer) {
-            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            const isReversed = globalSettings.replaceMondai;
             const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
 
             // 完全一致で比較
@@ -1611,7 +1744,7 @@
 
         // 手書き回答の送信処理 (write.js側で checkHandwritingAnswer を呼ぶ想定)
         function checkHandwritingAnswer(handwritingResult) {
-            const isReversed = localStorage.getItem('replace_mondai') === 'true';
+            const isReversed = globalSettings.replaceMondai;
             const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
 
             // 手書き認識結果 (handwritingResult) と正解 (correctAnswer) を比較
@@ -1626,9 +1759,7 @@
 
 
         document.addEventListener('DOMContentLoaded', function () {
-
             if (getParam("tangolist")=== 'true') {
-                
                 swiper.slideTo(2);
 
                 const url = new URL(window.location.href);
@@ -1636,21 +1767,14 @@
                 window.history.replaceState({}, document.title, url);
             }
 
-            // 保存された出題順序モードを読み込む
-            selectQuestionMode(); // これでlocalStorageが読み込まれUIに反映される
-
-            // 保存された回答モードを読み込む
-            const savedAnswerMode = localStorage.getItem('answer_mode') || 'choice';
-            document.getElementById(savedAnswerMode + '-mode').checked = true;
-            // イベントを発火させて表示を切り替える
-            document.getElementById(savedAnswerMode + '-mode').dispatchEvent(new Event('change'));
-
-            const savedReplaceMode = localStorage.getItem('replace_mondai') === 'true';
-            document.getElementById('replace-mondai').checked = savedReplaceMode;
-
-            // 保存されたハードモード設定を読み込む
-            const savedHardMode = localStorage.getItem('hard_mode') === 'true';
-            document.getElementById('hardmode').checked = savedHardMode;
+            // ローカルストレージから設定を読み込み、UIに反映
+            loadSettings();
+            
+            // 回答モードの表示を切り替える
+            const answerModeRadio = document.getElementById(globalSettings.answerMode + '-mode');
+            if (answerModeRadio) {
+                answerModeRadio.dispatchEvent(new Event('change'));
+            }
 
             //タイトルの変更
             document.title = `Quizbox - ${getParam("id")}`;

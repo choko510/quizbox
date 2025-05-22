@@ -240,19 +240,23 @@ let apiResponseData = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
     // MicroModalの初期化
-    MicroModal.init({
-        onShow: function(modal) {
-            // ランキングモーダル表示時にランキングデータを自動取得
-            if (modal.id === 'modal-1') {
-                const activeTab = document.querySelector('.tab.active');
-                if (activeTab && activeTab.getAttribute('data-tab') === 'ranking') {
-                    fetchAndDisplayRanking();
+    if (typeof MicroModal !== 'undefined') {
+        MicroModal.init({
+            onShow: function(modal) {
+                // ランキングモーダル表示時にランキングデータを自動取得
+                if (modal.id === 'modal-1') {
+                    const activeTab = document.querySelector('.tab.active');
+                    if (activeTab && activeTab.getAttribute('data-tab') === 'ranking') {
+                        fetchAndDisplayRanking();
+                    }
                 }
-            }
-        },
-        awaitOpenAnimation: true,
-        awaitCloseAnimation: true
-    });
+            },
+            awaitOpenAnimation: true,
+            awaitCloseAnimation: true
+        });
+    } else {
+        console.warn('MicroModal is not defined. Modal functionality may not work properly.');
+    }
     
     // タブ切り替え機能
     setupTabs();
@@ -278,28 +282,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     if (userId && userPassword) {
         try {
-            // api/getを一度だけ呼び出す
             const scoresData = await fetchScores(userId, userPassword);
             if (scoresData) {
                 if (scoresData.message === "password is wrong") {
-                    // パスワードが間違っている場合、新しいアカウントを作成
-                    const newId = Math.random().toString(36).substring(2);
-                    const newPassword = Math.random().toString(36).substring(2);
-                    Cookies.set('id', newId, { expires: 120 });
-                    Cookies.set('password', newPassword, { expires: 120 });
-                    await fetch('api/registration', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            id: newId,
-                            password: newPassword
-                        })
-                    });
+                    // パスワードが間違っている場合、エラーをログに記録するだけで、
+                    // 既存のクッキーは維持する（強制ログアウトを防止）
+                    console.warn('認証エラー: パスワードが一致しません。サーバー上のアカウント情報が変更された可能性があります。');
+                    // 認証エラーフラグを設定
+                    localStorage.setItem('authErrorFlag', 'true');
                 } else {
                     // 正常にデータを取得できた場合
                     analyzedata(scoresData); // プログレスバーを表示
+                    // 認証エラーフラグがあれば削除
+                    localStorage.removeItem('authErrorFlag');
                 }
             }
         } catch (error) {
@@ -315,7 +310,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // APIからスコアデータを取得
-// APIからスコアデータを取得（キャッシュ対応）
 async function fetchScores(id, password) {
     // すでにデータを取得済みの場合は、キャッシュデータを返す
     if (apiDataFetched && apiResponseData) {
@@ -349,16 +343,30 @@ async function fetchScores(id, password) {
     
     return data;
 }
-// リンクの href から 'id' クエリパラメータを取得する関数
+// リンクの href から進捗管理用のキーを取得する関数
 function getProgressKey(href) {
     try {
         const url = new URL(href, window.location.origin); // 相対URLも扱えるように基底URLを指定
-        if (url.searchParams.has('id')) {
-            return url.searchParams.get('id');
-        } else if (url.searchParams.has('name')) { 
+        
+        // URLパラメータの取得
+        const id = url.searchParams.get('id');
+        const start = url.searchParams.get('start');
+        const end = url.searchParams.get('end');
+        
+        // idパラメータがある場合の処理
+        if (id) {
+            // start/endパラメータが両方ある場合は範囲付きのキーを生成
+            if (start && end) {
+                return `${id}_${start}_${end}`;
+            }
+            return id;
+        }
+        // nameパラメータがある場合の処理
+        else if (url.searchParams.has('name')) {
             const nameParam = url.searchParams.get("name");
             return nameParam ? decodeURIComponent(nameParam) : null;
         }
+        return null;
     } catch (e) {
         console.error('URLの解析に失敗しました:', href, e);
         return null; // エラー時は null を返す
@@ -377,18 +385,29 @@ function analyzedata(data) {
     console.log('進捗データ:', data); // デバッグ用
     const allProgressData = data.progress_summary || {};
     console.log('処理する全進捗データ:', allProgressData);
+    
     // 全問題リンクに対してプログレスバーを追加
     const categoryDivs = document.querySelectorAll('.category');
     categoryDivs.forEach(category => {
+        console.log('処理中のカテゴリー:', category.querySelector('p')?.textContent || '名称不明');
+        
         const links = category.querySelectorAll('a');
         links.forEach(link => {
             // リンクからプログレスキーを取得
-            const progressKey = getProgressKey(link.href); // textContent は不要
+            const hrefValue = link.href;
+            const progressKey = getProgressKey(hrefValue);
+            
             if (!progressKey) {
                 return; // キーが取得できなければスキップ
             }
+            
             // 進捗データの抽出
             const progressData = extractProgressData(allProgressData, progressKey);
+            
+            // データがない場合は特別扱い
+            if (progressData.total === 0 && progressData.learned === 0 && progressData.learning === 0) {
+            }
+            
             // プログレスバー作成・追加
             createProgressBar(link, progressData);
         });
@@ -455,10 +474,20 @@ async function iconmodal() {
     const id = Cookies.get('id');
     const password = Cookies.get('password');
     
+    // 認証エラーフラグがあれば、警告を表示
+    if (localStorage.getItem('authErrorFlag') === 'true') {
+        alert('前回のログイン時に認証エラーが発生しました。アカウント設定を確認してください。');
+        // タブをアカウント管理に切り替え
+        const accountTab = document.querySelector('.tab[data-tab="account"]');
+        if (accountTab) {
+            accountTab.click();
+        }
+    }
+    
     const scores = await fetchScores(id, password);
     if (!scores) return;
-
-analyzedata(scores); // 進捗データを分析してプログレスバーを表示
+    
+    analyzedata(scores); // 進捗データを分析してプログレスバーを表示
     const total = scores.correct + scores.bad;
     const ritu = total > 0 ? Math.round(scores.correct / total * 100) + "%" : "0%";
 
