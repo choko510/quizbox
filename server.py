@@ -983,8 +983,10 @@ async def process_image(data: Union[ImageData, TextData]):
 
             # 指示概要
             - 提供されたテキストデータから、重要な情報を問う一問一答形式の問題を作成します。
-            - 特に、テキスト中で強調されていると思われる語句（例えば、OCR前の元画像で赤文字だった箇所や太字だった箇所など、文脈から重要と判断できるキーワードや概念）を中心に出題してください。
+            - 特に、テキスト中で強調されていると思われる語句（例えば、画像で赤文字だった箇所や太字だった箇所など、文脈から重要と判断できるキーワードや概念）を中心に出題してください。
             - 問題文と回答は、提供されたテキストの内容に忠実である必要があります。
+            - 画像が極度に不鮮明な場合は、{"error","img unclear"}と返してください。
+            - 問題を作成するためのデータが極端に不足している場合は、{"error","data shortage"}と返してください。
 
             # 問題作成の要件
             - 各問題文は、簡潔かつ明確にしてください。質問の意図が曖昧にならないように注意してください。
@@ -1015,7 +1017,36 @@ async def process_image(data: Union[ImageData, TextData]):
             model="gemini-2.5-flash-preview-05-20",
             images=image
         )
-    
+
+        # AIからのエラー時の処理
+        if question_response_text.startswith("{\"error") or question_response_text.startswith("error"):
+            # エラーメッセージを解析
+            error_message = question_response_text.split(":")[1].strip().strip("\"")
+            if error_message == "img unclear":
+                return JSONResponse(
+                    content={
+                        "status": "failed",
+                        "message": "画像が不鮮明です。"
+                    },
+                    status_code=400
+                )
+            elif error_message == "data shortage":
+                return JSONResponse(
+                    content={
+                        "status": "failed",
+                        "message": "データが不足しています。"
+                    },
+                    status_code=400
+                )
+            else:
+                return JSONResponse(
+                    content={
+                        "status": "failed",
+                        "message": f"AIからのエラー: {error_message}"
+                    },
+                    status_code=400
+                )
+
         # JSONパターンを抽出（APIの応答からJSONを抽出）
         # 応答が直接JSON文字列である場合も考慮
         questions = []
