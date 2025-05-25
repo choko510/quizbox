@@ -17,38 +17,71 @@
 
 <body>
     <a href="javascript:pageback()" class="back"></a>
-    <a href="javascript:void(0);" id="settings-btn" class="settings-btn"><i class="fas fa-cog"></i></a>
+    <a href="javascript:void(0);" id="settings-btn" class="settings-btn">
+        <i class="fas fa-cog"></i>
+    </a>
     <div class="swiper-container">
         <div class="swiper-wrapper">
-
             <div class="swiper-slide slide1">
                 <div class="resultbox">
                     <div class="resultbox1">
-                        <div class="progress-title"><i class="fas fa-book-open"></i>学習進捗</div>
+                        <div class="progress-title">
+                            <i class="fas fa-book-open"></i>学習進捗
+                        </div>
                         <div id="progress-stats">
-                            <div><i class="fas fa-tasks"></i>総問題数: <span id="total-questions">0</span></div>
-                            <div><i class="fas fa-check-circle"></i>学習済み: <span id="answered-questions">0</span></div>
-                            <div><i class="fas fa-smile"></i>正解: <span id="correct-answers">0</span></div>
-                            <div><i class="fas fa-times-circle"></i>不正解: <span id="wrong-answers">0</span></div>
                             <div>
-                                <i class="fas fa-chart-pie"></i>進捗率: <span id="progress-percentage">0</span>%
+                                <i class="fas fa-tasks"></i>総問題数:
+                                <span id="total-questions">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-check-circle"></i>学習済み:
+                                <span id="answered-questions">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-smile"></i>正解:
+                                <span id="correct-answers">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-times-circle"></i>不正解:
+                                <span id="wrong-answers">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-chart-pie"></i>進捗率:
+                                <span id="progress-percentage">0</span>%
                                 <div class="progress-bar-container">
-                                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                                    <div class="progress-bar" id="progress-bar" style="width: 0%">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="resultbox2">
-                        <div class="stats-title"><i class="fas fa-chart-bar"></i>統計情報</div>
+                        <div class="stats-title">
+                            <i class="fas fa-chart-bar"></i>統計情報
+                        </div>
                         <div id="performance-stats">
-                            <div><i class="fas fa-percentage"></i>平均正解率: <span id="avg-accuracy">0</span>%</div>
-                            <div><i class="fas fa-trophy"></i>最高連続正解: <span id="max-streak">0</span></div>
-                            <div><i class="fas fa-fire"></i>現在の連続正解: <span id="current-streak">0</span></div>
-                            <div><i class="fas fa-stopwatch"></i>平均解答時間: <span id="avg-time">0</span>秒</div>
+                            <div>
+                                <i class="fas fa-percentage"></i>平均正解率:
+                                <span id="avg-accuracy">0</span>%
+                            </div>
+                            <div>
+                                <i class="fas fa-trophy"></i>最高連続正解:
+                                <span id="max-streak">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-fire"></i>現在の連続正解:
+                                <span id="current-streak">0</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-stopwatch"></i>平均解答時間:
+                                <span id="avg-time">0</span>秒
+                            </div>
                         </div>
                     </div>
                     <div class="resultbox3">
-                        <div class="study-title"><i class="fas fa-exclamation-circle"></i>学習中の問題</div>
+                        <div class="study-title">
+                            <i class="fas fa-exclamation-circle"></i>学習中の問題
+                        </div>
                         <ul id="study-list"></ul>
                         <button id="start-review-btn" class="review-btn">間違えた問題を復習する</button>
                     </div>
@@ -57,27 +90,33 @@
                     </div>
                 </div>
             </div>
-
             <div class="swiper-slide slide2">
                 <div class="main">
-                    <div id="review-mode-indicator" class="review-mode-indicator">
-                        復習モード中 (残り <span id="review-count">0</span> 問)</div>
-
+                    <div id="review-mode-indicator" class="review-mode-indicator">復習モード中 (残り
+                        <span id="review-count">0</span>問)
+                    </div>
                     <div class="title">
-                        <div id="question"></div>
+                        <div id="question">
+                        </div>
                     </div>
                     <ul class="sp" id="choice-answers">
-                        <li><button id="answer1"></button></li>
-                        <li><button id="answer2"></button></li>
-                        <li><button id="answer3"></button></li>
-                        <li><button id="answer4"></button></li>
+                        <li>
+                            <button id="answer1"></button>
+                        </li>
+                        <li>
+                            <button id="answer2"></button>
+                        </li>
+                        <li>
+                            <button id="answer3"></button>
+                        </li>
+                        <li>
+                            <button id="answer4"></button>
+                        </li>
                     </ul>
-
                     <div id="input-area" style="display: none;" class="no-swiping">
                         <input type="text" id="text-answer" placeholder="回答を入力">
                         <button id="submit-text-answer">回答</button>
                     </div>
-
                     <div id="handwriting-area" style="display: none;" class="no-swiping">
                         <div class="canvas-container no-swiping">
                             <canvas id="handwriting-canvas" width="400" height="200" class="no-swiping"></canvas>
@@ -87,42 +126,65 @@
                             <button id="submit-answer" class="handwriting-btn">回答する</button>
                         </div>
                     </div>
-                </div>
-                <div id="score">
-                    回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
-                </div>
-                <button id="exit-review-btn" class="exit-review-btn">通常モードに戻る</button>
-
-            </div>
-
-            <div class="swiper-slide slide3">
-                <div class="tangolist">
-                    <h1>単語リスト</h1>
-                    <div class="search-container">
-                        <input type="text" class="searchbox" placeholder="検索" oninput="filterWords()">
-                        <i class="fas fa-search search-icon"></i>
-                        <div class="filter-options">
-                            <select id="answerFilter" onchange="filterWords()">
-                                <option value="all">すべての問題</option>
-                                <option value="unanswered">未回答の問題</option>
-                                <option value="correct">正解した問題</option>
-                                <option value="incorrect">間違えた問題</option>
-                            </select>
+                    <!-- 英単語並び替えモード -->
+                    <div id="word-arrange-area" style="display: none;" class="no-swiping">
+                        <div class="word-arrange-instruction">単語を正しい順序でタップして文章を完成させてください
+                        </div>
+                        <div id="shuffled-words" class="shuffled-words-container">
+                        </div>
+                        <div id="arranged-words" class="arranged-words-container">
+                            <div class="arranged-placeholder">ここに単語をタップして配置
+                            </div>
+                        </div>
+                        <div class="word-arrange-controls">
+                            <button id="clear-arrange" class="arrange-btn">リセット</button>
+                            <button id="submit-arrange" class="arrange-btn">回答</button>
                         </div>
                     </div>
-                    <ul id="wordList" class="custom-list"></ul>
+                    <!-- ○×問題モード -->
+                    <div id="true-false-area" style="display: none;" class="no-swiping">
+                        <div class="true-false-instruction">この問題文は正しいですか？
+                        </div>
+                        <div class="true-false-buttons">
+                            <button id="true-btn" class="tf-btn true-btn">○ (正しい)</button>
+                            <button id="false-btn" class="tf-btn false-btn">× (間違い)</button>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div id="score">回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+            </div>
+            <button id="exit-review-btn" class="exit-review-btn">通常モードに戻る</button>
         </div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
+        <div class="swiper-slide slide3">
+            <div class="tangolist">
+                <h1>単語リスト</h1>
+                <div class="search-container">
+                    <input type="text" class="searchbox" placeholder="検索" oninput="filterWords()">
+                    <i class="fas fa-search search-icon"></i>
+                    <div class="filter-options">
+                        <select id="answerFilter" onchange="filterWords()">
+                            <option value="all">すべての問題</option>
+                            <option value="unanswered">未回答の問題</option>
+                            <option value="correct">正解した問題</option>
+                            <option value="incorrect">間違えた問題</option>
+                        </select>
+                    </div>
+                </div>
+                <ul id="wordList" class="custom-list"></ul>
+            </div>
+        </div>
     </div>
-
+    <div class="swiper-button-next">
+    </div>
+    <div class="swiper-button-prev">
+    </div>
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
             <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
                 <main class="modal__content" id="modal-1-content">
-                    <div id="result-message" class="result-message"></div>
+                    <div id="result-message" class="result-message">
+                    </div>
                 </main>
                 <footer class="modal__footer modal__footer-centered">
                     <button class="modal__btn" data-micromodal-close
@@ -131,7 +193,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal micromodal-slide" id="settings-modal" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
             <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
@@ -145,12 +206,10 @@
                             <input type="checkbox" name="replace-mondai" id="replace-mondai">
                             <label for="replace-mondai">問題文と回答文を入れ換える</label>
                         </div>
-
                         <div class="settings-option">
                             <input type="checkbox" name="hardmode" id="hardmode">
                             <label for="hardmode">ハードモード</label>
                         </div>
-
                         <h3>出題順序</h3>
                         <div class="settings-option">
                             <input type="radio" id="random-mode" name="question-mode" value="random" checked>
@@ -160,21 +219,26 @@
                             <input type="radio" id="sequential-mode" name="question-mode" value="sequential">
                             <label for="sequential-mode">1問目から順に出題</label>
                         </div>
-
                         <h3>回答モード</h3>
                         <div class="settings-option">
                             <input type="radio" id="choice-mode" name="answer-mode" value="choice" checked>
                             <label for="choice-mode">4択モード</label>
                         </div>
-
                         <div class="settings-option">
                             <input type="radio" id="input-mode" name="answer-mode" value="input">
                             <label for="input-mode">入力モード</label>
                         </div>
-
                         <div class="settings-option">
-                            <input type="radio" id="handwriting-mode" name="answer-mode" value="handwriting" checked>
+                            <input type="radio" id="handwriting-mode" name="answer-mode" value="handwriting">
                             <label for="handwriting-mode">手書きモード(Beta)</label>
+                        </div>
+                        <div class="settings-option">
+                            <input type="radio" id="word-arrange-mode" name="answer-mode" value="word-arrange">
+                            <label for="word-arrange-mode">英単語並び替えモード</label>
+                        </div>
+                        <div class="settings-option">
+                            <input type="radio" id="true-false-mode" name="answer-mode" value="true-false">
+                            <label for="true-false-mode">○×問題モード</label>
                         </div>
                         <h3>リスニングモード</h3>
                         <a href="javascript:window.location.replace(`/listening?id=${encodeURIComponent(mondai)}`);"
@@ -187,7 +251,6 @@
             </div>
         </div>
     </div>
-
     <audio id="audioPlayer" class="hidden-player"></audio>
     <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -229,7 +292,7 @@
                 results = regex.exec(url);
             if (!results) return null;
             if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
+            return decodeURIComponent(results[2].replace(/+/g, " "));
         }
 
         let mondai = getParam("id");
@@ -244,22 +307,23 @@
                 isCustom = true;
                 mondai = mondainame;
             } else {
-                mondai = "hard";  //デフォルトの問題
+                mondai = "hard"; //デフォルトの問題
             }
         }
-        const questions = [];  // Initialize questions array
+
+        const questions = []; // Initialize questions array
         // 設定を一元管理するオブジェクト
         // グローバル設定（問題セット共通）
         const globalSettings = {
-            replaceMondai: false,    // 問題文と回答文を入れ替えるか
-            hardMode: false,         // ハードモード
-            answerMode: 'choice'    // 回答モード（'choice', 'input', 'handwriting'）
+            replaceMondai: false, // 問題文と回答文を入れ替えるか
+            hardMode: false, // ハードモード
+            answerMode: 'choice' // 回答モード（'choice', 'input', 'handwriting', 'word-arrange', 'true-false'）
         };
-        
+
         // 問題セット固有の設定
         const problemSettings = {
             questionMode: 'sequential', // 出題モード（'random'または'sequential'）
-            currentQuestionIndex: 0     // 順番モードでの現在の問題インデックス
+            currentQuestionIndex: 0 // 順番モードでの現在の問題インデックス
         };
 
         let answeredQuestions = new Set();
@@ -298,7 +362,7 @@
         function playWord(word) {
             const audioPlayer = document.getElementById('audioPlayer');
             audioPlayer.src = `/api/gen/speak/${encodeURIComponent(word)}`;
-            audioPlayer.play().catch(() => {});
+            audioPlayer.play().catch(() => { });
         }
 
         function loadQuestions() {
@@ -316,14 +380,15 @@
                 // XSS対策として、errorMessageをエスケープしてから挿入
                 const escapeHtml = (unsafe) => {
                     return unsafe
-                         .replace(/&/g, "&amp;")
-                         .replace(/</g, "&lt;")
-                         .replace(/>/g, "&gt;")
-                         .replace(/"/g, "&quot;")
-                         .replace(/'/g, "&#039;");
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
                 };
-                
-                document.getElementById('question').innerHTML = `
+
+                document.getElementById('question').innerHTML =
+                    `
                     <div class="error-message">
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>${escapeHtml(errorMessage)}</p>
@@ -371,7 +436,7 @@
                                 } else if (!Array.isArray(mondaiData)) {
                                     mondaiData = [];
                                 }
-                                
+
                                 questions.push({
                                     word: item.word,
                                     description: item.description,
@@ -381,14 +446,15 @@
                         });
                     })
                     .catch(error => {
-                        
+
                     });
             } else {
                 // URLから開始と終了の問題番号を取得
                 const startNum = parseInt(getParam("start")) || 1;
                 const endNum = parseInt(getParam("end")) || null;
                 // APIから範囲指定で問題を取得
-                const apiUrl = `/api/get/mondai/${mondai}.json?start=${startNum - 1}${endNum && endNum >= startNum ? `&end=${endNum}` : ''}`;
+                const apiUrl =
+                    `/api/get/mondai/${mondai}.json?start=${startNum - 1}${endNum && endNum >= startNum ? `&end=${endNum}` : ''}`;
                 return fetch(apiUrl)
                     .then(response => checkResponse(response, '範囲指定問題API'))
                     .then(response => response.json())
@@ -396,48 +462,53 @@
                         data.forEach(item => {
                             const [word, description, mondaiData] = item.split('|');
                             if (mondaiData === undefined) {
-                                questions.push({ word, description });
+                                questions.push({
+                                    word, description
+                                });
                             } else {
-                                questions.push({ word, description, mondai: JSON.parse(mondaiData) });
+                                questions.push({
+                                    word, description, mondai: JSON.parse(mondaiData)
+                                });
                             }
                         });
                     })
                     .catch(error => {
-                        
+
                     });
             }
         }
-loadQuestions().then(async () => {
-    document.getElementById('total-questions').textContent = questions.length;
 
-    // 設定を読み込む
-    loadSettings();
-    
-    // 問題の選択方法をモードに応じて設定
-    selectQuestionMode();
+        loadQuestions().then(async () => {
+            document.getElementById('total-questions').textContent = questions.length;
 
-    // もしログインしていれば、サーバーから学習進捗データを読み込む
-    if (accid && password) {
-        await loadProgressFromServer();
-    }
+            // 設定を読み込む
+            loadSettings();
 
-    // 最初の問題表示と進捗更新
-    await showNextQuestion();
-    updateProgressDisplay(); // 進捗表示を更新
-    initializeChart();
-    populateWordList();
+            // 問題の選択方法をモードに応じて設定
+            selectQuestionMode();
 
-    // --- タイマー制御: 初期ロード時に問題画面ならタイマー開始 ---
-    if (swiper.activeIndex === 1) {
-        start = performance.now();
-    }
-    // --- タイマー制御ここまで ---
+            // もしログインしていれば、サーバーから学習進捗データを読み込む
+            if (accid && password) {
+                await loadProgressFromServer();
+            }
+
+            // 最初の問題表示と進捗更新
+            await showNextQuestion();
+            updateProgressDisplay(); // 進捗表示を更新
+            initializeChart();
+            populateWordList();
+
+            // --- タイマー制御: 初期ロード時に問題画面ならタイマー開始 ---
+            if (swiper.activeIndex === 1) {
+                start = performance.now();
+            }
+            // --- タイマー制御ここまで ---
 
 
             // 検索インデックスを事前構築（バックグラウンドで実行）
             setTimeout(() => {
                 buildSearchIndex();
-                
+
             }, 1000);
         });
 
@@ -452,15 +523,18 @@ loadQuestions().then(async () => {
                 titleHTML = question.word;
                 contentHTML = question.description;
 
-                const isEnglishWord = /^[a-zA-Z0-9\s\-.,'']+$/.test(titleHTML.trim());
-                const speakerIcon = isEnglishWord
-                    ? `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>`
-                    : '';
+                const isEnglishWord = /^[a-zA-Z0-9s-.,'']+$/.test(titleHTML.trim());
+                const speakerIcon = isEnglishWord ?
+                    `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>` :
+                    '';
 
-                if (contentHTML.endsWith("か。") || contentHTML.endsWith("答えよ。") || contentHTML.endsWith("答えなさい。")) {
-                    listHTML += `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${titleHTML}</div></li>`;
+                if (contentHTML.endsWith("か。") || contentHTML.endsWith("答えよ。") ||
+                    contentHTML.endsWith("答えなさい。")) {
+                    listHTML +=
+                        `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${titleHTML}</div></li>`;
                 } else {
-                    listHTML += `<li><div class="${titleClass}">${titleHTML}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div></li>`;
+                    listHTML +=
+                        `<li><div class="${titleClass}">${titleHTML}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div></li>`;
                 }
             });
 
@@ -474,8 +548,9 @@ loadQuestions().then(async () => {
         let renzokuseikai = 0;
 
         async function showNextQuestion() {
-            if (currentIndex === undefined || currentIndex < 0 || currentIndex >= questions.length) {
-                
+            if (currentIndex === undefined || currentIndex < 0 || currentIndex >=
+                questions.length) {
+
                 if (questions.length > 0) {
                     currentIndex = 0;
                 } else {
@@ -485,7 +560,7 @@ loadQuestions().then(async () => {
             }
             const question = questions[currentIndex];
             if (!question) {
-                
+
                 return;
             }
 
@@ -496,7 +571,7 @@ loadQuestions().then(async () => {
             screenHeight = window.innerHeight;
 
             // 問題文表示
-            if(!isHardMode){
+            if (!isHardMode) {
                 if (isReversed) {
                     title.innerHTML = question.word;
                     textlength = question.word.length;
@@ -504,8 +579,8 @@ loadQuestions().then(async () => {
                     title.innerHTML = question.description;
                     textlength = question.description.length;
                 }
-            
-                
+
+
                 if (screenWidth < 600 || screenHeight < 600) {
                     if (textlength >= 150) title.style.fontSize = "0.8em";
                     else if (textlength >= 100) title.style.fontSize = "1em";
@@ -530,7 +605,8 @@ loadQuestions().then(async () => {
             if (isReversed) {
                 // 反転モード: 他の問題の説明文を候補に
                 questions.forEach((q, index) => {
-                    if (index !== currentIndex && q.description !== correctAnswer && !incorrectOptions.includes(q.description)) {
+                    if (index !== currentIndex && q.description !== correctAnswer && !
+                        incorrectOptions.includes(q.description)) {
                         incorrectOptions.push(q.description);
                     }
                 });
@@ -539,7 +615,7 @@ loadQuestions().then(async () => {
                 if (question.mondai) {
                     // mondaiフィールドあり: 指定の不正解選択肢を優先使用
                     const providedIncorrect = Array.isArray(question.mondai) ? question.mondai : [];
-                    
+
                     // mondaiの選択肢を優先的に使用（正解との重複を除外）
                     providedIncorrect.forEach(opt => {
                         if (opt !== correctAnswer && !incorrectOptions.includes(opt)) {
@@ -547,11 +623,12 @@ loadQuestions().then(async () => {
                         }
                     });
                 }
-                
+
                 // 他の問題の単語も候補に追加 (mondaiの選択肢と区別するため別の配列に)
                 const otherOptions = [];
                 questions.forEach((q, index) => {
-                    if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
+                    if (index !== currentIndex && q.word !== correctAnswer && !
+                        incorrectOptions.includes(q.word)) {
                         otherOptions.push(q.word);
                     }
                 });
@@ -563,24 +640,31 @@ loadQuestions().then(async () => {
                 try {
                     const response = await fetch('/api/get/sentences', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ words: [correctAnswer] }) // 正解の単語を送信
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            words: [correctAnswer]
+                        }) // 正解の単語を送信
                     });
                     if (!response.ok) {
                         throw new Error(`API request failed with status ${response.status}`);
                     }
                     const sentenceData = await response.json();
-                    if (sentenceData.results && sentenceData.results[correctAnswer] && sentenceData.results[correctAnswer].length > 0) {
+                    if (sentenceData.results && sentenceData.results[correctAnswer] &&
+                        sentenceData.results[correctAnswer].length > 0) {
                         const sentences = sentenceData.results[correctAnswer];
-                        const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences.length)]; // ランダムに1文選択
-                        
+                        const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences
+                            .length)]; // ランダムに1文選択
+
                         // 問題文を書き換え
                         // グローバルな正規表現を使用して、すべての | を <br> に置換
-                        title.innerHTML = sentenceForQuestion.replace(/\|/g,"<br>").replace(new RegExp(escapeRegExp(correctAnswer), "g"),"(     )");
-                        
+                        title.innerHTML = sentenceForQuestion.replace(/|/g, "<br>").replace(new RegExp(
+                            escapeRegExp(correctAnswer), "g"), "(     )");
+
                         // 正規表現のエスケープ関数（新たに追加）
                         function escapeRegExp(string) {
-                            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            return string.replace(/[.*+?^${}()|[]\]/g, '\$&');
                         }
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
@@ -604,18 +688,20 @@ loadQuestions().then(async () => {
 
                         // 他の問題の単語を不正解の候補として集める
                         questions.forEach((q, index) => {
-                            if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
+                            if (index !== currentIndex && q.word !== correctAnswer && !
+                                incorrectOptions.includes(q.word)) {
                                 incorrectOptions.push(q.word);
                             }
                         });
-                        
+
                     }
                 } catch (error) {
                     console.error('Error fetching sentences:', error);
                     // エラーが発生した場合は通常の選択肢生成に戻る
                     incorrectOptions = [];
                     questions.forEach((q, index) => {
-                        if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
+                        if (index !== currentIndex && q.word !== correctAnswer && !
+                            incorrectOptions.includes(q.word)) {
                             incorrectOptions.push(q.word);
                         }
                     });
@@ -632,7 +718,7 @@ loadQuestions().then(async () => {
                     options.push(incorrectOption);
                 }
             }
-            
+
             // mondaiの選択肢だけでは足りない場合、他の問題から選択肢を追加
             if (options.length < 4 && otherOptions.length > 0) {
                 otherOptions.sort(() => Math.random() - 0.5); // 他の候補もシャッフル
@@ -658,14 +744,14 @@ loadQuestions().then(async () => {
                         }
                     }
                 });
-                
+
                 // シャッフルして使う
                 allPossibleOptions.sort(() => Math.random() - 0.5);
-                
+
                 while (options.length < 4 && allPossibleOptions.length > 0) {
                     options.push(allPossibleOptions.shift());
                 }
-                
+
                 // それでも足りない場合（問題数が少ない場合など）は末尾に番号付き選択肢を追加
                 let backupCount = 1;
                 while (options.length < 4) {
@@ -676,19 +762,32 @@ loadQuestions().then(async () => {
                 }
             }
 
-            // 5. 選択肢をシャッフルして表示
-            options.sort(() => Math.random() - 0.5);
-            options.forEach((answer, index) => {
-                document.getElementById('answer' + (index + 1)).textContent = answer;
-            });
+            // 5. 選択肢をシャッフルして表示（4択モードの場合のみ）
+            if (globalSettings.answerMode === 'choice') {
+                options.sort(() => Math.random() - 0.5);
+                options.forEach((answer, index) => {
+                    document.getElementById('answer' + (index + 1)).textContent = answer;
+                });
+            }
             // --- 選択肢生成ここまで ---
+
+            // 英単語並び替えモードの処理
+            if (globalSettings.answerMode === 'word-arrange') {
+                setupWordArrangeMode(correctAnswer);
+            }
+
+            // ○×問題モードの処理
+            if (globalSettings.answerMode === 'true-false') {
+                setupTrueFalseMode(question);
+            }
 
 
             // --- タイマー制御: ここでのタイマー開始を削除 ---
             // start = performance.now();
             // --- タイマー制御ここまで ---
 
-            document.getElementById('exit-review-btn').style.display = isInReviewMode ? 'block' : 'none';
+            document.getElementById('exit-review-btn').style.display = isInReviewMode ?
+                'block' : 'none';
             if (isInReviewMode) {
                 document.getElementById('review-count').textContent = reviewQuestions.length;
             }
@@ -735,7 +834,9 @@ loadQuestions().then(async () => {
                 const accuracy = calculateAccuracy();
                 performanceHistory.push(accuracy);
 
-                performanceChart.data.labels = Array.from({ length: performanceHistory.length }, (_, i) => i + 1);
+                performanceChart.data.labels = Array.from({
+                    length: performanceHistory.length
+                }, (_, i) => i + 1);
                 performanceChart.data.datasets[0].data = performanceHistory;
                 performanceChart.update();
             }
@@ -753,32 +854,40 @@ loadQuestions().then(async () => {
                 const question = questions[index];
                 const li = document.createElement('li');
                 // 'wrong'クラスは不正解の場合、'long-time'は時間がかかった場合（判定ロジックは必要なら追加）
-                li.className = `study-item ${stats.isWrong ? 'wrong-answer' : ''} ${stats.isLongTime ? 'long-time' : ''}`;
+                li.className =
+                    `study-item ${stats.isWrong ? 'wrong-answer' : ''} ${stats.isLongTime ? 'long-time' : ''}`;
 
                 let statusText = [];
                 if (stats.isWrong) statusText.push('間違えた問題');
                 if (stats.isLongTime) statusText.push('時間がかかった問題');
 
-                li.innerHTML = `
+                li.innerHTML =
+                    `
                     <strong>${question.word}</strong><br>
                     <small>${statusText.join(' / ')}</small>
                 `;
                 studyList.appendChild(li);
             }
             // 復習ボタンの表示/非表示
-            document.getElementById('start-review-btn').style.display = studyingQuestions.size > 0 ? 'block' : 'none';
+            document.getElementById('start-review-btn').style.display = studyingQuestions
+                .size > 0 ? 'block' : 'none';
         }
 
 
         function updateStats() {
-            document.getElementById('answered-questions').textContent = answeredQuestions.size;
+            document.getElementById('answered-questions').textContent = answeredQuestions
+                .size;
             document.getElementById('correct-answers').textContent = correctCount;
             document.getElementById('wrong-answers').textContent = wrongCount;
-            const progressPercentage = questions.length > 0 ? (answeredQuestions.size / questions.length) * 100 : 0; // Avoid division by zero
-            document.getElementById('progress-percentage').textContent = progressPercentage.toFixed(1);
-            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+            const progressPercentage = questions.length > 0 ? (answeredQuestions.size /
+                questions.length) * 100 : 0; // Avoid division by zero
+            document.getElementById('progress-percentage').textContent =
+                progressPercentage.toFixed(1);
+            document.getElementById('progress-bar').style.width = progressPercentage +
+                '%';
 
-            document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(1);
+            document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(
+                1);
             document.getElementById('max-streak').textContent = maxStreak;
             document.getElementById('current-streak').textContent = renzokuseikai;
             document.getElementById('avg-time').textContent = calculateAverageTime();
@@ -793,7 +902,7 @@ loadQuestions().then(async () => {
 
             // --- タイマー制御: startが未定義の場合のフォールバック ---
             if (typeof start === 'undefined' || start === null) {
-                
+
                 start = performance.now(); // 念のため現在時刻を開始時刻とする
             }
             // --- タイマー制御ここまで ---
@@ -821,14 +930,16 @@ loadQuestions().then(async () => {
             const stats = questionStats.get(currentIndex);
             stats.attempts++;
             // 平均解答時間の計算を更新 (より正確に)
-            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) +
+                timeTaken) / stats.attempts;
             stats.isLongTime = isLongTime || stats.isLongTime; // 一度でも時間がかかったらフラグを立てる
 
             answeredQuestions.add(currentIndex);
             totalCount++;
 
             const isReversed = globalSettings.replaceMondai;
-            const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
+            const correctAnswer = isReversed ? questions[currentIndex].description :
+                questions[currentIndex].word;
 
             if (e.target.textContent === correctAnswer) { // 正解の場合
                 stats.isWrong = false; // 正解したので不正解フラグはリセット
@@ -847,7 +958,11 @@ loadQuestions().then(async () => {
                             isInReviewMode = false;
                             document.getElementById('review-mode-indicator').style.display = 'none';
                             document.getElementById('exit-review-btn').style.display = 'none';
-                            notie.alert({ type: 'success', text: '復習完了！お疲れ様でした。', time: 3 });
+                            notie.alert({
+                                type: 'success',
+                                text: '復習完了！お疲れ様でした。',
+                                time: 3
+                            });
                             document.getElementById('review-count').textContent = reviewQuestions.length;
 
                             swiper.slideTo(0); // 学習進捗画面へ
@@ -863,7 +978,11 @@ loadQuestions().then(async () => {
                         maxStreak = renzokuseikai;
                     }
                     stats.correctAnswers = (stats.correctAnswers || 0) + 1; // correctAnswersが存在しない場合も考慮
-                    notie.alert({ type: 1, text: '正解', time: 1 });
+                    notie.alert({
+                        type: 1,
+                        text: '正解',
+                        time: 1
+                    });
                     updateProgressDisplay();
                     document.getElementById('review-count').textContent = reviewQuestions.length;
 
@@ -887,7 +1006,11 @@ loadQuestions().then(async () => {
                     } else if (stats.correctAnswers >= 1 && isLongTime) {
                         studyingQuestions.add(currentIndex); // 1回正解でも時間がかかったら学習中に戻す
                     }
-                    notie.alert({ type: 1, text: '正解', time: 1 });
+                    notie.alert({
+                        type: 1,
+                        text: '正解',
+                        time: 1
+                    });
                     updateProgressDisplay();
                     updateStats();
                     nextIndex();
@@ -924,7 +1047,8 @@ loadQuestions().then(async () => {
                     }
                     notie.force({
                         type: 'error',
-                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' +
+                            answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                         callback: async function () {
                             updateProgressDisplay();
@@ -957,7 +1081,8 @@ loadQuestions().then(async () => {
                     }
                     notie.force({
                         type: 'error',
-                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' + answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
+                        text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' +
+                            answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                         callback: async function () {
                             updateProgressDisplay();
@@ -980,102 +1105,109 @@ loadQuestions().then(async () => {
                 updateStats(); // 表示更新
             }
         }
-// 設定をlocalStorageから読み込む関数
-function loadSettings() {
-    // グローバル設定を読み込む（一括で）
-    try {
-        const savedGlobalSettings = localStorage.getItem('quizbox_global_settings');
-        if (savedGlobalSettings) {
-            const parsedSettings = JSON.parse(savedGlobalSettings);
-            // 有効なプロパティのみをグローバル設定に適用
-            if (parsedSettings.replaceMondai !== undefined) globalSettings.replaceMondai = parsedSettings.replaceMondai;
-            if (parsedSettings.hardMode !== undefined) globalSettings.hardMode = parsedSettings.hardMode;
-            if (parsedSettings.answerMode) globalSettings.answerMode = parsedSettings.answerMode;
+        // 設定をlocalStorageから読み込む関数
+        function loadSettings() {
+            // グローバル設定を読み込む（一括で）
+            try {
+                const savedGlobalSettings = localStorage.getItem('quizbox_global_settings');
+                if (savedGlobalSettings) {
+                    const parsedSettings = JSON.parse(savedGlobalSettings);
+                    // 有効なプロパティのみをグローバル設定に適用
+                    if (parsedSettings.replaceMondai !== undefined) globalSettings.replaceMondai =
+                        parsedSettings.replaceMondai;
+                    if (parsedSettings.hardMode !== undefined) globalSettings.hardMode =
+                        parsedSettings.hardMode;
+                    if (parsedSettings.answerMode) globalSettings.answerMode = parsedSettings.answerMode;
+                }
+            } catch (e) {
+                console.error('グローバル設定の読み込みエラー:', e);
+                // 個別設定から読み込み（後方互換性）
+                globalSettings.replaceMondai = localStorage.getItem('replace_mondai') ===
+                    'true';
+                globalSettings.hardMode = localStorage.getItem('hard_mode') === 'true';
+                globalSettings.answerMode = localStorage.getItem('answer_mode') || 'choice';
+            }
+
+            // 問題セット固有の設定を読み込む
+            try {
+                // 範囲指定がある場合は、それを含めたキーを生成
+                const startParam = getParam("start");
+                const endParam = getParam("end");
+                let problemSetKey = mondai;
+
+                if (startParam && endParam) {
+                    problemSetKey = `${mondai}_${startParam}_${endParam}`;
+                }
+
+                const key = `quizbox_problem_settings_${problemSetKey}`;
+                const savedProblemSettings = localStorage.getItem(key);
+                if (savedProblemSettings) {
+                    const parsedSettings = JSON.parse(savedProblemSettings);
+                    // 有効なプロパティのみを問題セット設定に適用
+                    if (parsedSettings.questionMode) problemSettings.questionMode =
+                        parsedSettings.questionMode;
+                    if (parsedSettings.currentQuestionIndex !== undefined) {
+                        problemSettings.currentQuestionIndex = parsedSettings.currentQuestionIndex;
+                    }
+                }
+            } catch (e) {
+                console.error('問題セット設定の読み込みエラー:', e);
+                // 個別設定から読み込み（後方互換性）
+                problemSettings.questionMode = localStorage.getItem('question_mode_' +
+                    mondai) || 'sequential';
+                problemSettings.currentQuestionIndex = parseInt(localStorage.getItem(
+                    'current_question_index_' + mondai) || '0');
+            }
+
+            // UIに設定を反映
+            document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
+            document.getElementById('hardmode').checked = globalSettings.hardMode;
+            document.getElementById(problemSettings.questionMode + '-mode').checked =
+                true;
+            document.getElementById(globalSettings.answerMode + '-mode').checked = true;
         }
-    } catch (e) {
-        console.error('グローバル設定の読み込みエラー:', e);
-        // 個別設定から読み込み（後方互換性）
-        globalSettings.replaceMondai = localStorage.getItem('replace_mondai') === 'true';
-        globalSettings.hardMode = localStorage.getItem('hard_mode') === 'true';
-        globalSettings.answerMode = localStorage.getItem('answer_mode') || 'choice';
-    }
-    
-    // 問題セット固有の設定を読み込む
-    try {
-        // 範囲指定がある場合は、それを含めたキーを生成
-        const startParam = getParam("start");
-        const endParam = getParam("end");
-        let problemSetKey = mondai;
-        
-        if (startParam && endParam) {
-            problemSetKey = `${mondai}_${startParam}_${endParam}`;
+
+        // 設定を保存する関数
+        function saveSettings() {
+            // グローバル設定を一括で保存
+            localStorage.setItem('quizbox_global_settings', JSON.stringify(globalSettings));
+
+            // 問題セット固有の設定を一括で保存（範囲指定がある場合はそれも含める）
+            const startParam = getParam("start");
+            const endParam = getParam("end");
+            let problemSetKey = mondai;
+
+            // start/endパラメータが指定されている場合は、それをキーに含める
+            if (startParam && endParam) {
+                problemSetKey = `${mondai}_${startParam}_${endParam}`;
+            }
+
+            const key = `quizbox_problem_settings_${problemSetKey}`;
+            localStorage.setItem(key, JSON.stringify(problemSettings));
         }
-        
-        const key = `quizbox_problem_settings_${problemSetKey}`;
-        const savedProblemSettings = localStorage.getItem(key);
-        if (savedProblemSettings) {
-            const parsedSettings = JSON.parse(savedProblemSettings);
-            // 有効なプロパティのみを問題セット設定に適用
-            if (parsedSettings.questionMode) problemSettings.questionMode = parsedSettings.questionMode;
-            if (parsedSettings.currentQuestionIndex !== undefined) {
-                problemSettings.currentQuestionIndex = parsedSettings.currentQuestionIndex;
+
+        function selectQuestionMode() {
+            // 問題セット設定から現在のモードを取得
+            const savedMode = problemSettings.questionMode;
+            document.getElementById(savedMode + '-mode').checked = true; // UIに反映
+
+            if (savedMode === 'sequential') {
+                // 保存されている進捗があれば復元、なければ0から開始
+                currentIndex = problemSettings.currentQuestionIndex;
+                if (currentIndex >= questions.length || currentIndex < 0) {
+                    currentIndex = 0; // インデックスが範囲外なら最初から
+                    problemSettings.currentQuestionIndex = 0; // 設定も更新
+                    saveSettings(); // 保存
+                }
+            } else {
+                // ランダムモード
+                if (questions.length > 0) {
+                    currentIndex = Math.floor(Math.random() * questions.length);
+                } else {
+                    currentIndex = undefined; // 問題がない場合
+                }
             }
         }
-    } catch (e) {
-        console.error('問題セット設定の読み込みエラー:', e);
-        // 個別設定から読み込み（後方互換性）
-        problemSettings.questionMode = localStorage.getItem('question_mode_' + mondai) || 'sequential';
-        problemSettings.currentQuestionIndex = parseInt(localStorage.getItem('current_question_index_' + mondai) || '0');
-    }
-    
-    // UIに設定を反映
-    document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
-    document.getElementById('hardmode').checked = globalSettings.hardMode;
-    document.getElementById(problemSettings.questionMode + '-mode').checked = true;
-    document.getElementById(globalSettings.answerMode + '-mode').checked = true;
-}
-
-// 設定を保存する関数
-function saveSettings() {
-    // グローバル設定を一括で保存
-    localStorage.setItem('quizbox_global_settings', JSON.stringify(globalSettings));
-    
-    // 問題セット固有の設定を一括で保存（範囲指定がある場合はそれも含める）
-    const startParam = getParam("start");
-    const endParam = getParam("end");
-    let problemSetKey = mondai;
-    
-    // start/endパラメータが指定されている場合は、それをキーに含める
-    if (startParam && endParam) {
-        problemSetKey = `${mondai}_${startParam}_${endParam}`;
-    }
-    
-    const key = `quizbox_problem_settings_${problemSetKey}`;
-    localStorage.setItem(key, JSON.stringify(problemSettings));
-}
-
-function selectQuestionMode() {
-    // 問題セット設定から現在のモードを取得
-    const savedMode = problemSettings.questionMode;
-    document.getElementById(savedMode + '-mode').checked = true; // UIに反映
-
-    if (savedMode === 'sequential') {
-        // 保存されている進捗があれば復元、なければ0から開始
-        currentIndex = problemSettings.currentQuestionIndex;
-        if (currentIndex >= questions.length || currentIndex < 0) {
-            currentIndex = 0; // インデックスが範囲外なら最初から
-            problemSettings.currentQuestionIndex = 0; // 設定も更新
-            saveSettings(); // 保存
-        }
-    } else {
-        // ランダムモード
-        if (questions.length > 0) {
-            currentIndex = Math.floor(Math.random() * questions.length);
-        } else {
-            currentIndex = undefined; // 問題がない場合
-        }
-    }
-}
 
         function nextIndex() {
             if (questions.length === 0) return; // 問題がない場合は何もしない
@@ -1086,7 +1218,11 @@ function selectQuestionMode() {
                     isInReviewMode = false;
                     document.getElementById('review-mode-indicator').style.display = 'none';
                     document.getElementById('exit-review-btn').style.display = 'none';
-                    notie.alert({ type: 'success', text: '復習完了！', time: 2 });
+                    notie.alert({
+                        type: 'success',
+                        text: '復習完了！',
+                        time: 2
+                    });
                     swiper.slideTo(0);
                     saveProgressToServer(); // 最後に保存
                     return; // 通常のモード選択に進まない
@@ -1102,7 +1238,11 @@ function selectQuestionMode() {
                     isInReviewMode = false;
                     document.getElementById('review-mode-indicator').style.display = 'none';
                     document.getElementById('exit-review-btn').style.display = 'none';
-                    notie.alert({ type: 'success', text: '復習完了！', time: 2 });
+                    notie.alert({
+                        type: 'success',
+                        text: '復習完了！',
+                        time: 2
+                    });
                     swiper.slideTo(0);
                     saveProgressToServer(); // 最後に保存
                     return;
@@ -1147,7 +1287,7 @@ function selectQuestionMode() {
                     currentIndex = 0;
                 }
             }
-            
+
             updateProgressDisplay();
         }
 
@@ -1155,7 +1295,8 @@ function selectQuestionMode() {
         function updateProgressDisplay() {
             const isSequential = problemSettings.questionMode === 'sequential';
 
-            let scoreText = `
+            let scoreText =
+                `
                 回答数: ${totalCount}
                 正解数: ${correctCount}
                 不正解数: ${wrongCount}
@@ -1165,7 +1306,8 @@ function selectQuestionMode() {
 
             if (isSequential && questions.length > 0) {
                 // 順番モードでは問題番号も表示 (currentIndexが有効な場合のみ)
-                if (currentIndex !== undefined && currentIndex >= 0 && currentIndex < questions.length) {
+                if (currentIndex !== undefined && currentIndex >= 0 && currentIndex <
+                    questions.length) {
                     scoreText = `問題 ${currentIndex + 1}/${questions.length}<br>` + scoreText;
                 }
             }
@@ -1195,18 +1337,18 @@ function selectQuestionMode() {
             }).then(response => {
                 if (!response.ok) {
                     // 401 Unauthorized のようなエラーも考慮
-                    
+
                     // throw new Error('Network response was not ok ' + response.statusText);
                     return null; // エラー時は null を返すなど
                 }
                 return response.json();
             }).then(data => {
                 if (data) {
-                    
+
                 }
                 // saveProgressToServer(); // スコア送信成功時にも保存 (頻繁すぎる可能性あり)
             }).catch((error) => {
-                
+
             });
         }
 
@@ -1220,7 +1362,7 @@ function selectQuestionMode() {
             let problemSet = mondai || 'default';
             const startParam = getParam("start");
             const endParam = getParam("end");
-            
+
             if (startParam && endParam) {
                 problemSet = `${mondai}_${startParam}_${endParam}`;
             }
@@ -1257,7 +1399,8 @@ function selectQuestionMode() {
                 if (!answeredQuestions.has(index)) {
                     // まだ解答していないが復習リストに入っている場合？ 基本的には解答済みのはず
                     // learningCount++; // 必要ならカウント
-                } else if (!questionStats.has(index) || (questionStats.get(index).correctAnswers < 2 || questionStats.get(index).isLongTime)) {
+                } else if (!questionStats.has(index) || (questionStats.get(index).correctAnswers <
+                    2 || questionStats.get(index).isLongTime)) {
                     // 解答済みだが学習済み条件を満たさない場合、learningCountに含まれているはず
                 }
             });
@@ -1273,8 +1416,6 @@ function selectQuestionMode() {
             };
 
 
-            
-
             try {
                 const response = await fetch('/api/save_progress', { // Use relative path
                     method: 'POST',
@@ -1285,20 +1426,21 @@ function selectQuestionMode() {
                         id: userId,
                         password: password,
                         problem_set: problemSet,
-                        summary: summaryData,   // Send summary data
-                        details: detailsData    // Send details data
+                        summary: summaryData, // Send summary data
+                        details: detailsData // Send details data
                     }),
                 });
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    throw new Error(
+                        `HTTP error! status: ${response.status}, message: ${errorText}`);
                 }
 
                 const result = await response.json();
-                
+
             } catch (error) {
-                
+
                 // ユーザーにエラーを通知する（例: notie）
                 // notie.alert({ type: 'error', text: '進捗の保存に失敗しました。', time: 2 });
             }
@@ -1315,7 +1457,9 @@ function selectQuestionMode() {
             try {
                 const detailsResponse = await fetch(detailsUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         id: accid,
                         password: password,
@@ -1333,23 +1477,24 @@ function selectQuestionMode() {
 
                 if (!detailsResponse.ok) {
                     if (detailsResponse.status === 404) {
-                        
+
                         answeredQuestions = new Set();
                         questionStats = new Map();
                         studyingQuestions = new Set(); // 初期化
                         localStorage.removeItem('current_question_index_' + mondai); // ローカルのインデックスもクリア
                         localStorage.removeItem('question_mode_' + mondai); // ローカルのモードもクリア
                     } else {
-                        throw new Error(`Error fetching progress details: ${detailsResponse.statusText}`);
+                        throw new Error(
+                            `Error fetching progress details: ${detailsResponse.statusText}`);
                     }
                 } else {
                     const detailsDataResult = await detailsResponse.json();
                     const detailsData = detailsDataResult.progress_details;
                     if (detailsData && Object.keys(detailsData).length > 0) {
-                        
+
                         applyProgressData(detailsData); // Apply the loaded details
                     } else {
-                        
+
                         answeredQuestions = new Set();
                         questionStats = new Map();
                         studyingQuestions = new Set(); // 初期化
@@ -1361,18 +1506,29 @@ function selectQuestionMode() {
                 // 2. Fetch Summary Data (for dashboard slide total count)
                 const summaryResponse = await fetch(summaryUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: accid, password: password })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: accid,
+                        password: password
+                    })
                 });
 
                 if (!summaryResponse.ok) {
-                    
+
                 } else {
                     const summaryDataResult = await summaryResponse.json();
                     const summary = summaryDataResult.progress_summary || {};
-                    const p = summary[mondai] || { learned: 0, learning: 0, unlearned: 0, total: questions.length };
+                    const p = summary[mondai] || {
+                        learned: 0,
+                        learning: 0,
+                        unlearned: 0,
+                        total: questions.length
+                    };
                     // サーバーからの total があればそれを使う、なければ計算値
-                    document.getElementById('total-questions').textContent = p.total || questions.length;
+                    document.getElementById('total-questions').textContent = p.total ||
+                        questions.length;
                 }
 
                 // 3. Update UI after potentially loading data
@@ -1381,93 +1537,98 @@ function selectQuestionMode() {
                 updateProgressDisplay(); // Updates score display
 
             } catch (error) {
-                
+
                 // Consider showing a user-friendly error message
-                notie.alert({ type: 'error', text: '進捗の読み込みに失敗しました。', time: 2 });
+                notie.alert({
+                    type: 'error',
+                    text: '進捗の読み込みに失敗しました。',
+                    time: 2
+                });
             }
         }
 
-// サーバーから取得した学習進捗データを適用する関数
-function applyProgressData(progressData) {
+        // サーバーから取得した学習進捗データを適用する関数
+        function applyProgressData(progressData) {
 
-    answeredQuestions = new Set(progressData.answeredQuestions || []);
-    maxStreak = progressData.maxStreak || 0;
-    performanceHistory = progressData.performanceHistory || [];
-    answerTimes = progressData.answerTimes || [];
-    studyingQuestions = new Set(progressData.studyingQuestions || []); // studyingQuestionsも復元
+            answeredQuestions = new Set(progressData.answeredQuestions || []);
+            maxStreak = progressData.maxStreak || 0;
+            performanceHistory = progressData.performanceHistory || [];
+            answerTimes = progressData.answerTimes || [];
+            studyingQuestions = new Set(progressData.studyingQuestions || []); // studyingQuestionsも復元
 
-    if (progressData.questionStats && typeof progressData.questionStats === 'object') {
-        // questionStats の各エントリを数値キーの Map に変換
-        questionStats = new Map();
-        for (const key in progressData.questionStats) {
-            if (Object.hasOwnProperty.call(progressData.questionStats, key)) {
-                // キーを数値に変換、statsオブジェクトをそのまま値としてセット
-                questionStats.set(parseInt(key), progressData.questionStats[key]);
+            if (progressData.questionStats && typeof progressData.questionStats ===
+                'object') {
+                // questionStats の各エントリを数値キーの Map に変換
+                questionStats = new Map();
+                for (const key in progressData.questionStats) {
+                    if (Object.hasOwnProperty.call(progressData.questionStats, key)) {
+                        // キーを数値に変換、statsオブジェクトをそのまま値としてセット
+                        questionStats.set(parseInt(key), progressData.questionStats[key]);
+                    }
+                }
+            } else {
+                questionStats = new Map();
             }
+
+            // ユーザー設定の復元
+            // 問題セット固有の設定を復元
+            if (progressData.questionMode) {
+                problemSettings.questionMode = progressData.questionMode;
+            }
+
+            if (progressData.currentQuestionIndex !== undefined) {
+                // サーバーから取得したインデックスが有効範囲内かチェック
+                const savedIndex = progressData.currentQuestionIndex;
+                if (savedIndex >= 0 && savedIndex < questions.length) {
+                    problemSettings.currentQuestionIndex = savedIndex;
+                } else {
+                    problemSettings.currentQuestionIndex = 0; // 無効なら0にリセット
+                }
+            }
+
+            // グローバル設定も復元
+            if (progressData.replaceMondai !== undefined) {
+                globalSettings.replaceMondai = progressData.replaceMondai;
+            }
+
+            if (progressData.hardMode !== undefined) {
+                globalSettings.hardMode = progressData.hardMode;
+            }
+
+            if (progressData.answerMode) {
+                globalSettings.answerMode = progressData.answerMode;
+            }
+
+            // UIに設定を反映
+            document.getElementById(problemSettings.questionMode + '-mode').checked =
+                true;
+            document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
+            document.getElementById('hardmode').checked = globalSettings.hardMode;
+            document.getElementById(globalSettings.answerMode + '-mode').checked = true;
+            // ローカルストレージにも保存
+            saveSettings();
+
+            // correctCount, wrongCount, totalCount を questionStats から再計算
+            correctCount = 0;
+            wrongCount = 0;
+            totalCount = 0;
+            if (questionStats.size > 0) {
+                answeredQuestions.forEach(index => {
+                    const stats = questionStats.get(index);
+                    if (stats) { // statsが存在する場合のみ計算
+                        totalCount += stats.attempts || 0;
+                        correctCount += stats.correctAnswers || 0;
+                        wrongCount += (stats.attempts || 0) - (stats.correctAnswers || 0);
+                    }
+                });
+            } else {
+                // questionStatsがない場合（古いデータなど）はansweredQuestionsのサイズをtotalCountとする
+                totalCount = answeredQuestions.size;
+                // この場合、correct/wrongは0のまま（情報がないため）
+            }
+
+            // updateStats(); // この関数を呼び出す loadProgressFromServer の最後で updateStats が呼ばれるので、ここでは不要
         }
-    } else {
-        questionStats = new Map();
-    }
-
-    // ユーザー設定の復元
-    // 問題セット固有の設定を復元
-    if (progressData.questionMode) {
-        problemSettings.questionMode = progressData.questionMode;
-    }
-    
-    if (progressData.currentQuestionIndex !== undefined) {
-        // サーバーから取得したインデックスが有効範囲内かチェック
-        const savedIndex = progressData.currentQuestionIndex;
-        if (savedIndex >= 0 && savedIndex < questions.length) {
-            problemSettings.currentQuestionIndex = savedIndex;
-        } else {
-            problemSettings.currentQuestionIndex = 0; // 無効なら0にリセット
-        }
-    }
-    
-    // グローバル設定も復元
-    if (progressData.replaceMondai !== undefined) {
-        globalSettings.replaceMondai = progressData.replaceMondai;
-    }
-    
-    if (progressData.hardMode !== undefined) {
-        globalSettings.hardMode = progressData.hardMode;
-    }
-    
-    if (progressData.answerMode) {
-        globalSettings.answerMode = progressData.answerMode;
-    }
-    
-    // UIに設定を反映
-    document.getElementById(problemSettings.questionMode + '-mode').checked = true;
-    document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
-    document.getElementById('hardmode').checked = globalSettings.hardMode;
-    document.getElementById(globalSettings.answerMode + '-mode').checked = true;
-    // ローカルストレージにも保存
-// ローカルストレージにも保存
-saveSettings();
-
-// correctCount, wrongCount, totalCount を questionStats から再計算
-correctCount = 0;
-wrongCount = 0;
-totalCount = 0;
-if (questionStats.size > 0) {
-answeredQuestions.forEach(index => {
-    const stats = questionStats.get(index);
-    if (stats) { // statsが存在する場合のみ計算
-        totalCount += stats.attempts || 0;
-        correctCount += stats.correctAnswers || 0;
-        wrongCount += (stats.attempts || 0) - (stats.correctAnswers || 0);
-    }
-});
-} else {
-// questionStatsがない場合（古いデータなど）はansweredQuestionsのサイズをtotalCountとする
-totalCount = answeredQuestions.size;
-// この場合、correct/wrongは0のまま（情報がないため）
-}
-
-// updateStats(); // この関数を呼び出す loadProgressFromServer の最後で updateStats が呼ばれるので、ここでは不要
-}
 
 
         document.getElementById('answer1').addEventListener('click', onAnswerClick);
@@ -1597,13 +1758,18 @@ totalCount = answeredQuestions.size;
                 const choiceArea = document.getElementById('choice-answers');
                 const inputArea = document.getElementById('input-area');
                 const handwritingArea = document.getElementById('handwriting-area');
+                const wordArrangeArea = document.getElementById('word-arrange-area');
+                const trueFalseArea = document.getElementById('true-false-area');
 
                 globalSettings.answerMode = this.value;
                 saveSettings();
 
+                // すべてのエリアを非表示にする
                 choiceArea.style.display = 'none';
                 inputArea.style.display = 'none';
                 handwritingArea.style.display = 'none';
+                wordArrangeArea.style.display = 'none';
+                trueFalseArea.style.display = 'none';
 
                 if (this.value === 'choice') {
                     choiceArea.style.display = 'block';
@@ -1613,16 +1779,21 @@ totalCount = answeredQuestions.size;
                 } else if (this.value === 'handwriting') {
                     handwritingArea.style.display = 'block';
                     // 手書きモード初期化処理（必要なら）
+                } else if (this.value === 'word-arrange') {
+                    wordArrangeArea.style.display = 'block';
+                } else if (this.value === 'true-false') {
+                    trueFalseArea.style.display = 'block';
                 }
             });
         });
         // テキスト回答送信
-        document.getElementById('submit-text-answer').addEventListener('click', function () {
-            const answer = document.getElementById('text-answer').value.trim();
-            if (answer) {
-                checkTextAnswer(answer);
-            }
-        });
+        document.getElementById('submit-text-answer').addEventListener('click',
+            function () {
+                const answer = document.getElementById('text-answer').value.trim();
+                if (answer) {
+                    checkTextAnswer(answer);
+                }
+            });
 
         // テキスト回答のEnterキー処理
         document.getElementById('text-answer').addEventListener('keypress', function (e) {
@@ -1645,12 +1816,19 @@ totalCount = answeredQuestions.size;
             start = null;
 
             if (!questionStats.has(currentIndex)) {
-                questionStats.set(currentIndex, { attempts: 0, correctAnswers: 0, averageTime: 0, isLongTime: false, isWrong: false });
+                questionStats.set(currentIndex, {
+                    attempts: 0,
+                    correctAnswers: 0,
+                    averageTime: 0,
+                    isLongTime: false,
+                    isWrong: false
+                });
             }
 
             const stats = questionStats.get(currentIndex);
             stats.attempts++;
-            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) +
+                timeTaken) / stats.attempts;
             stats.isWrong = false
 
             answeredQuestions.add(currentIndex);
@@ -1675,7 +1853,11 @@ totalCount = answeredQuestions.size;
             }
 
 
-            notie.alert({ type: 1, text: '正解', time: 1 });
+            notie.alert({
+                type: 1,
+                text: '正解',
+                time: 1
+            });
             updateProgressDisplay();
             updateStats();
 
@@ -1702,12 +1884,19 @@ totalCount = answeredQuestions.size;
             start = null; // タイマーリセット
 
             if (!questionStats.has(currentIndex)) {
-                questionStats.set(currentIndex, { attempts: 0, correctAnswers: 0, averageTime: 0, isLongTime: false, isWrong: false });
+                questionStats.set(currentIndex, {
+                    attempts: 0,
+                    correctAnswers: 0,
+                    averageTime: 0,
+                    isLongTime: false,
+                    isWrong: false
+                });
             }
 
             const stats = questionStats.get(currentIndex);
             stats.attempts++;
-            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) + timeTaken) / stats.attempts;
+            stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) +
+                timeTaken) / stats.attempts;
             stats.isWrong = true; // 不正解フラグ
 
             answeredQuestions.add(currentIndex);
@@ -1722,7 +1911,8 @@ totalCount = answeredQuestions.size;
 
             notie.force({
                 type: 'error',
-                text: '<div class="popup">正しい回答: ' + correctAnswer + '<br>あなたの回答: ' + userAnswer + '</div>',
+                text: '<div class="popup">正しい回答: ' + correctAnswer + '<br>あなたの回答: ' +
+                    userAnswer + '</div>',
                 buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
                 callback: async function () { // Make callback async
                     // 入力フィールド/キャンバスはクリアしない（間違いを確認できるように）
@@ -1745,7 +1935,8 @@ totalCount = answeredQuestions.size;
         // テキスト回答の正誤チェック
         function checkTextAnswer(answer) {
             const isReversed = globalSettings.replaceMondai;
-            const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
+            const correctAnswer = isReversed ? questions[currentIndex].description :
+                questions[currentIndex].word;
 
             // 完全一致で比較
             if (answer === correctAnswer) {
@@ -1761,21 +1952,229 @@ totalCount = answeredQuestions.size;
         // 手書き回答の送信処理 (write.js側で checkHandwritingAnswer を呼ぶ想定)
         function checkHandwritingAnswer(handwritingResult) {
             const isReversed = globalSettings.replaceMondai;
-            const correctAnswer = isReversed ? questions[currentIndex].description : questions[currentIndex].word;
+            const correctAnswer = isReversed ? questions[currentIndex].description :
+                questions[currentIndex].word;
 
             // 手書き認識結果 (handwritingResult) と正解 (correctAnswer) を比較
             // 認識結果が複数候補ある場合は、いずれかが一致すれば正解とするなどの処理が必要
             // ここでは単純に最初の候補と比較する例
-            if (handwritingResult && handwritingResult.length > 0 && handwritingResult[0] === correctAnswer) {
+            if (handwritingResult && handwritingResult.length > 0 && handwritingResult[0] ===
+                correctAnswer) {
                 handleCorrectAnswerInput();
             } else {
-                handleWrongAnswerInput(handwritingResult ? handwritingResult.join(', ') : '認識失敗', correctAnswer);
+                handleWrongAnswerInput(handwritingResult ? handwritingResult.join(', ') :
+                    '認識失敗', correctAnswer);
+            }
+        }
+
+        // 英単語並び替えモードのセットアップ
+        async function setupWordArrangeMode(correctAnswer) {
+            // ハードモードの処理を参考に、英単語から文章を取得
+            try {
+                const response = await fetch('/api/get/sentences', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        words: [correctAnswer]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const sentenceData = await response.json();
+                let sentenceForArrange = null;
+
+                if (sentenceData.results && sentenceData.results[correctAnswer] &&
+                    sentenceData.results[correctAnswer].length > 0) {
+                    const sentences = sentenceData.results[correctAnswer];
+                    sentenceForArrange = sentences[Math.floor(Math.random() * sentences.length)];
+                } else {
+                    // 文章が見つからない場合は、正解の単語を使った簡単な文を作成
+                    sentenceForArrange = `This is a ${correctAnswer}.`;
+                }
+
+                // 正解の文章を保存（後で正誤判定に使用）
+                window.correctSentence = sentenceForArrange;
+
+                // 文章を単語に分割（句読点も含める）
+                const words = sentenceForArrange.match(/bw+b|[.,!?;]/g) ||
+                    sentenceForArrange.split(' ');
+                const filteredWords = words.filter(word => word.trim() !== '');
+
+                // 単語をシャッフル
+                const shuffledWords = [...filteredWords].sort(() => Math.random() - 0.5);
+
+                // シャッフルされた単語を表示
+                const shuffledContainer = document.getElementById('shuffled-words');
+                shuffledContainer.innerHTML = '';
+
+                shuffledWords.forEach((word, index) => {
+                    const wordChip = document.createElement('button');
+                    wordChip.className = 'word-chip';
+                    wordChip.textContent = word;
+                    wordChip.dataset.word = word;
+                    wordChip.dataset.originalIndex = index;
+                    wordChip.onclick = () => moveWordToArranged(wordChip);
+                    shuffledContainer.appendChild(wordChip);
+                });
+
+                // 並び替えエリアをリセット
+                const arrangedContainer = document.getElementById('arranged-words');
+                arrangedContainer.innerHTML =
+                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+
+                // 配置された単語を記録する配列をリセット
+                window.arrangedWords = [];
+
+                // 問題文も更新（元の文章から単語を隠して表示）
+                const questionElement = document.getElementById('question');
+                const hiddenSentence = sentenceForArrange.replace(new RegExp(
+                    `\b${correctAnswer}\b`, 'gi'), '(_____)')
+                    .replace(/|/g, '<br>');
+                questionElement.innerHTML =
+                    `次の文章を正しい語順に並び替えてください：<br><br><em>${hiddenSentence}</em>`;
+
+            } catch (error) {
+                console.error('Error setting up word arrange mode:', error);
+                // エラーの場合は元の実装にフォールバック
+                const words = correctAnswer.split(' ').filter(word => word.trim() !== '');
+                window.correctSentence = correctAnswer;
+
+                const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+                const shuffledContainer = document.getElementById('shuffled-words');
+                shuffledContainer.innerHTML = '';
+
+                shuffledWords.forEach((word, index) => {
+                    const wordChip = document.createElement('button');
+                    wordChip.className = 'word-chip';
+                    wordChip.textContent = word;
+                    wordChip.dataset.word = word;
+                    wordChip.dataset.originalIndex = index;
+                    wordChip.onclick = () => moveWordToArranged(wordChip);
+                    shuffledContainer.appendChild(wordChip);
+                });
+
+                const arrangedContainer = document.getElementById('arranged-words');
+                arrangedContainer.innerHTML =
+                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+                window.arrangedWords = [];
+            }
+        }
+
+        // 単語を並び替えエリアに移動
+        function moveWordToArranged(wordChip) {
+            const arrangedContainer = document.getElementById('arranged-words');
+            const placeholder = arrangedContainer.querySelector('.arranged-placeholder');
+
+            // プレースホルダーを削除
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            // 単語を並び替えエリアに追加
+            const arrangedChip = wordChip.cloneNode(true);
+            arrangedChip.className = 'word-chip arranged';
+            arrangedChip.onclick = () => moveWordBackToShuffled(arrangedChip);
+            arrangedContainer.appendChild(arrangedChip);
+
+            // 元の単語を削除
+            wordChip.remove();
+
+            // 配置された単語を記録
+            window.arrangedWords.push(arrangedChip.dataset.word);
+        }
+
+        // 単語をシャッフルエリアに戻す
+        function moveWordBackToShuffled(arrangedChip) {
+            const shuffledContainer = document.getElementById('shuffled-words');
+            const arrangedContainer = document.getElementById('arranged-words');
+
+            // 単語をシャッフルエリアに戻す
+            const shuffledChip = arrangedChip.cloneNode(true);
+            shuffledChip.className = 'word-chip';
+            shuffledChip.onclick = () => moveWordToArranged(shuffledChip);
+            shuffledContainer.appendChild(shuffledChip);
+
+            // 並び替えエリアから削除
+            arrangedChip.remove();
+
+            // 記録から削除
+            const wordIndex = window.arrangedWords.indexOf(arrangedChip.dataset.word);
+            if (wordIndex > -1) {
+                window.arrangedWords.splice(wordIndex, 1);
+            }
+
+            // プレースホルダーを表示するかチェック
+            if (window.arrangedWords.length === 0) {
+                arrangedContainer.innerHTML =
+                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+            }
+        }
+
+        // 並び替え回答をリセット
+        async function clearWordArrangement() {
+            const isReversed = globalSettings.replaceMondai;
+            const correctAnswer = isReversed ? questions[currentIndex].description :
+                questions[currentIndex].word;
+            await setupWordArrangeMode(correctAnswer);
+        }
+
+        // 並び替え回答を送信
+        function submitWordArrangement() {
+            if (!window.arrangedWords || window.arrangedWords.length === 0) {
+                alert('単語を配置してください');
+                return;
+            }
+
+            const userAnswer = window.arrangedWords.join(' ');
+            const correctAnswer = window.correctSentence || questions[currentIndex].word;
+
+            // 句読点を無視した比較
+            const normalizeText = (text) => {
+                return text.replace(/[.,!?;]/g, '').replace(/s+/g, ' ').trim().toLowerCase();
+            };
+
+            const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
+
+            if (isCorrect) {
+                handleCorrectAnswerInput();
+            } else {
+                handleWrongAnswerInput(userAnswer, correctAnswer);
+            }
+        }
+
+        // ○×問題モードのセットアップ
+        function setupTrueFalseMode(question) {
+            // 問題データに trueFalseAnswer プロパティがあるかチェック
+            if (question.trueFalseAnswer !== undefined) {
+                // 明示的に○×の正解が設定されている場合
+                window.trueFalseCorrectAnswer = question.trueFalseAnswer;
+            } else {
+                // 設定されていない場合はランダムで決定（デモ用）
+                window.trueFalseCorrectAnswer = Math.random() < 0.5;
+            }
+        }
+
+        // ○×問題の回答処理
+        function submitTrueFalseAnswer(userAnswer) {
+            const isCorrect = userAnswer === window.trueFalseCorrectAnswer;
+
+            if (isCorrect) {
+                handleCorrectAnswerInput();
+            } else {
+                const answerText = userAnswer ? '○ (正しい)' : '× (間違い)';
+                const correctText = window.trueFalseCorrectAnswer ? '○ (正しい)' : '× (間違い)';
+                handleWrongAnswerInput(answerText, correctText);
             }
         }
 
 
         document.addEventListener('DOMContentLoaded', function () {
-            if (getParam("tangolist")=== 'true') {
+            if (getParam("tangolist") === 'true') {
                 swiper.slideTo(2);
 
                 const url = new URL(window.location.href);
@@ -1785,9 +2184,10 @@ totalCount = answeredQuestions.size;
 
             // ローカルストレージから設定を読み込み、UIに反映
             loadSettings();
-            
+
             // 回答モードの表示を切り替える
-            const answerModeRadio = document.getElementById(globalSettings.answerMode + '-mode');
+            const answerModeRadio = document.getElementById(globalSettings.answerMode +
+                '-mode');
             if (answerModeRadio) {
                 answerModeRadio.dispatchEvent(new Event('change'));
             }
@@ -1800,7 +2200,11 @@ totalCount = answeredQuestions.size;
         document.getElementById('start-review-btn').addEventListener('click', async function () {
             reviewQuestions = Array.from(studyingQuestions);
             if (reviewQuestions.length === 0) {
-                notie.alert({ type: 'info', text: '復習する問題はありません。', time: 2 });
+                notie.alert({
+                    type: 'info',
+                    text: '復習する問題はありません。',
+                    time: 2
+                });
                 return;
             }
 
@@ -1814,7 +2218,11 @@ totalCount = answeredQuestions.size;
             } else {
                 // 念のため復習対象がない場合の処理
                 isInReviewMode = false;
-                notie.alert({ type: 'info', text: 'エラー: 復習対象がありません。', time: 2 });
+                notie.alert({
+                    type: 'info',
+                    text: 'エラー: 復習対象がありません。',
+                    time: 2
+                });
                 return;
             }
 
@@ -1826,7 +2234,11 @@ totalCount = answeredQuestions.size;
             swiper.slideTo(1); // クイズ画面へ移動
             await showNextQuestion();
             updateProgressDisplay(); // 進捗表示も更新
-            notie.alert({ type: 'info', text: '復習モードを開始します。', time: 1.5 });
+            notie.alert({
+                type: 'info',
+                text: '復習モードを開始します。',
+                time: 1.5
+            });
             // 復習モード開始時もタイマー開始
             start = performance.now();
         });
@@ -1836,7 +2248,11 @@ totalCount = answeredQuestions.size;
             isInReviewMode = false;
             document.getElementById('review-mode-indicator').style.display = 'none';
             document.getElementById('exit-review-btn').style.display = 'none';
-            notie.alert({ type: 'info', text: '通常モードに戻りました。', time: 1.5 });
+            notie.alert({
+                type: 'info',
+                text: '通常モードに戻りました。',
+                time: 1.5
+            });
             saveProgressToServer(); // 復習モード終了時に進捗保存
             selectQuestionMode(); // 通常のモード選択ロジックを再実行
             await showNextQuestion();
@@ -1845,6 +2261,20 @@ totalCount = answeredQuestions.size;
             start = performance.now();
         });
 
+        // 英単語並び替えモードのイベントリスナー
+        document.getElementById('clear-arrange').addEventListener('click',
+            clearWordArrangement);
+        document.getElementById('submit-arrange').addEventListener('click',
+            submitWordArrangement);
+
+        // ○×問題モードのイベントリスナー
+        document.getElementById('true-btn').addEventListener('click', function () {
+            submitTrueFalseAnswer(true);
+        });
+
+        document.getElementById('false-btn').addEventListener('click', function () {
+            submitTrueFalseAnswer(false);
+        });
     </script>
 </body>
 

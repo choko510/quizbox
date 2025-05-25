@@ -35,6 +35,20 @@ body {
     text-align: center;
 }
 
+/* 並び替えモード用の問題文スタイル */
+#question em {
+    color: #666;
+    font-style: italic;
+    line-height: 1.6;
+    display: block;
+    margin: 10px 0;
+    padding: 15px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    font-size: 0.9em;
+}
+
 .mondai-image {
     max-width: 90%;
     margin-top: 10px;
@@ -1024,4 +1038,226 @@ strong {
 
 .modal__header-centered {
     text-align: center;
+}
+
+/* 英単語並び替えモード用のスタイル */
+#word-arrange-area {
+    text-align: center;
+    padding: 20px;
+}
+
+.word-arrange-instruction {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 500;
+}
+
+.shuffled-words-container {
+    min-height: 100px;
+    padding: 15px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.arranged-words-container {
+    min-height: 80px;
+    padding: 15px;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: #f8fff8;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.arranged-placeholder {
+    color: #999;
+    font-style: italic;
+    font-size: 1em;
+}
+
+.word-chip {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    font-size: 0.9em;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.word-chip:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+
+.word-chip.arranged {
+    background-color: #28a745;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.word-chip.arranged:hover {
+    background-color: #1e7e34;
+}
+
+.word-arrange-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.arrange-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+#clear-arrange {
+    background-color: #6c757d;
+    color: white;
+}
+
+#clear-arrange:hover {
+    background-color: #545b62;
+}
+
+#submit-arrange {
+    background-color: #28a745;
+    color: white;
+}
+
+#submit-arrange:hover {
+    background-color: #1e7e34;
+}
+
+/* ○×問題モード用のスタイル */
+#true-false-area {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.true-false-instruction {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: #333;
+    font-weight: 500;
+}
+
+.true-false-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.tf-btn {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: none;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.true-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.true-btn:hover {
+    background: linear-gradient(135deg, #1e7e34, #17a2b8);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.false-btn {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    color: white;
+}
+
+.false-btn:hover {
+    background: linear-gradient(135deg, #c82333, #e8590c);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+/* モバイル対応 */
+@media screen and (max-width: 540px) {
+    .word-arrange-instruction,
+    .true-false-instruction {
+        font-size: 1em;
+        margin-bottom: 15px;
+    }
+    
+    .shuffled-words-container,
+    .arranged-words-container {
+        min-height: 80px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .word-chip {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+    
+    .tf-btn {
+        width: 120px;
+        height: 120px;
+        font-size: 1.2em;
+    }
+    
+    .true-false-buttons {
+        gap: 20px;
+    }
+    
+    .arrange-btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+}
+
+@media screen and (max-width: 380px) {
+    .tf-btn {
+        width: 100px;
+        height: 100px;
+        font-size: 1em;
+    }
+    
+    .true-false-buttons {
+        gap: 15px;
+    }
+    
+    .word-chip {
+        padding: 5px 10px;
+        font-size: 0.75em;
+    }
 }

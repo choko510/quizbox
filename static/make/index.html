@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="toast.css">
     <link rel="stylesheet" href="editor.css">
+    <link rel="stylesheet" href="table-editor.css">
     <title>問題作成</title>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
@@ -84,99 +85,128 @@
                             <p>ファイルから問題を読み込みます</p>
                             <button class="option-button">選択</button>
                         </div>
+
+                        <div class="welcome-option" id="option-image-create">
+                            <div class="option-icon">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <h3>画像から作成</h3>
+                            <p>画像をアップロードして問題を生成します</p>
+                            <button class="option-button">選択</button>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
-            
-            <!-- 作成ビュー -->
+            <!-- 作成ビュー（表形式エディタ） -->
             <div class="editor-view" id="create-view">
-                <div class="editor-container">
-                    <!-- 左側の問題一覧パネル -->
-                    <div class="problem-list-panel">
-                        <div class="panel-header">
-                            <h2>問題一覧</h2>
-                            <div class="problem-count" id="total-accs">問題数: 0</div>
-                        </div>
-                        
-                        <div class="panel-toolbar">
-                            <button id="addProblem" class="tool-button" title="問題を追加">
-                                <i class="bi bi-plus-circle"></i>
+                <div class="table-editor-container">
+                    <!-- ツールバー -->
+                    <div class="table-toolbar">
+                        <div class="toolbar-left">
+                            <button id="addRowBtn" class="btn-primary">
+                                <i class="bi bi-plus"></i> 問題追加
                             </button>
-                            <button id="duplicateSelected" class="tool-button" title="選択した問題を複製">
-                                <i class="bi bi-files"></i>
+                            <button id="bulkDeleteBtn" class="btn-danger">
+                                <i class="bi bi-trash"></i> 一括削除
                             </button>
-                            <button id="deleteSelected" class="tool-button danger" title="選択した問題を削除">
-                                <i class="bi bi-trash"></i>
+                            <button id="duplicateBtn" class="btn-secondary">
+                                <i class="bi bi-files"></i> 複製
                             </button>
-                            <div class="search-container">
-                                <input type="text" id="problemSearch" placeholder="検索...">
-                                <i class="bi bi-search"></i>
-                            </div>
                         </div>
-                        
-                        <div class="problem-list" id="problemList">
-                            <ul id="fileContent" class="file-content sortable-list"></ul>
+                        <div class="toolbar-center">
+                            <input type="text" id="tableSearch" placeholder="問題・回答を検索..." class="search-input">
                         </div>
-                    </div>
-                    
-                    <!-- 右側の問題編集パネル -->
-                    <div class="problem-edit-panel">
-                        <div class="panel-header">
-                            <h2>問題編集</h2>
-                            <div class="autosave-status" id="save-status">自動保存: -</div>
-                        </div>
-                        
-                        <div id="noSelection" class="no-selection-message">
-                            <i class="bi bi-arrow-left-circle"></i>
-                            <p>左側のリストから問題を選択するか、新しい問題を追加してください。</p>
-                        </div>
-                        
-                        <div id="problemEditor" class="problem-editor hidden">
-                            <div class="editor-form">
-                                <div class="form-group">
-                                    <label for="answerField">回答 <span class="required">*</span></label>
-                                    <div class="rich-text-toolbar">
-                                        <button type="button" data-action="bold" title="太字"><i class="bi bi-type-bold"></i></button>
-                                        <button type="button" data-action="italic" title="斜体"><i class="bi bi-type-italic"></i></button>
-                                        <button type="button" data-action="underline" title="下線"><i class="bi bi-type-underline"></i></button>
-                                    </div>
-                                    <div id="answerField" class="rich-text-editor" contenteditable="true" data-placeholder="回答を入力してください"></div>
-                                    <div class="character-counter"><span id="answerCount">0</span> 文字</div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="questionField">問題 <span class="required">*</span></label>
-                                    <div class="rich-text-toolbar">
-                                        <button type="button" data-action="bold" title="太字"><i class="bi bi-type-bold"></i></button>
-                                        <button type="button" data-action="italic" title="斜体"><i class="bi bi-type-italic"></i></button>
-                                        <button type="button" data-action="underline" title="下線"><i class="bi bi-type-underline"></i></button>
-                                        <button type="button" data-action="image" title="画像を挿入"><i class="bi bi-image"></i></button>
-                                    </div>
-                                    <div id="questionField" class="rich-text-editor" contenteditable="true" data-placeholder="問題を入力してください"></div>
-                                    <div class="character-counter"><span id="questionCount">0</span> 文字</div>
-                                </div>
-                                
-                                <div class="form-group" id="validationFeedback">
-                                    <!-- バリデーションフィードバックはここに表示 -->
-                                </div>
-                                
-                                <div class="action-buttons">
-                                    <button id="checkButton" class="action-btn"><i class="bi bi-check-circle"></i> 品質チェック</button>
-                                    <button id="previewButton" class="action-btn"><i class="bi bi-eye"></i> プレビュー</button>
+                        <div class="toolbar-right">
+                            <button id="checkAllBtn" class="btn-secondary">
+                                <i class="bi bi-check-circle"></i> 品質チェック
+                            </button>
+                            <div class="dropdown">
+                                <button id="exportBtn" class="btn-secondary dropdown-toggle">
+                                    <i class="bi bi-download"></i> エクスポート
+                                </button>
+                                <div class="dropdown-menu" id="exportMenu">
+                                    <button class="dropdown-item" onclick="tableEditor.exportProblems('json')">
+                                        <i class="bi bi-file-earmark-code"></i>
+                                        JSON形式
+                                    </button>
+                                    <button class="dropdown-item" onclick="tableEditor.exportProblems('csv')">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                                        CSV形式
+                                    </button>
+                                    <button class="dropdown-item" onclick="tableEditor.exportProblems('excel')">
+                                        <i class="bi bi-file-earmark-excel"></i>
+                                        Excel形式
+                                    </button>
+                                    <button class="dropdown-item" onclick="tableEditor.exportProblems('txt')">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                        テキスト形式
+                                    </button>
                                 </div>
                             </div>
+                            <button id="saveBtn" class="btn-success">
+                                <i class="bi bi-save"></i> 保存
+                            </button>
+                            <button id="releaseBtn" class="btn-success">
+                                <i class="bi bi-cloud-upload"></i> 公開
+                            </button>
                         </div>
                     </div>
-                </div>
-                
-                <div class="editor-actions">
-                    <div class="left-actions">
-                        <button id="bulkDelete" class="action-btn danger-btn">一括削除</button>
-                        <button id="exportJSON" class="action-btn">エクスポート</button>
+
+                    <!-- 問題テーブル -->
+                    <div class="table-wrapper">
+                        <table class="problem-table" id="problemTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-number">
+                                        <input type="checkbox" id="selectAll" title="すべて選択">
+                                    </th>
+                                    <th class="col-question">
+                                        問題
+                                        <i class="bi bi-sort-alpha-down sort-icon" data-sort="question"></i>
+                                    </th>
+                                    <th class="col-answer">
+                                        回答
+                                        <i class="bi bi-sort-alpha-down sort-icon" data-sort="answer"></i>
+                                    </th>
+                                    <th class="col-actions">アクション</th>
+                                </tr>
+                            </thead>
+                            <tbody id="problemTableBody">
+                                <!-- 動的に生成される行 -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- 空の状態 -->
+                        <div class="empty-table" id="emptyState" style="display: none;">
+                            <i class="bi bi-journal-text"></i>
+                            <h3>問題がまだありません</h3>
+                            <p>「問題追加」ボタンをクリックして最初の問題を作成しましょう</p>
+                            <button class="btn-primary" onclick="addNewRow()">
+                                <i class="bi bi-plus"></i> 最初の問題を追加
+                            </button>
+                        </div>
                     </div>
-                    <div class="right-actions">
-                        <a href="javascript:save();" class="dashboard-btn primary-btn disable-btn" id="saveBtn">保存</a>
-                        <a href="javascript:release();" class="dashboard-btn publish-btn disable-btn" id="releaseBtn">公開</a>
+
+                    <!-- モバイル用カード表示（JavaScriptで動的生成） -->
+                    <div class="mobile-card-view" id="mobileCardView" style="display: none;">
+                        <!-- カードはJavaScriptで動的に生成される -->
+                    </div>
+
+                    <!-- ステータスバー -->
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <strong>問題数:</strong> <span id="problemCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <strong>選択中:</strong> <span id="selectedCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <strong>自動保存:</strong> <span id="autoSaveStatus">待機中</span>
+                        </div>
+                        <div class="status-item">
+                            <strong>品質スコア:</strong> <span id="qualityScore">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -480,7 +510,7 @@
     </div>
 
     <!-- 画像プレビュー用コンテナ -->
-    <div class="preview-container">
+    <div class="preview-container" style="display: none;">
         <div class="preview-content">
             <span class="preview-close">&times;</span>
             <img class="preview-image"
@@ -601,6 +631,7 @@
     <!-- 必要なスクリプト -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="editor.js"></script>
+    <script src="table-editor.js"></script>
 
 </body>
 

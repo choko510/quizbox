@@ -1,11 +1,9 @@
-/**
- * 強化された問題作成エディタのJavaScript
- */
 
 /**
- * HTMLをサニタイズして安全にレンダリングする関数
- * XSS攻撃対策として、ユーザー入力を安全にHTMLとして表示するために使用
+ * エディタ統合スクリプト
+ * ウェルカム画面、ビュー切り替え、インポート機能などを提供
  */
+
 function sanitizeHTML(unsafe) {
     if (!unsafe) return '';
     
@@ -28,11 +26,12 @@ let editorSettings = {
     theme: 'light'
 };
 
-let problems = [];        // 問題リスト
-let currentProblemIndex = -1;  // 現在選択されている問題のインデックス
-let isEditing = false;    // 編集中フラグ
-let autoSaveTimer = null; // 自動保存タイマー
-let searchTimeout = null; // 検索遅延タイマー
+// 互換性のため残す（table-editorが主に使用）
+let problems = [];
+let currentProblemIndex = -1;
+let isEditing = false;
+let autoSaveTimer = null;
+let searchTimeout = null;
 
 // DOM読み込み完了時の処理
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,8 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupWelcomeOptions() {
     // 新規作成ボタン
     document.getElementById('option-create-new').addEventListener('click', () => {
-        // 問題データの読み込みと初期化
-        initializeEditor();
+        // 表形式エディタを初期化
+        if (window.tableEditor) {
+            window.tableEditor.loadProblemsFromStorage();
+            window.tableEditor.render();
+        }
         switchView('create');
     });
     
@@ -78,6 +80,10 @@ function setupWelcomeOptions() {
     // インポートボタン
     document.getElementById('option-import').addEventListener('click', () => {
         switchView('import');
+    });
+
+    document.getElementById('option-image-create').addEventListener('click', () => {
+        switchView('image-create');
     });
 }
 
@@ -110,9 +116,16 @@ function setupEventListeners() {
             const viewId = item.dataset.view;
             switchView(viewId);
             
-            // createビューに切り替える際に、まだ初期化されていなければ初期化
-            if (viewId === 'create' && problems.length === 0) {
-                initializeEditor();
+            // createビューに切り替える際の表形式エディタ初期化
+            if (viewId === 'create') {
+                // 表形式エディタが存在する場合は初期化
+                if (window.tableEditor) {
+                    window.tableEditor.loadProblemsFromStorage();
+                    window.tableEditor.render();
+                } else if (problems.length === 0) {
+                    // フォールバック: 古いエディタの初期化
+                    initializeEditor();
+                }
             }
         });
     });
@@ -131,40 +144,73 @@ function setupEventListeners() {
     });
 
     // 問題追加ボタン
-    document.getElementById('addProblem').addEventListener('click', addNewProblem);
+    const addProblemBtn = document.getElementById('addProblem');
+    if (addProblemBtn) {
+        addProblemBtn.addEventListener('click', addNewProblem);
+    }
     
     // 選択した問題を削除するボタン
-    document.getElementById('deleteSelected').addEventListener('click', deleteSelectedProblem);
+    const deleteSelectedBtn = document.getElementById('deleteSelected');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', deleteSelectedProblem);
+    }
     
     // 選択した問題を複製するボタン
-    document.getElementById('duplicateSelected').addEventListener('click', duplicateSelectedProblem);
+    const duplicateSelectedBtn = document.getElementById('duplicateSelected');
+    if (duplicateSelectedBtn) {
+        duplicateSelectedBtn.addEventListener('click', duplicateSelectedProblem);
+    }
     
     // 問題検索機能
-    document.getElementById('problemSearch').addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            searchProblems(e.target.value);
-        }, 300);
-    });
+    const problemSearchInput = document.getElementById('problemSearch');
+    if (problemSearchInput) {
+        problemSearchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchProblems(e.target.value);
+            }, 300);
+        });
+    }
     
     // プレビューボタン
-    document.getElementById('previewButton').addEventListener('click', previewCurrentProblem);
+    const previewBtn = document.getElementById('previewButton');
+    if (previewBtn) {
+        previewBtn.addEventListener('click', previewCurrentProblem);
+    }
     
     // 品質チェックボタン
-    document.getElementById('checkButton').addEventListener('click', checkCurrentProblem);
+    const checkBtn = document.getElementById('checkButton');
+    if (checkBtn) {
+        checkBtn.addEventListener('click', checkCurrentProblem);
+    }
     
     // 一括削除ボタン
-    document.getElementById('bulkDelete').addEventListener('click', confirmBulkDelete);
+    const bulkDeleteBtn = document.getElementById('bulkDelete');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', confirmBulkDelete);
+    }
     
     // エクスポートボタン
-    document.getElementById('exportJSON').addEventListener('click', exportProblems);
+    const exportBtn = document.getElementById('exportJSON');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportProblems);
+    }
     
     // 保存・公開ボタン
-    document.getElementById('saveBtn').addEventListener('click', saveProblems);
-    document.getElementById('releaseBtn').addEventListener('click', releaseProblems);
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveProblems);
+    }
+    const releaseBtn = document.getElementById('releaseBtn');
+    if (releaseBtn) {
+        releaseBtn.addEventListener('click', releaseProblems);
+    }
     
     // 設定保存ボタン
-    document.getElementById('saveSettings').addEventListener('click', saveSettings);
+    const saveSettingsBtn = document.getElementById('saveSettings');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', saveSettings);
+    }
     
     // テーマ選択
     document.querySelectorAll('.theme-option').forEach(option => {
@@ -206,25 +252,43 @@ function setupEventListeners() {
     });
     
     // テスト回答表示ボタン
-    document.querySelector('.show-answer-btn').addEventListener('click', (e) => {
-        const answerContainer = document.querySelector('.test-answer');
-        answerContainer.classList.toggle('hidden');
-        e.target.textContent = answerContainer.classList.contains('hidden') ? '回答を表示' : '回答を隠す';
-    });
+    const showAnswerBtn = document.querySelector('.show-answer-btn');
+    if (showAnswerBtn) {
+        showAnswerBtn.addEventListener('click', (e) => {
+            const answerContainer = document.querySelector('.test-answer');
+            if (answerContainer) {
+                answerContainer.classList.toggle('hidden');
+                e.target.textContent = answerContainer.classList.contains('hidden') ? '回答を表示' : '回答を隠す';
+            }
+        });
+    }
     
     // ファイル読み込みイベント
-    // ファイル読み込みイベント
-    document.getElementById('txtload').addEventListener('change', handleFileUpload);
-    document.getElementById('csvload').addEventListener('change', handleFileUpload);
-    document.getElementById('xlsxload').addEventListener('change', handleFileUpload);
-    // document.getElementById('imageLoad').addEventListener('change', handleImageUpload); // handleImageUploadで処理するため、ここはコメントアウトまたは削除
+    const txtloadInput = document.getElementById('txtload');
+    if (txtloadInput) {
+        txtloadInput.addEventListener('change', handleFileUpload);
+    }
+    const csvloadInput = document.getElementById('csvload');
+    if (csvloadInput) {
+        csvloadInput.addEventListener('change', handleFileUpload);
+    }
+    const xlsxloadInput = document.getElementById('xlsxload');
+    if (xlsxloadInput) {
+        xlsxloadInput.addEventListener('change', handleFileUpload);
+    }
     
     // 文章から問題を自動生成するボタン - インラインモードとモーダルモード
-    document.getElementById('generateQuestions').addEventListener('click', () => {
-        // モーダル表示して大きい入力欄で編集
-        openTextGenerateModal();
-    });
-    document.getElementById('generateQuestionsModal').addEventListener('click', generateQuestionsFromModal);
+    const generateQuestionsBtn = document.getElementById('generateQuestions');
+    if (generateQuestionsBtn) {
+        generateQuestionsBtn.addEventListener('click', () => {
+            // モーダル表示して大きい入力欄で編集
+            openTextGenerateModal();
+        });
+    }
+    const generateQuestionsModalBtn = document.getElementById('generateQuestionsModal');
+    if (generateQuestionsModalBtn) {
+        generateQuestionsModalBtn.addEventListener('click', generateQuestionsFromModal);
+    }
     
     // 画像アップロード (新しい複数ファイル対応のハンドラを紐付け)
     const imageLoadInput = document.getElementById('imageLoad');
@@ -280,6 +344,27 @@ function setupEventListeners() {
         }
     } catch (e) {
         console.error('画像ビューの初期化エラー:', e);
+    }
+
+    // 画像プレビューコンテナの閉じるボタン
+    const previewCloseBtn = document.querySelector('.preview-close');
+    if (previewCloseBtn) {
+        previewCloseBtn.addEventListener('click', () => {
+            const previewContainer = document.querySelector('.preview-container');
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // プレビューコンテナ自体をクリックして閉じる
+    const previewContainer = document.querySelector('.preview-container');
+    if (previewContainer) {
+        previewContainer.addEventListener('click', (e) => {
+            if (e.target === previewContainer) {
+                previewContainer.style.display = 'none';
+            }
+        });
     }
 }
 /**
@@ -351,7 +436,8 @@ function initializeRichTextEditor() {
 function initializeSortable() {
     const sortableList = document.getElementById('fileContent');
     
-    new Sortable(sortableList, {
+    if (sortableList && typeof Sortable !== 'undefined') {
+        new Sortable(sortableList, {
         animation: 150,
         ghostClass: 'sortable-ghost',
         handle: '.drag-handle',
@@ -379,7 +465,8 @@ function initializeSortable() {
                 }
             }
         }
-    });
+        });
+    }
 }
 
 /**
@@ -397,12 +484,21 @@ function loadSettings() {
         }
     }
     
-    // 設定を反映
-    document.getElementById('auto-quality-check').checked = editorSettings.autoQualityCheck;
-    document.getElementById('show-characters').checked = editorSettings.showCharacterCount;
-    document.getElementById('show-preview').checked = editorSettings.showPreview;
-    document.getElementById('auto-save').checked = editorSettings.autoSave;
-    document.getElementById('auto-save-interval').value = editorSettings.autoSaveInterval;
+    // 設定を反映（要素が存在する場合のみ）
+    const autoQualityCheck = document.getElementById('auto-quality-check');
+    if (autoQualityCheck) autoQualityCheck.checked = editorSettings.autoQualityCheck;
+    
+    const showCharacters = document.getElementById('show-characters');
+    if (showCharacters) showCharacters.checked = editorSettings.showCharacterCount;
+    
+    const showPreview = document.getElementById('show-preview');
+    if (showPreview) showPreview.checked = editorSettings.showPreview;
+    
+    const autoSave = document.getElementById('auto-save');
+    if (autoSave) autoSave.checked = editorSettings.autoSave;
+    
+    const autoSaveInterval = document.getElementById('auto-save-interval');
+    if (autoSaveInterval) autoSaveInterval.value = editorSettings.autoSaveInterval;
     
     // 文字数カウントの表示/非表示
     const counters = document.querySelectorAll('.character-counter');
@@ -499,7 +595,10 @@ function loadProblemsFromLocalStorage() {
 function saveProblemsToLocalStorage() {
     try {
         localStorage.setItem('editor-problems', JSON.stringify(problems));
-        document.getElementById('save-status').textContent = '自動保存: ' + new Date().toLocaleTimeString();
+        const saveStatus = document.getElementById('save-status');
+        if (saveStatus) {
+            saveStatus.textContent = '自動保存: ' + new Date().toLocaleTimeString();
+        }
     } catch (e) {
         console.error('問題の保存に失敗しました:', e);
         showToast('自動保存に失敗しました', 'error');
@@ -1303,8 +1402,6 @@ function handleFileUpload(event) {
 
 /**
  * 画像アップロード処理
-/**
- * 画像アップロード処理 - 新しいビュー用
  */
 let selectedImageFiles = []; // 選択された画像ファイルを保持する配列
 let processingQueue = []; // 処理待ちの画像キュー
@@ -1435,7 +1532,6 @@ function clearSelectedImages() {
     document.getElementById('imageUpload').value = '';
 }
 
-// 次の画像を処理
 // 次の画像を処理
 async function processNextImage() {
     if (processingQueue.length === 0 || isProcessing) {

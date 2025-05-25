@@ -22,6 +22,7 @@ import google.generativeai as genai
 from gtts import gTTS
 from io import BytesIO
 import aiohttp
+import asyncio
 
 from sqlalchemy import Column, Integer, String, Float, func, case, desc
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -976,7 +977,7 @@ async def process_image(data: Union[ImageData, TextData]):
         # 画像を開く
         image = Image.open(image_path)
         
-        question_generation_prompt = f"""
+        question_generation_prompt = """
             あなたは優秀な教育アシスタントです。
             以下の画像に基づいて、学習者が内容を効率的に覚え、理解を深めるための勉強に活用できる問題を作成してください。
 
@@ -991,22 +992,22 @@ async def process_image(data: Union[ImageData, TextData]):
             - 1つの問題に対して、回答は1つになるようにしてください。
             - 問題数は、テキストの内容量に応じて適切に調整してください（例：5問～15問程度）。
 
-            # カスタム指示（特に指定がある場合）
-            {data.custom_prompt if data.custom_prompt else "特になし"}
-
             # 出力形式
             以下のJSON形式で、問題と回答のリストを返してください。
             各要素は `question` (問題文) と `answer` (回答) のキーを持つオブジェクトとします。
 
-            例:
+            出力例:
             ```json
             [
-                {{"question": "経済において基本的な活動とされるものは何と何か？", "answer": "生産と消費"}}
-                {{"question": "財やサービスをつくりだす行為を経済学で何と呼びますか？", "answer": "生産"}}
-                {{"question": "生産に必要な3要素とは何ですか？", "answer": "労働力、土地、資本"}}
+                {"question": "経済において基本的な活動とされるものは何と何か？", "answer": "生産と消費"},
+                {"question": "財やサービスをつくりだす行為を経済学で何と呼びますか？", "answer": "生産"},
+                {"question": "生産に必要な3要素とは何ですか？", "answer": "労働力、土地、資本"}
             ]
             ```
             """
+        
+        if data.custom_prompt:
+            question_generation_prompt += data.custom_prompt
 
         # reqAI関数を使用して画像処理を実行
         question_response_text = await reqAI(
@@ -1014,7 +1015,7 @@ async def process_image(data: Union[ImageData, TextData]):
             model="gemini-2.5-flash-preview-05-20",
             images=image
         )
-
+    
         # JSONパターンを抽出（APIの応答からJSONを抽出）
         # 応答が直接JSON文字列である場合も考慮
         questions = []
@@ -1085,6 +1086,7 @@ async def process_image(data: Union[ImageData, TextData]):
             detail=f"Error processing image: {str(e)}"
         )
     finally:
+        await asyncio.sleep(5)
         # 画像処理後、ファイルを削除
         if os.path.exists(image_path):
             try:

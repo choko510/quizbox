@@ -246,19 +246,487 @@
     }
 }
 
+/* レスポンシブデザイン強化版 */
+
+/* タブレット横向き (1024px以下) */
+@media (max-width: 1024px) {
+    .welcome-container {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 15px;
+    }
+    
+    .welcome-options {
+        gap: 20px;
+    }
+    
+    .welcome-option {
+        width: 220px;
+        padding: 25px;
+    }
+    
+    .option-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .welcome-option h3 {
+        font-size: 1.3rem;
+    }
+    
+    .ai-text-input {
+        min-height: 100px;
+        font-size: 0.9rem;
+    }
+    
+    .modal-text-input {
+        min-height: 250px;
+        font-size: 0.95rem;
+    }
+}
+
+/* タブレット縦向き (992px以下) */
+@media (max-width: 992px) {
+    .welcome-container {
+        margin: 20px auto;
+        padding: 15px;
+    }
+    
+    .welcome-options {
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .welcome-option {
+        width: 200px;
+        padding: 20px;
+    }
+    
+    .option-icon {
+        font-size: 2.2rem;
+    }
+    
+    .modal-controls {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .control-group {
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    .large-modal .modal-container {
+        width: 95%;
+        max-height: 85vh;
+    }
+}
+
+/* スマートフォン横向き (768px以下) */
 @media (max-width: 768px) {
+    .welcome-container {
+        margin: 15px auto;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    .welcome-container h2 {
+        font-size: 1.6rem;
+        margin-bottom: 12px;
+    }
+    
+    .welcome-description {
+        font-size: 1rem;
+        margin-bottom: 30px;
+    }
+    
     .welcome-options {
         flex-direction: column;
         align-items: center;
+        gap: 15px;
     }
     
     .welcome-option {
         width: 90%;
-        max-width: 350px;
+        max-width: 300px;
+        padding: 20px 15px;
+    }
+    
+    .option-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+    }
+    
+    .welcome-option h3 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .welcome-option p {
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+    
+    .option-button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .ai-text-input {
+        min-height: 80px;
+        padding: 10px;
+        font-size: 0.9rem;
     }
     
     .option-controls {
         flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .number-input {
+        width: 100%;
+        text-align: left;
+        padding: 10px;
+    }
+    
+    .input-label {
+        font-size: 13px;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .import-option {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .modal-text-input {
+        min-height: 200px;
+        padding: 12px;
+    }
+    
+    .modal-controls {
+        gap: 12px;
+    }
+    
+    .uploaded-image-preview {
+        max-height: 200px;
+        margin-bottom: 15px;
+    }
+    
+    .image-preview-container {
+        min-height: 120px;
+        padding: 8px;
+    }
+    
+    .toast-container {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+        align-items: stretch;
+    }
+    
+    .toast {
+        max-width: none;
+        margin-top: 8px;
+        padding: 10px 12px;
+    }
+}
+
+/* スマートフォン縦向き (480px以下) */
+@media (max-width: 480px) {
+    .welcome-container {
+        margin: 10px;
+        padding: 12px;
+        border-radius: 6px;
+    }
+    
+    .welcome-container h2 {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+    
+    .welcome-description {
+        font-size: 0.9rem;
+        margin-bottom: 25px;
+    }
+    
+    .welcome-option {
+        width: 100%;
+        max-width: none;
+        padding: 15px 12px;
+    }
+    
+    .option-icon {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+    
+    .welcome-option h3 {
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+    }
+    
+    .welcome-option p {
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+    }
+    
+    .option-button {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+    
+    .ai-text-input {
+        min-height: 70px;
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .number-input {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .input-label {
+        font-size: 12px;
+    }
+    
+    .import-option {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .large-modal .modal-container {
+        width: 98%;
+        margin: 5px;
+        max-height: 90vh;
+    }
+    
+    .modal-text-input {
+        min-height: 150px;
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .control-group {
+        flex-direction: column;
         align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .control-group label {
+        font-size: 0.9rem;
+    }
+    
+    .uploaded-image-preview {
+        max-height: 150px;
+        margin-bottom: 12px;
+    }
+    
+    .image-preview-container {
+        min-height: 100px;
+        padding: 6px;
+    }
+    
+    .toast {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+/* 極小画面 (320px以下) */
+@media (max-width: 320px) {
+    .welcome-container {
+        margin: 5px;
+        padding: 10px;
+    }
+    
+    .welcome-container h2 {
+        font-size: 1.3rem;
+    }
+    
+    .welcome-description {
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+    }
+    
+    .welcome-option {
+        padding: 12px 8px;
+    }
+    
+    .option-icon {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+    }
+    
+    .welcome-option h3 {
+        font-size: 1rem;
+    }
+    
+    .welcome-option p {
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+    
+    .option-button {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .ai-text-input {
+        min-height: 60px;
+        padding: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .modal-text-input {
+        min-height: 120px;
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .uploaded-image-preview {
+        max-height: 120px;
+    }
+    
+    .image-preview-container {
+        min-height: 80px;
+        padding: 4px;
+    }
+}
+
+/* ランドスケープモード特別調整 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .welcome-container {
+        margin: 10px auto;
+        padding: 10px;
+    }
+    
+    .welcome-container h2 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+    
+    .welcome-description {
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+    
+    .welcome-options {
+        gap: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .welcome-option {
+        width: 180px;
+        padding: 12px;
+    }
+    
+    .option-icon {
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+    }
+    
+    .welcome-option h3 {
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+    
+    .welcome-option p {
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+    }
+    
+    .option-button {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .ai-text-input {
+        min-height: 60px;
+    }
+    
+    .modal-text-input {
+        min-height: 100px;
+    }
+    
+    .large-modal .modal-container {
+        max-height: 95vh;
+    }
+    
+    .uploaded-image-preview {
+        max-height: 100px;
+    }
+    
+    .image-preview-container {
+        min-height: 60px;
+    }
+}
+
+/* タッチデバイス用の改善 */
+@media (hover: none) and (pointer: coarse) {
+    .welcome-option {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .welcome-option:hover {
+        transform: none;
+    }
+    
+    .welcome-option:active {
+        transform: scale(0.98);
+        background-color: var(--hover-bg);
+    }
+    
+    .option-button {
+        padding: 12px 20px;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+    
+    .number-input {
+        min-height: 44px;
+        font-size: 16px; /* iOS zoom prevention */
+    }
+    
+    .ai-text-input, .modal-text-input {
+        font-size: 16px; /* iOS zoom prevention */
+    }
+    
+    .toast {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* プリントメディア用 */
+@media print {
+    .welcome-container {
+        box-shadow: none;
+        border: 1px solid #000;
+        margin: 0;
+    }
+    
+    .option-button,
+    .toast-container {
+        display: none;
+    }
+    
+    .welcome-option {
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+    
+    .ai-text-input,
+    .modal-text-input {
+        border: 1px solid #000;
+        background: white;
     }
 }
