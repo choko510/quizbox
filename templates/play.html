@@ -151,10 +151,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div id="score">回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
-            </div>
-            <button id="exit-review-btn" class="exit-review-btn">通常モードに戻る</button>
+                <div id="score">回答数: 0 正解数: 0 不正解数: 0 連続正解数:0 正答率: 0%
+                </div>
+                <button id="exit-review-btn" class="exit-review-btn">通常モードに戻る</button>
         </div>
         <div class="swiper-slide slide3">
             <div class="tangolist">
@@ -178,6 +177,7 @@
     <div class="swiper-button-next">
     </div>
     <div class="swiper-button-prev">
+    </div>
     </div>
     <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
         <div class="modal__overlay" tabindex="-1" data-micromodal-close>
@@ -236,10 +236,6 @@
                             <input type="radio" id="word-arrange-mode" name="answer-mode" value="word-arrange">
                             <label for="word-arrange-mode">英単語並び替えモード</label>
                         </div>
-                        <div class="settings-option">
-                            <input type="radio" id="true-false-mode" name="answer-mode" value="true-false">
-                            <label for="true-false-mode">○×問題モード</label>
-                        </div>
                         <h3>リスニングモード</h3>
                         <a href="javascript:window.location.replace(`/listening?id=${encodeURIComponent(mondai)}`);"
                             style="color: black;text-decoration:none;">リスニングモードに移動</a>
@@ -292,7 +288,7 @@
                 results = regex.exec(url);
             if (!results) return null;
             if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/+/g, " "));
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
         let mondai = getParam("id");
@@ -484,6 +480,9 @@
             // 設定を読み込む
             loadSettings();
 
+            // 英単語かどうかを判断して要素を制御
+            checkAndControlEnglishOnlyFeatures();
+
             // 問題の選択方法をモードに応じて設定
             selectQuestionMode();
 
@@ -504,6 +503,8 @@
             }
             // --- タイマー制御ここまで ---
 
+            // 回答モードの設定を再確認（問題データ読み込み完了後）
+            validateAnswerModeSettings();
 
             // 検索インデックスを事前構築（バックグラウンドで実行）
             setTimeout(() => {
@@ -511,6 +512,145 @@
 
             }, 1000);
         });
+
+        // 英単語かどうかを判断する関数
+        function isEnglishWord(text) {
+            if (!text || typeof text !== 'string') return false;
+            // 英語の文字、数字、基本的な句読点のみを含む場合に英単語と判断
+            // 日本語文字（ひらがな、カタカナ、漢字）が含まれていない場合に英語と判定
+            return /^[a-zA-Z0-9\s.,'\-!?;:()]+$/.test(text.trim()) &&
+                   !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+        }
+
+        // 問題セットが英単語かどうかを判断する関数
+        function isProblemSetEnglish() {
+            if (!questions || questions.length === 0) {
+                console.log('No questions available for English check');
+                return false;
+            }
+            
+            // 最初の10問（または全問題数が10未満の場合は全問題）をサンプルとして判断
+            const sampleSize = Math.min(10, questions.length);
+            let englishCount = 0;
+            
+            console.log(`Checking ${sampleSize} questions for English content:`);
+            
+            for (let i = 0; i < sampleSize; i++) {
+                const question = questions[i];
+                if (question && question.word) {
+                    const isEnglish = isEnglishWord(question.word);
+                    console.log(`Question ${i}: "${question.word}" -> ${isEnglish ? 'English' : 'Not English'}`);
+                    if (isEnglish) {
+                        englishCount++;
+                    }
+                }
+            }
+            
+            const ratio = englishCount / sampleSize;
+            const isEnglishSet = ratio >= 0.5; // 判定基準を80%から50%に緩和
+            
+            console.log(`English count: ${englishCount}/${sampleSize} (${(ratio * 100).toFixed(1)}%) -> ${isEnglishSet ? 'English Set' : 'Non-English Set'}`);
+            
+            return isEnglishSet;
+        }
+
+        // 英単語以外の場合に特定の要素を非表示にする関数
+        function checkAndControlEnglishOnlyFeatures() {
+            const isEnglish = isProblemSetEnglish();
+            console.log('Checking English-only features. Is English set:', isEnglish);
+            
+            if (!isEnglish) {
+                console.log('Non-English problem set detected. Hiding English-only features.');
+                
+                // 非表示にする要素を取得（英単語専用機能のみ）
+                const replaceMondaiOption = document.querySelector('label[for="replace-mondai"]');
+                const hardmodeOption = document.querySelector('label[for="hardmode"]');
+                const wordArrangeOption = document.querySelector('label[for="word-arrange-mode"]');
+                const listeningSection = document.querySelector('h3').parentElement;
+                
+                // 要素を非表示にする（親のsettings-optionクラスを持つdivを非表示にする）
+                if (replaceMondaiOption) {
+                    replaceMondaiOption.parentElement.style.display = 'none';
+                }
+                if (hardmodeOption) {
+                    hardmodeOption.parentElement.style.display = 'none';
+                }
+                if (wordArrangeOption) {
+                    wordArrangeOption.parentElement.style.display = 'none';
+                }
+                
+                // リスニングモードセクション全体を非表示にする
+                const listeningHeaders = document.querySelectorAll('h3');
+                listeningHeaders.forEach(header => {
+                    if (header.textContent.includes('リスニングモード')) {
+                        header.style.display = 'none';
+                        // 次の要素（リンク）も非表示にする
+                        if (header.nextElementSibling) {
+                            header.nextElementSibling.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // 英単語並び替えモードが選択されている場合は4択モードに変更
+                if (globalSettings.answerMode === 'word-arrange') {
+                    console.log('Word arrange mode was selected but switching to choice mode for non-English set');
+                    globalSettings.answerMode = 'choice';
+                    document.getElementById('choice-mode').checked = true;
+                    saveSettings();
+                    
+                    // ユーザーに通知
+                    setTimeout(() => {
+                        notie.alert({
+                            type: 'warning',
+                            text: '英単語並び替えモードは英単語問題でのみ利用可能です。4択モードに変更しました。',
+                            time: 3
+                        });
+                    }, 1000);
+                }
+                
+                // ハードモードが有効になっている場合は無効にする
+                if (globalSettings.hardMode) {
+                    globalSettings.hardMode = false;
+                    document.getElementById('hardmode').checked = false;
+                    saveSettings();
+                }
+            } else {
+                console.log('English problem set confirmed. English-only features available.');
+            }
+        }
+
+        // 回答モード設定の妥当性を検証する関数（問題データ読み込み完了後に呼ばれる）
+        function validateAnswerModeSettings() {
+            console.log('Validating answer mode settings after questions loaded');
+            
+            // 英単語並び替えモードが選択されているかチェック
+            if (globalSettings.answerMode === 'word-arrange') {
+                const isEnglishSet = isProblemSetEnglish();
+                console.log('Current mode is word-arrange. English set check:', isEnglishSet);
+                
+                if (!isEnglishSet) {
+                    console.log('Switching from word-arrange to choice mode due to non-English set');
+                    globalSettings.answerMode = 'choice';
+                    document.getElementById('choice-mode').checked = true;
+                    saveSettings();
+                    
+                    // UI表示も更新
+                    document.getElementById('choice-answers').style.display = 'block';
+                    document.getElementById('word-arrange-area').style.display = 'none';
+                    
+                    // ユーザーに通知
+                    setTimeout(() => {
+                        notie.alert({
+                            type: 'warning',
+                            text: '英単語並び替えモードは英単語問題でのみ利用可能です。4択モードに変更しました。',
+                            time: 3
+                        });
+                    }, 500);
+                } else {
+                    console.log('Word arrange mode is valid for this English problem set');
+                }
+            }
+        }
 
         function populateWordList() {
             let listHTML = ''; // HTML文字列を構築
@@ -523,7 +663,7 @@
                 titleHTML = question.word;
                 contentHTML = question.description;
 
-                const isEnglishWord = /^[a-zA-Z0-9s-.,'']+$/.test(titleHTML.trim());
+                const isEnglishWord = /^[a-zA-Z0-9s.,'\-]+$/.test(titleHTML.trim());
                 const speakerIcon = isEnglishWord ?
                     `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>` :
                     '';
@@ -774,11 +914,6 @@
             // 英単語並び替えモードの処理
             if (globalSettings.answerMode === 'word-arrange') {
                 setupWordArrangeMode(correctAnswer);
-            }
-
-            // ○×問題モードの処理
-            if (globalSettings.answerMode === 'true-false') {
-                setupTrueFalseMode(question);
             }
 
 
@@ -1708,7 +1843,19 @@
 
         // ハードモードチェックボックスの変更イベント
         hardmodeCheckbox.addEventListener('change', async function () {
-            globalSettings.hardMode = this.checked;
+            // 英単語以外の問題セットでハードモードを有効にしようとした場合は無効にする
+            if (this.checked && !isProblemSetEnglish()) {
+                notie.alert({
+                    type: 'warning',
+                    text: 'ハードモードは英単語問題でのみ利用可能です。',
+                    time: 3
+                });
+                this.checked = false;
+                globalSettings.hardMode = false;
+            } else {
+                globalSettings.hardMode = this.checked;
+            }
+            
             saveSettings();
 
             if (swiper.activeIndex === 1) {
@@ -1762,6 +1909,30 @@
                 const trueFalseArea = document.getElementById('true-false-area');
 
                 globalSettings.answerMode = this.value;
+                
+                // 英単語並び替えモードが選択された場合のチェック
+                if (this.value === 'word-arrange') {
+                    // 問題データが読み込まれているかチェック
+                    if (questions && questions.length > 0) {
+                        const isEnglishSet = isProblemSetEnglish();
+                        console.log('Word arrange mode selected. English set check:', isEnglishSet);
+                        
+                        if (!isEnglishSet) {
+                            notie.alert({
+                                type: 'warning',
+                                text: '英単語並び替えモードは英単語問題でのみ利用可能です。4択モードに変更しました。',
+                                time: 3
+                            });
+                            document.getElementById('choice-mode').checked = true;
+                            globalSettings.answerMode = 'choice';
+                        }
+                    } else {
+                        console.log('Questions not loaded yet, will check later');
+                        // 問題データがまだ読み込まれていない場合は、後でチェックする
+                        // loadQuestions完了後にcheckAndControlEnglishOnlyFeaturesが呼ばれる
+                    }
+                }
+                
                 saveSettings();
 
                 // すべてのエリアを非表示にする
@@ -1771,17 +1942,17 @@
                 wordArrangeArea.style.display = 'none';
                 trueFalseArea.style.display = 'none';
 
-                if (this.value === 'choice') {
+                if (globalSettings.answerMode === 'choice') {
                     choiceArea.style.display = 'block';
-                } else if (this.value === 'input') {
+                } else if (globalSettings.answerMode === 'input') {
                     inputArea.style.display = 'block';
                     document.getElementById('text-answer').focus();
-                } else if (this.value === 'handwriting') {
+                } else if (globalSettings.answerMode === 'handwriting') {
                     handwritingArea.style.display = 'block';
                     // 手書きモード初期化処理（必要なら）
-                } else if (this.value === 'word-arrange') {
+                } else if (globalSettings.answerMode === 'word-arrange') {
                     wordArrangeArea.style.display = 'block';
-                } else if (this.value === 'true-false') {
+                } else if (globalSettings.answerMode === 'true-false') {
                     trueFalseArea.style.display = 'block';
                 }
             });
@@ -1969,6 +2140,21 @@
 
         // 英単語並び替えモードのセットアップ
         async function setupWordArrangeMode(correctAnswer) {
+            console.log('Setting up word arrange mode for:', correctAnswer);
+            
+            // 正解の文章を保存（デフォルト値を設定）
+            window.correctSentence = correctAnswer;
+            window.arrangedWords = [];
+            
+            // シャッフルされた単語を表示するコンテナを取得
+            const shuffledContainer = document.getElementById('shuffled-words');
+            const arrangedContainer = document.getElementById('arranged-words');
+            
+            if (!shuffledContainer || !arrangedContainer) {
+                console.error('Word arrange containers not found');
+                return;
+            }
+            
             // ハードモードの処理を参考に、英単語から文章を取得
             try {
                 const response = await fetch('/api/get/sentences', {
@@ -1981,87 +2167,78 @@
                     })
                 });
 
-                if (!response.ok) {
+                if (response.ok) {
+                    const sentenceData = await response.json();
+                    
+                    if (sentenceData.results && sentenceData.results[correctAnswer] &&
+                        sentenceData.results[correctAnswer].length > 0) {
+                        const sentences = sentenceData.results[correctAnswer];
+                        const selectedSentence = sentences[Math.floor(Math.random() * sentences.length)];
+                        const parts = selectedSentence.split("|");
+                        window.correctSentence = parts[1] || selectedSentence;
+                        window.japaneseText = parts[0] || null;
+                        console.log('Got sentence from API:', window.correctSentence);
+                        console.log('Japanese text:', window.japaneseText);
+
+                    } else {
+                        // 文章が見つからない場合は、正解の単語を使った簡単な文を作成
+                        window.correctSentence = `This is a ${correctAnswer}.`;
+                        console.log('Using fallback sentence:', window.correctSentence);
+                    }
+                } else {
                     throw new Error(`API request failed with status ${response.status}`);
                 }
-
-                const sentenceData = await response.json();
-                let sentenceForArrange = null;
-
-                if (sentenceData.results && sentenceData.results[correctAnswer] &&
-                    sentenceData.results[correctAnswer].length > 0) {
-                    const sentences = sentenceData.results[correctAnswer];
-                    sentenceForArrange = sentences[Math.floor(Math.random() * sentences.length)];
-                } else {
-                    // 文章が見つからない場合は、正解の単語を使った簡単な文を作成
-                    sentenceForArrange = `This is a ${correctAnswer}.`;
-                }
-
-                // 正解の文章を保存（後で正誤判定に使用）
-                window.correctSentence = sentenceForArrange;
-
-                // 文章を単語に分割（句読点も含める）
-                const words = sentenceForArrange.match(/bw+b|[.,!?;]/g) ||
-                    sentenceForArrange.split(' ');
-                const filteredWords = words.filter(word => word.trim() !== '');
-
-                // 単語をシャッフル
-                const shuffledWords = [...filteredWords].sort(() => Math.random() - 0.5);
-
-                // シャッフルされた単語を表示
-                const shuffledContainer = document.getElementById('shuffled-words');
-                shuffledContainer.innerHTML = '';
-
-                shuffledWords.forEach((word, index) => {
-                    const wordChip = document.createElement('button');
-                    wordChip.className = 'word-chip';
-                    wordChip.textContent = word;
-                    wordChip.dataset.word = word;
-                    wordChip.dataset.originalIndex = index;
-                    wordChip.onclick = () => moveWordToArranged(wordChip);
-                    shuffledContainer.appendChild(wordChip);
-                });
-
-                // 並び替えエリアをリセット
-                const arrangedContainer = document.getElementById('arranged-words');
-                arrangedContainer.innerHTML =
-                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
-
-                // 配置された単語を記録する配列をリセット
-                window.arrangedWords = [];
-
-                // 問題文も更新（元の文章から単語を隠して表示）
-                const questionElement = document.getElementById('question');
-                const hiddenSentence = sentenceForArrange.replace(new RegExp(
-                    `\b${correctAnswer}\b`, 'gi'), '(_____)')
-                    .replace(/|/g, '<br>');
-                questionElement.innerHTML =
-                    `次の文章を正しい語順に並び替えてください：<br><br><em>${hiddenSentence}</em>`;
-
             } catch (error) {
-                console.error('Error setting up word arrange mode:', error);
-                // エラーの場合は元の実装にフォールバック
-                const words = correctAnswer.split(' ').filter(word => word.trim() !== '');
-                window.correctSentence = correctAnswer;
+                console.error('Error fetching sentences:', error);
+                // エラーの場合は単語そのものまたは簡単な文を使用
+                if (correctAnswer.includes(' ')) {
+                    window.correctSentence = correctAnswer;
+                } else {
+                    window.correctSentence = `This is a ${correctAnswer}.`;
+                }
+                console.log('Using error fallback sentence:', window.correctSentence);
+            }
+            
+            // 文章を単語に分割（句読点も含める）
+            const words = window.correctSentence.match(/\b\w+\b|[.,!?;]/g) ||
+                         window.correctSentence.split(/\s+/).filter(word => word.trim() !== '');
+            
+            console.log('Words to arrange:', words);
+            
+            if (words.length === 0) {
+                console.error('No words found to arrange');
+                return;
+            }
+            
+            // 単語をシャッフル
+            const shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
-                const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-                const shuffledContainer = document.getElementById('shuffled-words');
-                shuffledContainer.innerHTML = '';
+            // シャッフルされた単語を表示
+            shuffledContainer.innerHTML = '';
 
-                shuffledWords.forEach((word, index) => {
-                    const wordChip = document.createElement('button');
-                    wordChip.className = 'word-chip';
-                    wordChip.textContent = word;
-                    wordChip.dataset.word = word;
-                    wordChip.dataset.originalIndex = index;
-                    wordChip.onclick = () => moveWordToArranged(wordChip);
-                    shuffledContainer.appendChild(wordChip);
-                });
+            shuffledWords.forEach((word, index) => {
+                const wordChip = document.createElement('button');
+                const isPunctuation = /^[.,!?;:]$/.test(word);
+                wordChip.className = isPunctuation ? 'word-chip punctuation' : 'word-chip';
+                wordChip.textContent = word;
+                wordChip.dataset.word = word;
+                wordChip.dataset.originalIndex = index;
+                wordChip.onclick = () => moveWordToArranged(wordChip);
+                setupDragAndDrop(wordChip);
+                shuffledContainer.appendChild(wordChip);
+            });
 
-                const arrangedContainer = document.getElementById('arranged-words');
-                arrangedContainer.innerHTML =
-                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
-                window.arrangedWords = [];
+            // 並び替えエリアをリセット
+            arrangedContainer.innerHTML = '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+            
+            // 問題文を更新
+            const questionElement = document.getElementById('question');
+            if (window.japaneseText) {
+                questionElement.innerHTML =
+                    `<div>次の日本語を英語に直して、正しい語順に並び替えてください：</div><br><div><em>${window.japaneseText}</em></div>`;
+            } else {
+                questionElement.innerHTML =
+                    `<div>次の英文を正しい語順に並び替えてください：</div><br><div><em>${window.correctSentence}</em></div>`;
             }
         }
 
@@ -2077,8 +2254,10 @@
 
             // 単語を並び替えエリアに追加
             const arrangedChip = wordChip.cloneNode(true);
-            arrangedChip.className = 'word-chip arranged';
+            const isPunctuation = /^[.,!?;:]$/.test(arrangedChip.textContent);
+            arrangedChip.className = isPunctuation ? 'word-chip arranged punctuation' : 'word-chip arranged';
             arrangedChip.onclick = () => moveWordBackToShuffled(arrangedChip);
+            setupDragAndDrop(arrangedChip);
             arrangedContainer.appendChild(arrangedChip);
 
             // 元の単語を削除
@@ -2095,8 +2274,10 @@
 
             // 単語をシャッフルエリアに戻す
             const shuffledChip = arrangedChip.cloneNode(true);
-            shuffledChip.className = 'word-chip';
+            const isPunctuation = /^[.,!?;:]$/.test(shuffledChip.textContent);
+            shuffledChip.className = isPunctuation ? 'word-chip punctuation' : 'word-chip';
             shuffledChip.onclick = () => moveWordToArranged(shuffledChip);
+            setupDragAndDrop(shuffledChip);
             shuffledContainer.appendChild(shuffledChip);
 
             // 並び替えエリアから削除
@@ -2146,6 +2327,224 @@
                 handleWrongAnswerInput(userAnswer, correctAnswer);
             }
         }
+
+        // ドラッグアンドドロップ機能のセットアップ
+        function setupDragAndDrop(element) {
+            // 既存のイベントリスナーを削除（重複防止）
+            element.removeEventListener('dragstart', handleDragStart);
+            element.removeEventListener('dragend', handleDragEnd);
+            element.removeEventListener('dragover', handleDragOver);
+            element.removeEventListener('drop', handleDrop);
+            element.removeEventListener('dragenter', handleDragEnter);
+            element.removeEventListener('dragleave', handleDragLeave);
+            
+            element.draggable = true;
+            
+            element.addEventListener('dragstart', handleDragStart);
+            element.addEventListener('dragend', handleDragEnd);
+            element.addEventListener('dragover', handleDragOver);
+            element.addEventListener('drop', handleDrop);
+            element.addEventListener('dragenter', handleDragEnter);
+            element.addEventListener('dragleave', handleDragLeave);
+        }
+
+        let draggedElement = null;
+        let dragStartContainer = null;
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            dragStartContainer = e.target.parentElement;
+            e.target.classList.add('dragging');
+            
+            // データ転送の設定
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            
+            // すべての視覚的フィードバックをクリア
+            document.querySelectorAll('.word-chip').forEach(chip => {
+                chip.classList.remove('drag-over', 'insert-before', 'insert-after');
+            });
+            document.querySelectorAll('.shuffled-words-container, .arranged-words-container').forEach(container => {
+                container.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            dragStartContainer = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const container = e.target.closest('.shuffled-words-container, .arranged-words-container');
+            if (container) {
+                container.classList.add('drag-over');
+            }
+            
+            // 並び替えエリア内での位置指示
+            if (e.target.classList.contains('word-chip') &&
+                e.target.closest('.arranged-words-container')) {
+                const rect = e.target.getBoundingClientRect();
+                const midpoint = rect.left + rect.width / 2;
+                
+                // マウス位置に応じて挿入位置を示す
+                if (e.clientX < midpoint) {
+                    e.target.classList.add('insert-before');
+                    e.target.classList.remove('insert-after');
+                } else {
+                    e.target.classList.add('insert-after');
+                    e.target.classList.remove('insert-before');
+                }
+            }
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+        }
+
+        function handleDragLeave(e) {
+            const container = e.target.closest('.shuffled-words-container, .arranged-words-container');
+            if (container && !container.contains(e.relatedTarget)) {
+                container.classList.remove('drag-over');
+            }
+            
+            if (e.target.classList.contains('word-chip')) {
+                e.target.classList.remove('insert-before', 'insert-after');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (!draggedElement) return;
+            
+            const targetContainer = e.target.closest('.shuffled-words-container, .arranged-words-container');
+            const targetElement = e.target.closest('.word-chip');
+            
+            if (!targetContainer) return;
+            
+            // 同じ要素にドロップした場合は何もしない
+            if (draggedElement === targetElement) return;
+            
+            const isTargetArranged = targetContainer.classList.contains('arranged-words-container');
+            const isDraggedFromArranged = draggedElement.classList.contains('arranged');
+            
+            // プレースホルダーを削除
+            const placeholder = targetContainer.querySelector('.arranged-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            if (isTargetArranged) {
+                // 並び替えエリア内での移動か、外部からの移動かを判定
+                if (isDraggedFromArranged && targetElement && targetElement.classList.contains('word-chip')) {
+                    // 並び替えエリア内での順序変更
+                    if (targetElement.classList.contains('insert-before')) {
+                        targetContainer.insertBefore(draggedElement, targetElement);
+                    } else {
+                        targetContainer.insertBefore(draggedElement, targetElement.nextSibling);
+                    }
+                    // arrangedWords配列を更新
+                    updateArrangedWordsArray();
+                } else {
+                    // シャッフルエリアから並び替えエリアへの移動
+                    const newChip = document.createElement('button');
+                    const isPunctuation = /^[.,!?;:]$/.test(draggedElement.textContent);
+                    newChip.className = isPunctuation ? 'word-chip arranged punctuation' : 'word-chip arranged';
+                    newChip.textContent = draggedElement.textContent;
+                    newChip.dataset.word = draggedElement.dataset.word;
+                    newChip.dataset.originalIndex = draggedElement.dataset.originalIndex;
+                    newChip.onclick = () => moveWordBackToShuffled(newChip);
+                    setupDragAndDrop(newChip);
+                    
+                    if (targetElement && targetElement.classList.contains('word-chip')) {
+                        // 特定の位置に挿入
+                        if (targetElement.classList.contains('insert-before')) {
+                            targetContainer.insertBefore(newChip, targetElement);
+                        } else {
+                            targetContainer.insertBefore(newChip, targetElement.nextSibling);
+                        }
+                    } else {
+                        // 最後に追加
+                        targetContainer.appendChild(newChip);
+                    }
+                    
+                    // arrangedWords配列を更新
+                    updateArrangedWordsArray();
+                    
+                    // 元の要素を削除（ドラッグ元から）
+                    draggedElement.remove();
+                }
+            } else {
+                // シャッフルエリアにドロップ（戻す）
+                if (isDraggedFromArranged) {
+                    const newChip = document.createElement('button');
+                    const isPunctuation = /^[.,!?;:]$/.test(draggedElement.textContent);
+                    newChip.className = isPunctuation ? 'word-chip punctuation' : 'word-chip';
+                    newChip.textContent = draggedElement.textContent;
+                    newChip.dataset.word = draggedElement.dataset.word;
+                    newChip.dataset.originalIndex = draggedElement.dataset.originalIndex;
+                    newChip.onclick = () => moveWordToArranged(newChip);
+                    setupDragAndDrop(newChip);
+                    targetContainer.appendChild(newChip);
+                    
+                    // arrangedWords配列から削除
+                    const wordIndex = window.arrangedWords.indexOf(draggedElement.dataset.word);
+                    if (wordIndex > -1) {
+                        window.arrangedWords.splice(wordIndex, 1);
+                    }
+                    
+                    draggedElement.remove();
+                    
+                    // プレースホルダーをチェック
+                    checkAndAddPlaceholder();
+                }
+            }
+            
+            // 視覚的フィードバックをクリア
+            document.querySelectorAll('.word-chip').forEach(chip => {
+                chip.classList.remove('insert-before', 'insert-after');
+            });
+            document.querySelectorAll('.shuffled-words-container, .arranged-words-container').forEach(container => {
+                container.classList.remove('drag-over');
+            });
+        }
+
+        // 並び替えられた単語の配列を更新
+        function updateArrangedWordsArray() {
+            const arrangedContainer = document.getElementById('arranged-words');
+            const chips = arrangedContainer.querySelectorAll('.word-chip.arranged');
+            window.arrangedWords = Array.from(chips).map(chip => chip.dataset.word);
+        }
+
+        // プレースホルダーが必要かチェックして追加
+        function checkAndAddPlaceholder() {
+            const arrangedContainer = document.getElementById('arranged-words');
+            const chips = arrangedContainer.querySelectorAll('.word-chip.arranged');
+            
+            if (chips.length === 0) {
+                arrangedContainer.innerHTML = '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+            }
+        }
+
+        // コンテナにもドロップイベントを設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const shuffledContainer = document.getElementById('shuffled-words');
+            const arrangedContainer = document.getElementById('arranged-words');
+            
+            [shuffledContainer, arrangedContainer].forEach(container => {
+                if (container) {
+                    container.addEventListener('dragover', handleDragOver);
+                    container.addEventListener('drop', handleDrop);
+                    container.addEventListener('dragenter', handleDragEnter);
+                    container.addEventListener('dragleave', handleDragLeave);
+                }
+            });
+        });
 
         // ○×問題モードのセットアップ
         function setupTrueFalseMode(question) {
