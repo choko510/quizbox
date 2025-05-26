@@ -17,9 +17,17 @@ class TableEditor {
         this.touchStartX = 0;
         this.touchStartY = 0;
         this.swipeThreshold = 100;
+        // 元に戻す機能のためのヒストリー
+        this.undoHistory = [];
+        this.maxUndoHistory = 50;
+        // スクロール制御用
+        this.lastScrollTop = 0;
+        this.scrollThreshold = 10;
+        this.headerHideTimeout = null;
         
         this.init();
         this.setupMobileFeatures();
+        this.setupScrollControl();
     }
 
     init() {
@@ -27,6 +35,7 @@ class TableEditor {
         this.loadProblemsFromStorage();
         this.render();
         this.startAutoSave();
+        this.updateUndoButton();
     }
 
     setupEventListeners() {
@@ -34,6 +43,7 @@ class TableEditor {
         document.getElementById('addRowBtn').addEventListener('click', () => this.addNewRow());
         document.getElementById('bulkDeleteBtn').addEventListener('click', () => this.bulkDelete());
         document.getElementById('duplicateBtn').addEventListener('click', () => this.duplicateSelected());
+        document.getElementById('undoBtn').addEventListener('click', () => this.undo());
         document.getElementById('checkAllBtn').addEventListener('click', () => this.qualityCheckAll());
         document.getElementById('exportBtn').addEventListener('click', (e) => this.toggleExportMenu(e));
         document.getElementById('saveBtn').addEventListener('click', () => this.saveProblems());
@@ -71,6 +81,12 @@ class TableEditor {
 
         // ウィンドウクリックでセル編集終了とドロップダウン閉じる
         document.addEventListener('click', (e) => {
+            // 編集中のテキストエリア内をクリックした場合は何もしない
+            if (this.editingCell && e.target.closest('.inline-editor')) {
+                return;
+            }
+            
+            // テーブル外をクリックした場合のみ編集終了
             if (!e.target.closest('.problem-table') && this.editingCell) {
                 this.finishEditing();
             }
@@ -86,6 +102,9 @@ class TableEditor {
 
     // 新しい行を追加
     addNewRow() {
+        // 操作をヒストリーに保存
+        this.saveToHistory('addRow');
+        
         const newProblem = {
             id: Date.now() + Math.random(),
             question: '',
@@ -119,15 +138,26 @@ class TableEditor {
         }
 
         if (confirm(`選択された${this.selectedRows.size}件の問題を削除しますか？`)) {
+            // 削除前の状態をヒストリーに保存
+            const selectedProblems = this.problems.filter(problem =>
+                this.selectedRows.has(problem.id)
+            );
+            this.saveToHistory('bulkDelete', {
+                problems: selectedProblems.map(p => ({ ...p })),
+                selectedIds: [...this.selectedRows]
+            });
+            
+            const deleteCount = this.selectedRows.size;
+            
             // 選択されたIDの問題を削除
-            this.problems = this.problems.filter(problem => 
+            this.problems = this.problems.filter(problem =>
                 !this.selectedRows.has(problem.id)
             );
             
             this.selectedRows.clear();
             this.render();
             this.autoSave();
-            this.showToast(`${this.selectedRows.size}件の問題を削除しました`, 'success');
+            this.showToast(`${deleteCount}件の問題を削除しました`, 'success');
         }
     }
 
@@ -182,6 +212,7 @@ class TableEditor {
         }
 
         this.updateStatusBar();
+        this.updateUndoButton();
     }
 
     // 行をレンダリング
@@ -253,6 +284,17 @@ class TableEditor {
     // テーブルクリックハンドリング
     handleTableClick(e) {
         const cellContent = e.target.closest('.cell-content');
+        
+        // 編集中の場合はクリックされたセルと同じかチェック
+        if (this.editingCell && cellContent) {
+            // 同じセルをクリックした場合は何もしない
+            if (this.editingCell === cellContent) {
+                return;
+            }
+            // 異なるセルをクリックした場合は編集を終了してから新しい編集を開始
+            this.finishEditing();
+        }
+        
         if (cellContent && !e.target.closest('.action-buttons')) {
             this.startEditing(cellContent);
         }
@@ -388,6 +430,14 @@ class TableEditor {
     updateProblemField(problemId, field, value) {
         const problem = this.problems.find(p => p.id == problemId);
         if (problem) {
+            // 変更前の状態をヒストリーに保存
+            this.saveToHistory('updateField', {
+                problemId: problemId,
+                field: field,
+                oldValue: problem[field],
+                newValue: value
+            });
+            
             problem[field] = value;
             problem.updated = new Date().toISOString();
             
@@ -464,6 +514,15 @@ class TableEditor {
     // 単一行削除
     deleteRow(problemId) {
         if (confirm('この問題を削除しますか？')) {
+            // 削除前の状態をヒストリーに保存
+            const problemToDelete = this.problems.find(p => p.id == problemId);
+            if (problemToDelete) {
+                this.saveToHistory('deleteRow', {
+                    problem: { ...problemToDelete },
+                    index: this.problems.findIndex(p => p.id == problemId)
+                });
+            }
+            
             this.problems = this.problems.filter(p => p.id != problemId);
             this.selectedRows.delete(problemId);
             this.render();
@@ -569,6 +628,12 @@ class TableEditor {
                 case 'n':
                     e.preventDefault();
                     this.addNewRow();
+                    break;
+                case 'z':
+                    if (!this.editingCell) {
+                        e.preventDefault();
+                        this.undo();
+                    }
                     break;
             }
         } else if (e.key === 'Delete' && this.selectedRows.size > 0 && !this.editingCell) {
@@ -1006,6 +1071,155 @@ class TableEditor {
         }
 
         return Math.min(100, score);
+    }
+
+    // ヒストリーに操作を保存
+    saveToHistory(action, data = null) {
+        const historyItem = {
+            action: action,
+            data: data,
+            problems: JSON.parse(JSON.stringify(this.problems)), // ディープコピー
+            selectedRows: new Set(this.selectedRows),
+            timestamp: Date.now()
+        };
+        
+        this.undoHistory.push(historyItem);
+        
+        // ヒストリーサイズ制限
+        if (this.undoHistory.length > this.maxUndoHistory) {
+            this.undoHistory.shift();
+        }
+        
+        // 元に戻すボタンの状態を更新
+        this.updateUndoButton();
+    }
+
+    // 元に戻す機能
+    undo() {
+        if (this.undoHistory.length === 0) {
+            this.showToast('元に戻す操作がありません', 'warning');
+            return;
+        }
+
+        const lastAction = this.undoHistory.pop();
+        
+        // 状態を復元
+        this.problems = lastAction.problems;
+        this.selectedRows = lastAction.selectedRows;
+        
+        this.render();
+        this.autoSave();
+        this.updateUndoButton();
+        
+        const actionText = this.getActionText(lastAction.action);
+        this.showToast(`「${actionText}」を元に戻しました`, 'success');
+    }
+
+    // 元に戻すボタンの状態を更新
+    updateUndoButton() {
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) {
+            if (this.undoHistory.length === 0) {
+                undoBtn.disabled = true;
+                undoBtn.title = '元に戻す操作がありません';
+            } else {
+                undoBtn.disabled = false;
+                const lastAction = this.undoHistory[this.undoHistory.length - 1];
+                const actionText = this.getActionText(lastAction.action);
+                undoBtn.title = `「${actionText}」を元に戻す (Ctrl+Z)`;
+            }
+        }
+    }
+
+    // アクション名を取得
+    getActionText(action) {
+        const actionMap = {
+            'addRow': '問題追加',
+            'deleteRow': '問題削除',
+            'bulkDelete': '一括削除',
+            'updateField': 'フィールド更新'
+        };
+        return actionMap[action] || action;
+    }
+
+    // スクロール制御のセットアップ
+    setupScrollControl() {
+        // タブレット横向きでのみ有効
+        if (window.innerWidth <= 1024) {
+            this.enableHeaderScrollControl();
+        }
+        
+        // ウィンドウリサイズ時の制御
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 1024) {
+                this.enableHeaderScrollControl();
+            } else {
+                this.disableHeaderScrollControl();
+            }
+        });
+    }
+
+    // ヘッダーのスクロール制御を有効化
+    enableHeaderScrollControl() {
+        const scrollHandler = () => {
+            const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const header = document.getElementById('mainHeader');
+            
+            if (!header) return;
+            
+            // スクロール方向を判定
+            if (Math.abs(currentScrollTop - this.lastScrollTop) < this.scrollThreshold) {
+                return;
+            }
+            
+            // 下スクロールでヘッダーを隠す
+            if (currentScrollTop > this.lastScrollTop && currentScrollTop > 100) {
+                header.classList.add('hidden');
+                
+                // 一定時間後に表示する
+                clearTimeout(this.headerHideTimeout);
+                this.headerHideTimeout = setTimeout(() => {
+                    header.classList.remove('hidden');
+                }, 3000);
+            }
+            // 上スクロールでヘッダーを表示
+            else if (currentScrollTop < this.lastScrollTop) {
+                header.classList.remove('hidden');
+                clearTimeout(this.headerHideTimeout);
+            }
+            
+            this.lastScrollTop = currentScrollTop;
+        };
+        
+        // スクロールイベントをスロットル化
+        let ticking = false;
+        const throttledScrollHandler = () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    scrollHandler();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+        
+        window.addEventListener('scroll', throttledScrollHandler, { passive: true });
+        this.scrollHandler = throttledScrollHandler;
+    }
+
+    // ヘッダーのスクロール制御を無効化
+    disableHeaderScrollControl() {
+        if (this.scrollHandler) {
+            window.removeEventListener('scroll', this.scrollHandler);
+            this.scrollHandler = null;
+        }
+        
+        const header = document.getElementById('mainHeader');
+        if (header) {
+            header.classList.remove('hidden');
+        }
+        
+        clearTimeout(this.headerHideTimeout);
     }
 
     // モバイル専用機能のセットアップ

@@ -1,5 +1,69 @@
 /* 表形式エディタ専用スタイル */
 
+/* ヘッダーのスクロール制御 */
+.top {
+    transition: transform 0.3s ease-in-out;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.top.hidden {
+    transform: translateY(-100%);
+}
+
+/* タブレット横向き時のヘッダー調整 */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .top {
+        position: fixed;
+        width: 100%;
+        padding: 8px 20px;
+        min-height: 50px;
+        box-shadow: var(--shadow);
+    }
+    
+    .top.hidden {
+        transform: translateY(-100%);
+    }
+    
+    .dashboard-container {
+        padding-top: 70px;
+    }
+    
+    .top-left h1 {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    
+    .home-btn, .create-btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* スマートフォン横向き時のさらなる調整 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .top {
+        padding: 6px 15px;
+        min-height: 45px;
+    }
+    
+    .dashboard-container {
+        padding-top: 60px;
+    }
+    
+    .top-left h1 {
+        font-size: 1.1rem;
+    }
+    
+    .home-btn, .create-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+    }
+}
+
 .table-editor-container {
     background-color: var(--card-bg);
     border-radius: 8px;

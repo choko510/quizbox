@@ -19,7 +19,7 @@
 
 <body>
     <!-- ヘッダー部分 -->
-    <div class="top">
+    <div class="top" id="mainHeader">
         <div class="top-left">
             <a href="/" class="home-btn">ホーム</a>
             <h1>問題作成</h1>
@@ -112,6 +112,9 @@
                             </button>
                             <button id="duplicateBtn" class="btn-secondary">
                                 <i class="bi bi-files"></i> 複製
+                            </button>
+                            <button id="undoBtn" class="btn-secondary" title="元に戻す (Ctrl+Z)">
+                                <i class="bi bi-arrow-counterclockwise"></i> 元に戻す
                             </button>
                         </div>
                         <div class="toolbar-center">
