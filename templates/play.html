@@ -2231,6 +2231,9 @@
             // 並び替えエリアをリセット
             arrangedContainer.innerHTML = '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
             
+            // コンテナのドラッグイベントを設定
+            setupContainerDragEvents();
+            
             // 問題文を更新
             const questionElement = document.getElementById('question');
             if (window.japaneseText) {
@@ -2330,26 +2333,29 @@
 
         // ドラッグアンドドロップ機能のセットアップ
         function setupDragAndDrop(element) {
-            // 既存のイベントリスナーを削除（重複防止）
-            element.removeEventListener('dragstart', handleDragStart);
-            element.removeEventListener('dragend', handleDragEnd);
-            element.removeEventListener('dragover', handleDragOver);
-            element.removeEventListener('drop', handleDrop);
-            element.removeEventListener('dragenter', handleDragEnter);
-            element.removeEventListener('dragleave', handleDragLeave);
+            if (!element) return;
             
             element.draggable = true;
             
-            element.addEventListener('dragstart', handleDragStart);
-            element.addEventListener('dragend', handleDragEnd);
-            element.addEventListener('dragover', handleDragOver);
-            element.addEventListener('drop', handleDrop);
-            element.addEventListener('dragenter', handleDragEnter);
-            element.addEventListener('dragleave', handleDragLeave);
+            // 重複を避けるため、一度リスナーをクリア
+            element.onmousedown = null;
+            element.ondragstart = null;
+            element.ondragend = null;
+            
+            element.addEventListener('dragstart', handleDragStart, { passive: false });
+            element.addEventListener('dragend', handleDragEnd, { passive: false });
+            
+            // タッチデバイス対応
+            element.addEventListener('touchstart', handleTouchStart, { passive: false });
+            element.addEventListener('touchmove', handleTouchMove, { passive: false });
+            element.addEventListener('touchend', handleTouchEnd, { passive: false });
         }
 
         let draggedElement = null;
         let dragStartContainer = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isDragging = false;
 
         function handleDragStart(e) {
             draggedElement = e.target;
@@ -2358,74 +2364,83 @@
             
             // データ転送の設定
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', e.target.outerHTML);
+            e.dataTransfer.setData('text/plain', e.target.dataset.word || e.target.textContent);
         }
 
         function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
+            if (e.target) {
+                e.target.classList.remove('dragging');
+            }
             
             // すべての視覚的フィードバックをクリア
+            clearDragFeedback();
+            
+            draggedElement = null;
+            dragStartContainer = null;
+            isDragging = false;
+        }
+
+        // タッチイベントハンドラー
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            draggedElement = e.target;
+            dragStartContainer = e.target.parentElement;
+        }
+
+        function handleTouchMove(e) {
+            if (!draggedElement) return;
+            
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+            
+            // ドラッグ開始の閾値
+            if (deltaX > 10 || deltaY > 10) {
+                isDragging = true;
+                draggedElement.classList.add('dragging');
+                
+                // タッチ位置の要素を取得
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                handleTouchDrop(elementBelow);
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (isDragging && draggedElement) {
+                const touch = e.changedTouches[0];
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (elementBelow) {
+                    handleTouchDrop(elementBelow);
+                }
+            }
+            
+            handleDragEnd(e);
+        }
+
+        function handleTouchDrop(targetElement) {
+            if (!draggedElement || !targetElement) return;
+            
+            const targetContainer = targetElement.closest('.shuffled-words-container, .arranged-words-container');
+            if (targetContainer) {
+                performWordMove(targetContainer, targetElement);
+            }
+        }
+
+        function clearDragFeedback() {
             document.querySelectorAll('.word-chip').forEach(chip => {
-                chip.classList.remove('drag-over', 'insert-before', 'insert-after');
+                chip.classList.remove('drag-over', 'insert-before', 'insert-after', 'dragging');
             });
             document.querySelectorAll('.shuffled-words-container, .arranged-words-container').forEach(container => {
                 container.classList.remove('drag-over');
             });
-            
-            draggedElement = null;
-            dragStartContainer = null;
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            
-            const container = e.target.closest('.shuffled-words-container, .arranged-words-container');
-            if (container) {
-                container.classList.add('drag-over');
-            }
-            
-            // 並び替えエリア内での位置指示
-            if (e.target.classList.contains('word-chip') &&
-                e.target.closest('.arranged-words-container')) {
-                const rect = e.target.getBoundingClientRect();
-                const midpoint = rect.left + rect.width / 2;
-                
-                // マウス位置に応じて挿入位置を示す
-                if (e.clientX < midpoint) {
-                    e.target.classList.add('insert-before');
-                    e.target.classList.remove('insert-after');
-                } else {
-                    e.target.classList.add('insert-after');
-                    e.target.classList.remove('insert-before');
-                }
-            }
-        }
-
-        function handleDragEnter(e) {
-            e.preventDefault();
-        }
-
-        function handleDragLeave(e) {
-            const container = e.target.closest('.shuffled-words-container, .arranged-words-container');
-            if (container && !container.contains(e.relatedTarget)) {
-                container.classList.remove('drag-over');
-            }
-            
-            if (e.target.classList.contains('word-chip')) {
-                e.target.classList.remove('insert-before', 'insert-after');
-            }
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            
-            if (!draggedElement) return;
-            
-            const targetContainer = e.target.closest('.shuffled-words-container, .arranged-words-container');
-            const targetElement = e.target.closest('.word-chip');
-            
-            if (!targetContainer) return;
+        function performWordMove(targetContainer, targetElement) {
+            if (!draggedElement || !targetContainer) return;
             
             // 同じ要素にドロップした場合は何もしない
             if (draggedElement === targetElement) return;
@@ -2440,78 +2455,67 @@
             }
             
             if (isTargetArranged) {
-                // 並び替えエリア内での移動か、外部からの移動かを判定
-                if (isDraggedFromArranged && targetElement && targetElement.classList.contains('word-chip')) {
-                    // 並び替えエリア内での順序変更
-                    if (targetElement.classList.contains('insert-before')) {
-                        targetContainer.insertBefore(draggedElement, targetElement);
+                // 並び替えエリアへの移動
+                if (isDraggedFromArranged) {
+                    // 同じエリア内での順序変更
+                    const targetChip = targetElement && targetElement.classList.contains('word-chip') ? targetElement : null;
+                    if (targetChip) {
+                        targetContainer.insertBefore(draggedElement, targetChip.nextSibling);
                     } else {
-                        targetContainer.insertBefore(draggedElement, targetElement.nextSibling);
+                        targetContainer.appendChild(draggedElement);
                     }
-                    // arrangedWords配列を更新
                     updateArrangedWordsArray();
                 } else {
-                    // シャッフルエリアから並び替えエリアへの移動
-                    const newChip = document.createElement('button');
-                    const isPunctuation = /^[.,!?;:]$/.test(draggedElement.textContent);
-                    newChip.className = isPunctuation ? 'word-chip arranged punctuation' : 'word-chip arranged';
-                    newChip.textContent = draggedElement.textContent;
-                    newChip.dataset.word = draggedElement.dataset.word;
-                    newChip.dataset.originalIndex = draggedElement.dataset.originalIndex;
-                    newChip.onclick = () => moveWordBackToShuffled(newChip);
-                    setupDragAndDrop(newChip);
-                    
-                    if (targetElement && targetElement.classList.contains('word-chip')) {
-                        // 特定の位置に挿入
-                        if (targetElement.classList.contains('insert-before')) {
-                            targetContainer.insertBefore(newChip, targetElement);
-                        } else {
-                            targetContainer.insertBefore(newChip, targetElement.nextSibling);
-                        }
-                    } else {
-                        // 最後に追加
-                        targetContainer.appendChild(newChip);
-                    }
-                    
-                    // arrangedWords配列を更新
-                    updateArrangedWordsArray();
-                    
-                    // 元の要素を削除（ドラッグ元から）
-                    draggedElement.remove();
+                    // シャッフルエリアから並び替えエリアへ
+                    moveWordToArrangedFromDrag(draggedElement, targetContainer, targetElement);
                 }
             } else {
-                // シャッフルエリアにドロップ（戻す）
+                // シャッフルエリアへ戻す
                 if (isDraggedFromArranged) {
-                    const newChip = document.createElement('button');
-                    const isPunctuation = /^[.,!?;:]$/.test(draggedElement.textContent);
-                    newChip.className = isPunctuation ? 'word-chip punctuation' : 'word-chip';
-                    newChip.textContent = draggedElement.textContent;
-                    newChip.dataset.word = draggedElement.dataset.word;
-                    newChip.dataset.originalIndex = draggedElement.dataset.originalIndex;
-                    newChip.onclick = () => moveWordToArranged(newChip);
-                    setupDragAndDrop(newChip);
-                    targetContainer.appendChild(newChip);
-                    
-                    // arrangedWords配列から削除
-                    const wordIndex = window.arrangedWords.indexOf(draggedElement.dataset.word);
-                    if (wordIndex > -1) {
-                        window.arrangedWords.splice(wordIndex, 1);
-                    }
-                    
-                    draggedElement.remove();
-                    
-                    // プレースホルダーをチェック
-                    checkAndAddPlaceholder();
+                    moveWordBackToShuffledFromDrag(draggedElement, targetContainer);
                 }
             }
+        }
+
+        function moveWordToArrangedFromDrag(wordChip, targetContainer, targetElement) {
+            const arrangedChip = wordChip.cloneNode(true);
+            const isPunctuation = /^[.,!?;:]$/.test(arrangedChip.textContent);
+            arrangedChip.className = isPunctuation ? 'word-chip arranged punctuation' : 'word-chip arranged';
+            arrangedChip.onclick = () => moveWordBackToShuffled(arrangedChip);
+            setupDragAndDrop(arrangedChip);
             
-            // 視覚的フィードバックをクリア
-            document.querySelectorAll('.word-chip').forEach(chip => {
-                chip.classList.remove('insert-before', 'insert-after');
-            });
-            document.querySelectorAll('.shuffled-words-container, .arranged-words-container').forEach(container => {
-                container.classList.remove('drag-over');
-            });
+            if (targetElement && targetElement.classList.contains('word-chip')) {
+                targetContainer.insertBefore(arrangedChip, targetElement.nextSibling);
+            } else {
+                targetContainer.appendChild(arrangedChip);
+            }
+            
+            // 元の単語を削除
+            wordChip.remove();
+            
+            // 配置された単語を記録
+            updateArrangedWordsArray();
+        }
+
+        function moveWordBackToShuffledFromDrag(arrangedChip, targetContainer) {
+            const shuffledChip = arrangedChip.cloneNode(true);
+            const isPunctuation = /^[.,!?;:]$/.test(shuffledChip.textContent);
+            shuffledChip.className = isPunctuation ? 'word-chip punctuation' : 'word-chip';
+            shuffledChip.onclick = () => moveWordToArranged(shuffledChip);
+            setupDragAndDrop(shuffledChip);
+            targetContainer.appendChild(shuffledChip);
+            
+            // 並び替えエリアから削除
+            arrangedChip.remove();
+            
+            // 記録から削除
+            const wordIndex = window.arrangedWords.indexOf(arrangedChip.dataset.word);
+            if (wordIndex > -1) {
+                window.arrangedWords.splice(wordIndex, 1);
+            }
+            
+            // プレースホルダーを表示するかチェック
+            checkAndAddPlaceholder();
         }
 
         // 並び替えられた単語の配列を更新
@@ -2531,20 +2535,52 @@
             }
         }
 
-        // コンテナにもドロップイベントを設定
-        document.addEventListener('DOMContentLoaded', function() {
+        // コンテナのドロップ機能を設定
+        function setupContainerDragEvents() {
             const shuffledContainer = document.getElementById('shuffled-words');
             const arrangedContainer = document.getElementById('arranged-words');
             
             [shuffledContainer, arrangedContainer].forEach(container => {
                 if (container) {
-                    container.addEventListener('dragover', handleDragOver);
-                    container.addEventListener('drop', handleDrop);
-                    container.addEventListener('dragenter', handleDragEnter);
-                    container.addEventListener('dragleave', handleDragLeave);
+                    // 既存のリスナーをクリア
+                    container.removeEventListener('dragover', handleContainerDragOver);
+                    container.removeEventListener('drop', handleContainerDrop);
+                    container.removeEventListener('dragenter', handleContainerDragEnter);
+                    container.removeEventListener('dragleave', handleContainerDragLeave);
+                    
+                    // 新しいリスナーを追加
+                    container.addEventListener('dragover', handleContainerDragOver);
+                    container.addEventListener('drop', handleContainerDrop);
+                    container.addEventListener('dragenter', handleContainerDragEnter);
+                    container.addEventListener('dragleave', handleContainerDragLeave);
                 }
             });
-        });
+        }
+
+        function handleContainerDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleContainerDragEnter(e) {
+            e.preventDefault();
+        }
+
+        function handleContainerDragLeave(e) {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        function handleContainerDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (draggedElement) {
+                performWordMove(e.currentTarget, null);
+            }
+        }
 
         // ○×問題モードのセットアップ
         function setupTrueFalseMode(question) {
