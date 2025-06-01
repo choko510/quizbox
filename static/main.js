@@ -1,3 +1,89 @@
+// ページ遷移監視とデータ更新機能
+function setupPageNavigationListener() {
+    // ブラウザの戻る/進むボタンを検知
+    window.addEventListener('popstate', function(event) {
+        console.log('ページ履歴が変更されました。データを更新中...');
+        
+        // APIキャッシュをクリア
+        clearApiCache();
+        
+        // データの再取得と表示更新
+        refreshPageData();
+    });
+    
+    // ページ表示時（ページキャッシュからの復帰も含む）のデータ更新
+    window.addEventListener('pageshow', function(event) {
+        // ページキャッシュから復帰した場合もデータを更新
+        if (event.persisted) {
+            console.log('ページキャッシュから復帰しました。データを更新中...');
+            clearApiCache();
+            refreshPageData();
+        }
+    });
+    
+    // フォーカス時のデータ更新（タブ切り替えから戻った時など）
+    window.addEventListener('focus', function() {
+        console.log('ページにフォーカスが戻りました。データを更新中...');
+        clearApiCache();
+        refreshPageData();
+    });
+}
+
+// APIキャッシュをクリアする関数
+function clearApiCache() {
+    apiDataFetched = false;
+    apiResponseData = null;
+    console.log('APIキャッシュをクリアしました');
+}
+
+// ページデータを再取得・更新する関数
+async function refreshPageData() {
+    const userId = Cookies.get('id');
+    const userPassword = Cookies.get('password');
+    
+    if (userId && userPassword) {
+        try {
+            console.log('進捗データを再取得中...');
+            const scoresData = await fetchScores(userId, userPassword);
+            if (scoresData && scoresData.message !== "password is wrong") {
+                // 進捗バーを更新
+                analyzedata(scoresData);
+                console.log('進捗データの更新が完了しました');
+                
+                // モーダルが開いている場合はモーダル内のデータも更新
+                const modal = document.getElementById('modal-1');
+                if (modal && modal.getAttribute('aria-hidden') === 'false') {
+                    console.log('モーダル内のデータも更新中...');
+                    const total = scoresData.correct + scoresData.bad;
+                    const ritu = total > 0 ? Math.round(scoresData.correct / total * 100) + "%" : "0%";
+                    updateScoreCards(scoresData.correct, scoresData.bad, total, ritu);
+                    
+                    // アクティブタブに応じて追加の更新を実行
+                    const activeTab = document.querySelector('.tab.active');
+                    if (activeTab) {
+                        const tabId = activeTab.getAttribute('data-tab');
+                        switch(tabId) {
+                            case 'dashboard':
+                                drawMainChart();
+                                break;
+                            case 'ranking':
+                                const activeButton = document.querySelector('.sort-button.active');
+                                const sortBy = activeButton ? activeButton.getAttribute('data-sort') : 'total';
+                                fetchAndDisplayRanking(sortBy);
+                                break;
+                            case 'advice':
+                                generateAdvice();
+                                break;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('データ更新エラー:', error);
+        }
+    }
+}
+
 // 検索機能
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
@@ -304,6 +390,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('ログイン情報が見つからないため、進捗バーは表示されません。');
         // 必要であれば、未ログイン状態のプログレスバー表示処理を追加
     }
+    
+    // ページナビゲーションリスナーを設定
+    setupPageNavigationListener();
     
     // アプリケーションの初期化完了
     console.log('アプリケーションの初期化が完了しました');

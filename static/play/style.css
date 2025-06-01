@@ -86,7 +86,7 @@ li {
 
 button {
     font-family: 'Noto Sans Japanese', sans-serif;
-    border: 1px solid #ccc;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
     display: flex;
@@ -96,8 +96,6 @@ button {
     width: 400px;
     margin: 0 auto;
     padding: .9em 2em;
-    border: none;
-    border-radius: 5px;
     box-shadow: 0 7px 10px rgb(0 0 0 / 10%);
     background-color: #fff;
     color: #333;
@@ -144,70 +142,7 @@ button:hover {
     left: 0;
 }
 
-.kaisetubtn {
-    position: absolute;
-    bottom: 4px;
-    right: 2px;
-    font-size: 110%;
-}
 
-.popup {
-    font-size: 110%;
-}
-
-.correct {
-    font-size: 110%;
-    font-weight: bold;
-}
-
-.hardlink {
-    color: #000;
-    text-decoration: none;
-}
-
-.back {
-    color: #000;
-    box-sizing: border-box;
-    position: relative;
-    top: 5px;
-    left: 5px;
-    display: block;
-    border: 2px solid transparent;
-    border-radius: 100px;
-    z-index: 10000;
-}
-
-.back::after {
-    content: "";
-    display: block;
-    box-sizing: border-box;
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-bottom: 2px solid;
-    border-left: 2px solid;
-    transform: rotate(45deg);
-    left: 6px;
-    top: 4px;
-}
-
-.back-button {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.back-button:hover {
-    background-color: #0056b3;
-}
 
 .tangolist {
     position: absolute;
@@ -559,45 +494,6 @@ ul.custom-list li .content {
     z-index: 1;
 }
 
-.ansbg ul {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 0;
-    list-style: none;
-}
-
-.lia,
-.lii,
-.liu,
-.lie {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: .7em 1.5em;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
-    transition: .2s ease;
-}
-
-.lia:hover,
-.lii:hover,
-.liu:hover,
-.lie:hover {
-    background: #f1f5f9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
-    transform: translateY(-1px);
-}
-
-.cite {
-    color: #2563eb;
-    font-weight: 600;
-    display: block;
-    margin-bottom: .5em;
-}
-
-.m,
-strong {
-    color: #2563eb;
-}
 
 /* 手書きモード用のスタイル */
 
@@ -814,9 +710,6 @@ strong {
         font-size: 24px;
     }
     
-    .sp {
-        margin-top: 16%;
-    }
     
     .resultbox {
         width: 94%;
@@ -971,22 +864,6 @@ strong {
     .content {
         font-size: 80%;
     }
-}
-
-/* 追加のユーティリティクラス */
-.hidden-player {
-    display: none;
-}
-
-/* 検索結果メッセージスタイル */
-.no-result-message {
-    margin-top: 20px;
-    text-align: center;
-    color: #999;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* 追加のユーティリティクラス */
