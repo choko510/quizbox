@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import io
 import json
 import os
@@ -64,8 +64,8 @@ class Mondai(Base):
     userid = Column(String)
     mondai = Column(String)
     is_public = Column(Integer, default=1)  # 1=公開、0=非公開
-    created_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
-    updated_at = Column(String, default=lambda: datetime.datetime.now().isoformat())
+    created_at = Column(String, default=lambda: datetime.now().isoformat())
+    updated_at = Column(String, default=lambda: datetime.now().isoformat())
 
 class MondaiStats(Base):
     """問題の統計情報を保存するテーブル"""
@@ -75,7 +75,7 @@ class MondaiStats(Base):
     usage_count = Column(Integer, default=0)  # 総利用回数
     correct_count = Column(Integer, default=0)  # 正解回数
     incorrect_count = Column(Integer, default=0)  # 不正解回数
-    last_updated = Column(String, default=lambda: datetime.datetime.now().isoformat())
+    last_updated = Column(String, default=lambda: datetime.now().isoformat())
     
 
 templates = Jinja2Templates(directory="templates")
@@ -93,7 +93,7 @@ class DB:
     @staticmethod
     def get_today() -> str:
         """現在の日付を YYYY/MM/DD 形式で返す"""
-        now = datetime.datetime.now()
+        now = datetime.now()
         return f"{now.year}/{now.month}/{now.day}"
         
     @staticmethod
@@ -328,8 +328,8 @@ class DB:
                 userid=userid,
                 mondai=json.dumps(mondai_data),
                 is_public=1 if is_public else 0,
-                created_at=datetime.datetime.now().isoformat(),
-                updated_at=datetime.datetime.now().isoformat()
+                created_at=datetime.now().isoformat(),
+                updated_at=datetime.now().isoformat()
             )
             session.add(new_mondai)
             await session.commit()
@@ -341,7 +341,7 @@ class DB:
             mondai = result.scalar_one_or_none()
             if mondai:
                 mondai.mondai = json.dumps(mondai_data)
-                mondai.updated_at = datetime.datetime.now().isoformat()
+                mondai.updated_at = datetime.now().isoformat()
                 # 公開状態も更新する場合
                 if is_public is not None:
                     mondai.is_public = 1 if is_public else 0
@@ -360,7 +360,7 @@ class DB:
             mondai = result.scalar_one_or_none()
             if mondai:
                 mondai.is_public = 1 if mondai.is_public == 0 else 0
-                mondai.updated_at = datetime.datetime.now().isoformat()
+                mondai.updated_at = datetime.now().isoformat()
                 await session.commit()
                 return {"is_public": bool(mondai.is_public)}
             else:
@@ -493,7 +493,7 @@ class DB:
                     usage_count=1,
                     correct_count=1 if is_correct else 0,
                     incorrect_count=0 if is_correct else 1,
-                    last_updated=datetime.datetime.now().isoformat()
+                    last_updated=datetime.now().isoformat()
                 )
                 session.add(stats)
             else:
@@ -503,7 +503,7 @@ class DB:
                     stats.correct_count += 1
                 else:
                     stats.incorrect_count += 1
-                stats.last_updated = datetime.datetime.now().isoformat()
+                stats.last_updated = datetime.now().isoformat()
             
             await session.commit()
             return True
@@ -1773,8 +1773,8 @@ async def get_advice(data: Data):
         return {"advice": "アドバイスを生成するためのデータがありません"}
     
     # 現在の日付から30日前までの日付を計算
-    today = datetime.datetime.now()
-    thirty_days_ago = today - datetime.timedelta(days=30)
+    today = datetime.now()
+    thirty_days_ago = today - timedelta(days=30)
     today_str = today.strftime("%Y年%m月%d日")
     
     # 解答データから日付ごとの統計を集計
@@ -1791,7 +1791,7 @@ async def get_advice(data: Data):
     date_format = "%Y/%m/%d"
     recent_dates = []
     for i in range(30):
-        date = today - datetime.timedelta(days=i)
+        date = today - timedelta(days=i)
         recent_dates.append(date.strftime(date_format))
     
     # 日付ごとの統計情報を構築
@@ -1811,7 +1811,7 @@ async def get_advice(data: Data):
                 study_dates.append(date_str)  # 学習日として記録
                 # 日付をYYYY/MM/DD形式からMM月DD日形式に変換
                 try:
-                    date_obj = datetime.datetime.strptime(date_str, date_format)
+                    date_obj = datetime.strptime(date_str, date_format)
                     formatted_date = date_obj.strftime("%m月%d日")
                     daily_stats_lines.append(f"{formatted_date} 総取り組み数 {total_count} 正解数 {correct_count} 不正解数 {bad_count}")
                 except ValueError:
@@ -1860,7 +1860,7 @@ async def get_advice(data: Data):
     consecutive_days = 0
     last_date = None
     for date_str in study_dates:
-        current_date = datetime.datetime.strptime(date_str, date_format)
+        current_date = datetime.strptime(date_str, date_format)
         
         if last_date:
             # 前回の学習日との差を計算
@@ -1884,7 +1884,7 @@ async def get_advice(data: Data):
         last_date = current_date
     
     # 現在の連続学習日数を設定
-    if study_dates and (today - datetime.datetime.strptime(study_dates[-1], date_format)).days <= 1:
+    if study_dates and (today - datetime.strptime(study_dates[-1], date_format)).days <= 1:
         study_continuity["current_streak"] = consecutive_days
     
     # 成長停滞分野を特定

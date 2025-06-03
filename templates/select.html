@@ -161,11 +161,9 @@
                         bookImage.src = imagePath;
                         bookImage.style.display = 'block';
                     } else {
-                        console.log('教材画像が見つかりません');
                     }
                 })
                 .catch(error => {
-                    console.error('画像読み込みエラー:', error);
                 });
                 
             }
@@ -233,7 +231,6 @@
                         document.getElementById('remaining-words').textContent = remainingWords+1;
                     }
                 } catch (e) {
-                    console.error('進捗取得エラー:', e);
                 }
             }
         async function fetchRanges(bookId) {
@@ -258,7 +255,6 @@
                     }
                 }
             } catch (error) {
-                console.error('Error fetching ranges:', error);
                 
                 // APIがまだ実装されていない場合は、デフォルトの範囲を使用
                 generateDefaultRanges(bookId);

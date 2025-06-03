@@ -426,7 +426,6 @@
                                     try {
                                         mondaiData = JSON.parse(mondaiData);
                                     } catch (e) {
-                                        console.error('mondaiのパースに失敗:', e);
                                         mondaiData = [];
                                     }
                                 } else if (!Array.isArray(mondaiData)) {
@@ -525,7 +524,6 @@
         // 問題セットが英単語かどうかを判断する関数
         function isProblemSetEnglish() {
             if (!questions || questions.length === 0) {
-                console.log('No questions available for English check');
                 return false;
             }
             
@@ -533,13 +531,10 @@
             const sampleSize = Math.min(10, questions.length);
             let englishCount = 0;
             
-            console.log(`Checking ${sampleSize} questions for English content:`);
-            
             for (let i = 0; i < sampleSize; i++) {
                 const question = questions[i];
                 if (question && question.word) {
                     const isEnglish = isEnglishWord(question.word);
-                    console.log(`Question ${i}: "${question.word}" -> ${isEnglish ? 'English' : 'Not English'}`);
                     if (isEnglish) {
                         englishCount++;
                     }
@@ -549,18 +544,14 @@
             const ratio = englishCount / sampleSize;
             const isEnglishSet = ratio >= 0.5; // 判定基準を80%から50%に緩和
             
-            console.log(`English count: ${englishCount}/${sampleSize} (${(ratio * 100).toFixed(1)}%) -> ${isEnglishSet ? 'English Set' : 'Non-English Set'}`);
-            
             return isEnglishSet;
         }
 
         // 英単語以外の場合に特定の要素を非表示にする関数
         function checkAndControlEnglishOnlyFeatures() {
             const isEnglish = isProblemSetEnglish();
-            console.log('Checking English-only features. Is English set:', isEnglish);
             
             if (!isEnglish) {
-                console.log('Non-English problem set detected. Hiding English-only features.');
                 
                 // 非表示にする要素を取得（英単語専用機能のみ）
                 const replaceMondaiOption = document.querySelector('label[for="replace-mondai"]');
@@ -593,7 +584,6 @@
                 
                 // 英単語並び替えモードが選択されている場合は4択モードに変更
                 if (globalSettings.answerMode === 'word-arrange') {
-                    console.log('Word arrange mode was selected but switching to choice mode for non-English set');
                     globalSettings.answerMode = 'choice';
                     document.getElementById('choice-mode').checked = true;
                     saveSettings();
@@ -615,22 +605,18 @@
                     saveSettings();
                 }
             } else {
-                console.log('English problem set confirmed. English-only features available.');
             }
         }
 
         // 回答モード設定の妥当性を検証する関数（問題データ読み込み完了後に呼ばれる）
         function validateAnswerModeSettings() {
             // 回答モード設定の妥当性を検証する関数（問題データ読み込み完了後に呼ばれる）
-            console.log('Validating answer mode settings after questions loaded');
             
             // 英単語並び替えモードが選択されているかチェック
             if (globalSettings.answerMode === 'word-arrange') {
                 const isEnglishSet = isProblemSetEnglish();
-                console.log('Current mode is word-arrange. English set check:', isEnglishSet);
                 
                 if (!isEnglishSet) {
-                    console.log('Switching from word-arrange to choice mode due to non-English set');
                     globalSettings.answerMode = 'choice';
                     document.getElementById('choice-mode').checked = true;
                     saveSettings();
@@ -644,7 +630,6 @@
                         });
                     }, 500);
                 } else {
-                    console.log('Word arrange mode is valid for this English problem set');
                 }
             }
             
@@ -838,7 +823,6 @@
 
                     }
                 } catch (error) {
-                    console.error('Error fetching sentences:', error);
                     // エラーが発生した場合は通常の選択肢生成に戻る
                     incorrectOptions = [];
                     questions.forEach((q, index) => {
@@ -1255,7 +1239,6 @@
                     if (parsedSettings.answerMode) globalSettings.answerMode = parsedSettings.answerMode;
                 }
             } catch (e) {
-                console.error('グローバル設定の読み込みエラー:', e);
                 // 個別設定から読み込み（後方互換性）
                 globalSettings.replaceMondai = localStorage.getItem('replace_mondai') ===
                     'true';
@@ -1286,7 +1269,6 @@
                     }
                 }
             } catch (e) {
-                console.error('問題セット設定の読み込みエラー:', e);
                 // 個別設定から読み込み（後方互換性）
                 problemSettings.questionMode = localStorage.getItem('question_mode_' +
                     mondai) || 'sequential';
@@ -1915,7 +1897,6 @@
                     // 問題データが読み込まれているかチェック
                     if (questions && questions.length > 0) {
                         const isEnglishSet = isProblemSetEnglish();
-                        console.log('Word arrange mode selected. English set check:', isEnglishSet);
                         
                         if (!isEnglishSet) {
                             notie.alert({
@@ -1927,7 +1908,6 @@
                             globalSettings.answerMode = 'choice';
                         }
                     } else {
-                        console.log('Questions not loaded yet, will check later');
                         // 問題データがまだ読み込まれていない場合は、後でチェックする
                         // loadQuestions完了後にcheckAndControlEnglishOnlyFeaturesが呼ばれる
                     }
@@ -2153,7 +2133,6 @@
 
         // 英単語並び替えモードのセットアップ
         async function setupWordArrangeMode(correctAnswer) {
-            console.log('Setting up word arrange mode for:', correctAnswer);
             
             // 正解の文章を保存（デフォルト値を設定）
             window.correctSentence = correctAnswer;
@@ -2164,7 +2143,6 @@
             const arrangedContainer = document.getElementById('arranged-words');
             
             if (!shuffledContainer || !arrangedContainer) {
-                console.error('Word arrange containers not found');
                 return;
             }
             
@@ -2190,36 +2168,28 @@
                         const parts = selectedSentence.split("|");
                         window.correctSentence = parts[1] || selectedSentence;
                         window.japaneseText = parts[0] || null;
-                        console.log('Got sentence from API:', window.correctSentence);
-                        console.log('Japanese text:', window.japaneseText);
 
                     } else {
                         // 文章が見つからない場合は、正解の単語を使った簡単な文を作成
                         window.correctSentence = `This is a ${correctAnswer}.`;
-                        console.log('Using fallback sentence:', window.correctSentence);
                     }
                 } else {
                     throw new Error(`API request failed with status ${response.status}`);
                 }
             } catch (error) {
-                console.error('Error fetching sentences:', error);
                 // エラーの場合は単語そのものまたは簡単な文を使用
                 if (correctAnswer.includes(' ')) {
                     window.correctSentence = correctAnswer;
                 } else {
                     window.correctSentence = `This is a ${correctAnswer}.`;
                 }
-                console.log('Using error fallback sentence:', window.correctSentence);
             }
             
             // 文章を単語に分割（句読点は除外）
             const words = window.correctSentence.match(/\b\w+\b/g) ||
                          window.correctSentence.split(/\s+/).filter(word => word.trim() !== '' && !/^[.,!?;:]$/.test(word));
             
-            console.log('Words to arrange:', words);
-            
             if (words.length === 0) {
-                console.error('No words found to arrange');
                 return;
             }
             
