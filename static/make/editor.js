@@ -630,6 +630,15 @@ function stopAutoSave() {
  */
 function updateProblemList() {
     const listElement = document.getElementById('fileContent');
+    if (!listElement) {
+        // フォールバック: 表形式エディタが存在する場合はそちらを使用
+        if (window.tableEditor && typeof window.tableEditor.render === 'function') {
+            window.tableEditor.render();
+            return;
+        }
+        console.warn('updateProblemList: fileContent要素が見つかりません');
+        return;
+    }
     listElement.innerHTML = '';
     
     if (problems.length === 0) {
@@ -672,7 +681,10 @@ function updateProblemList() {
     }
     
     // 問題数表示の更新
-    document.getElementById('total-accs').textContent = `問題数: ${problems.length}`;
+    const totalAccsElement = document.getElementById('total-accs');
+    if (totalAccsElement) {
+        totalAccsElement.textContent = `問題数: ${problems.length}`;
+    }
     
     // 保存・公開ボタンの有効/無効設定
     const saveBtn = document.getElementById('saveBtn');
@@ -702,6 +714,12 @@ function selectProblem(index) {
     const selectedItem = document.querySelector(`#fileContent li[data-index="${index}"]`);
     if (selectedItem) {
         selectedItem.classList.add('selected');
+    }
+    
+    // fileContent要素が存在しない場合のフォールバック
+    if (!document.getElementById('fileContent')) {
+        console.warn('selectProblem: fileContent要素が見つかりません。表形式エディタを使用してください。');
+        return;
     }
     
     // 編集エリアを表示
@@ -1608,30 +1626,55 @@ async function processNextImage() {
                     '<button class="view-questions-btn" data-questions=\'' + JSON.stringify(processData) + '\'>表示</button>' +
                 '</div>';
             
-            // 問題を追加
-            const imageDescription = {
-                answer: processData.description,
-                question: "この画像 (" + safeFileName + ") について説明してください",
-                answerHtml: processData.description,
-                questionHtml: "この画像 (" + safeFileName + ") について説明してください",
-                created: new Date().toISOString()
-            };
+            // 表形式エディタが存在する場合はそちらを使用
+            if (window.tableEditor) {
+                const imageDescription = {
+                    id: Date.now() + Math.random(),
+                    answer: processData.description,
+                    question: "この画像 (" + safeFileName + ") について説明してください",
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    quality: null
+                };
+                    
+                const aiQuestions = processData.questions.map(q => ({
+                    id: Date.now() + Math.random(),
+                    answer: q.answer,
+                    question: q.question,
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    quality: null
+                }));
+                    
+                const newProblems = [imageDescription, ...aiQuestions];
+                window.tableEditor.problems = [...window.tableEditor.problems, ...newProblems];
+                window.tableEditor.render();
+                window.tableEditor.saveToStorage();
+            } else {
+                // フォールバック: 古いエディタ
+                const imageDescription = {
+                    answer: processData.description,
+                    question: "この画像 (" + safeFileName + ") について説明してください",
+                    answerHtml: processData.description,
+                    questionHtml: "この画像 (" + safeFileName + ") について説明してください",
+                    created: new Date().toISOString()
+                };
+                    
+                const aiQuestions = processData.questions.map(q => ({
+                    answer: q.answer,
+                    question: q.question,
+                    answerHtml: q.answer,
+                    questionHtml: q.question,
+                    created: new Date().toISOString()
+                }));
+                    
+                const newProblems = [imageDescription, ...aiQuestions];
+                problems = [...problems, ...newProblems];
+                updateProblemList();
                 
-            const aiQuestions = processData.questions.map(q => ({
-                answer: q.answer,
-                question: q.question,
-                answerHtml: q.answer,
-                questionHtml: q.question,
-                created: new Date().toISOString()
-            }));
-                
-            const newProblems = [imageDescription, ...aiQuestions];
-            problems = [...problems, ...newProblems];
-                
-            updateProblemList();
-                
-            if (editorSettings.autoSave) {
-                saveProblemsToLocalStorage();
+                if (editorSettings.autoSave) {
+                    saveProblemsToLocalStorage();
+                }
             }
             
             // 表示ボタンのイベントリスナー
@@ -1724,30 +1767,45 @@ async function generateQuestionsFromModal() {
         const data = await response.json();
         
         if (data.status === 'success' && data.questions && data.questions.length > 0) {
-            // 生成された問題をエディタに追加
-            const newProblems = data.questions.map(q => ({
-                answer: q.answer,
-                question: q.question,
-                answerHtml: q.answer,
-                questionHtml: q.question,
-                created: new Date().toISOString()
-            }));
-            
-            // 現在の問題リストに追加
-            problems = [...problems, ...newProblems];
-            
-            updateProblemList();
-            selectProblem(problems.length - newProblems.length);
-            
-            // 自動保存
-            if (editorSettings.autoSave) {
-                saveProblemsToLocalStorage();
+            // 表形式エディタが存在する場合はそちらを使用
+            if (window.tableEditor) {
+                const convertedProblems = data.questions.map(q => ({
+                    id: Date.now() + Math.random(),
+                    question: q.question,
+                    answer: q.answer,
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    quality: null
+                }));
+                
+                window.tableEditor.problems = [...window.tableEditor.problems, ...convertedProblems];
+                window.tableEditor.render();
+                window.tableEditor.saveToStorage();
+                
+                showToast(`${data.questions.length}問の問題を生成しました`, 'success');
+                switchView('create');
+            } else {
+                // フォールバック: 古いエディタ
+                const newProblems = data.questions.map(q => ({
+                    answer: q.answer,
+                    question: q.question,
+                    answerHtml: q.answer,
+                    questionHtml: q.question,
+                    created: new Date().toISOString()
+                }));
+                
+                problems = [...problems, ...newProblems];
+                updateProblemList();
+                selectProblem(problems.length - newProblems.length);
+                
+                // 自動保存
+                if (editorSettings.autoSave) {
+                    saveProblemsToLocalStorage();
+                }
+                
+                showToast(`${data.questions.length}問の問題を生成しました`, 'success');
+                switchView('create');
             }
-            
-            showToast(`${data.questions.length}問の問題を生成しました`, 'success');
-            
-            // 作成ビューに切り替え
-            switchView('create');
         } else {
             showToast('問題の生成に失敗しました: ' + (data.message || ''), 'error');
         }
@@ -1794,27 +1852,45 @@ function copy() {
         });
         
         if (data.length > 0) {
-            // 問題リストを更新
-            problems = [...data, {
-                answer: '',
-                question: '',
-                answerHtml: '',
-                questionHtml: '',
-                created: new Date().toISOString()
-            }];
-            
-            updateProblemList();
-            selectProblem(0);
-            
-            // 自動保存
-            if (editorSettings.autoSave) {
-                saveProblemsToLocalStorage();
+            // 表形式エディタが存在する場合はそちらを使用
+            if (window.tableEditor) {
+                // 既存の問題に追加
+                const convertedProblems = data.map(item => ({
+                    id: Date.now() + Math.random(),
+                    question: item.question,
+                    answer: item.answer,
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    quality: null
+                }));
+                
+                window.tableEditor.problems = [...window.tableEditor.problems, ...convertedProblems];
+                window.tableEditor.render();
+                window.tableEditor.saveToStorage();
+                
+                showToast(`${data.length}個の問題を読み込みました`, 'success');
+                switchView('create');
+            } else {
+                // フォールバック: 古いエディタ
+                problems = [...data, {
+                    answer: '',
+                    question: '',
+                    answerHtml: '',
+                    questionHtml: '',
+                    created: new Date().toISOString()
+                }];
+                
+                updateProblemList();
+                selectProblem(0);
+                
+                // 自動保存
+                if (editorSettings.autoSave) {
+                    saveProblemsToLocalStorage();
+                }
+                
+                showToast(`${data.length}個の問題を読み込みました`, 'success');
+                switchView('create');
             }
-            
-            showToast(`${data.length}個の問題を読み込みました`, 'success');
-            
-            // 作成ビューに切り替え
-            switchView('create');
         } else {
             showToast('読み込める問題がありませんでした', 'warning');
         }

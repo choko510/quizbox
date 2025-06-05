@@ -236,6 +236,11 @@
                             <input type="radio" id="word-arrange-mode" name="answer-mode" value="word-arrange">
                             <label for="word-arrange-mode">英単語並び替えモード</label>
                         </div>
+                        <h3>発音機能</h3>
+                        <div class="settings-option">
+                            <input type="checkbox" name="pronunciation" id="pronunciation">
+                            <label for="pronunciation">正解時に英単語の発音を再生する</label>
+                        </div>
                         <h3>リスニングモード</h3>
                         <a href="javascript:window.location.replace(`/listening?id=${encodeURIComponent(mondai)}`);"
                             style="color: black;text-decoration:none;">リスニングモードに移動</a>
@@ -313,7 +318,8 @@
         const globalSettings = {
             replaceMondai: false, // 問題文と回答文を入れ替えるか
             hardMode: false, // ハードモード
-            answerMode: 'choice' // 回答モード（'choice', 'input', 'handwriting', 'word-arrange', 'true-false'）
+            answerMode: 'choice', // 回答モード（'choice', 'input', 'handwriting', 'word-arrange', 'true-false'）
+            pronunciation: false // 発音機能（英単語正解時に発音を再生するか）
         };
 
         // 問題セット固有の設定
@@ -359,6 +365,22 @@
             const audioPlayer = document.getElementById('audioPlayer');
             audioPlayer.src = `/api/gen/speak/${encodeURIComponent(word)}`;
             audioPlayer.play().catch(() => { });
+        }
+
+        // 発音機能：英単語の正解時に発音を再生する関数
+        function playCorrectAnswerPronunciation(answer) {
+            // 発音機能が有効で、英単語問題セットの場合のみ実行
+            if (!globalSettings.pronunciation || !isProblemSetEnglish()) {
+                return;
+            }
+            
+            // 回答が英単語かどうかを確認
+            if (isEnglishWord(answer)) {
+                // 少し遅延してから発音を再生（正解通知の後に再生されるように）
+                setTimeout(() => {
+                    playWord(answer);
+                }, 800);
+            }
         }
 
         function loadQuestions() {
@@ -557,7 +579,7 @@
                 const replaceMondaiOption = document.querySelector('label[for="replace-mondai"]');
                 const hardmodeOption = document.querySelector('label[for="hardmode"]');
                 const wordArrangeOption = document.querySelector('label[for="word-arrange-mode"]');
-                const listeningSection = document.querySelector('h3').parentElement;
+                const pronunciationOption = document.querySelector('label[for="pronunciation"]');
                 
                 // 要素を非表示にする（親のsettings-optionクラスを持つdivを非表示にする）
                 if (replaceMondaiOption) {
@@ -569,6 +591,17 @@
                 if (wordArrangeOption) {
                     wordArrangeOption.parentElement.style.display = 'none';
                 }
+                if (pronunciationOption) {
+                    pronunciationOption.parentElement.style.display = 'none';
+                }
+                
+                // 発音機能セクション全体を非表示にする
+                const pronunciationHeaders = document.querySelectorAll('h3');
+                pronunciationHeaders.forEach(header => {
+                    if (header.textContent.includes('発音機能')) {
+                        header.style.display = 'none';
+                    }
+                });
                 
                 // リスニングモードセクション全体を非表示にする
                 const listeningHeaders = document.querySelectorAll('h3');
@@ -1102,6 +1135,10 @@
                         text: '正解',
                         time: 1
                     });
+                    
+                    // 発音機能：正解の英単語を発音
+                    playCorrectAnswerPronunciation(correctAnswer);
+                    
                     updateProgressDisplay();
                     document.getElementById('review-count').textContent = reviewQuestions.length;
 
@@ -1130,6 +1167,10 @@
                         text: '正解',
                         time: 1
                     });
+                    
+                    // 発音機能：正解の英単語を発音
+                    playCorrectAnswerPronunciation(correctAnswer);
+                    
                     updateProgressDisplay();
                     updateStats();
                     nextIndex();
@@ -1237,6 +1278,8 @@
                     if (parsedSettings.hardMode !== undefined) globalSettings.hardMode =
                         parsedSettings.hardMode;
                     if (parsedSettings.answerMode) globalSettings.answerMode = parsedSettings.answerMode;
+                    if (parsedSettings.pronunciation !== undefined) globalSettings.pronunciation =
+                        parsedSettings.pronunciation;
                 }
             } catch (e) {
                 // 個別設定から読み込み（後方互換性）
@@ -1244,6 +1287,7 @@
                     'true';
                 globalSettings.hardMode = localStorage.getItem('hard_mode') === 'true';
                 globalSettings.answerMode = localStorage.getItem('answer_mode') || 'choice';
+                globalSettings.pronunciation = localStorage.getItem('pronunciation') === 'true';
             }
 
             // 問題セット固有の設定を読み込む
@@ -1279,6 +1323,7 @@
             // UIに設定を反映
             document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
             document.getElementById('hardmode').checked = globalSettings.hardMode;
+            document.getElementById('pronunciation').checked = globalSettings.pronunciation;
             document.getElementById(problemSettings.questionMode + '-mode').checked =
                 true;
             document.getElementById(globalSettings.answerMode + '-mode').checked = true;
@@ -1716,11 +1761,16 @@
                 globalSettings.answerMode = progressData.answerMode;
             }
 
+            if (progressData.pronunciation !== undefined) {
+                globalSettings.pronunciation = progressData.pronunciation;
+            }
+
             // UIに設定を反映
             document.getElementById(problemSettings.questionMode + '-mode').checked =
                 true;
             document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
             document.getElementById('hardmode').checked = globalSettings.hardMode;
+            document.getElementById('pronunciation').checked = globalSettings.pronunciation;
             document.getElementById(globalSettings.answerMode + '-mode').checked = true;
             // ローカルストレージにも保存
             saveSettings();
@@ -1849,6 +1899,31 @@
                     time: 1.5
                 });
             }
+        });
+
+        // 発音機能チェックボックスの変更イベント
+        const pronunciationCheckbox = document.getElementById('pronunciation');
+        pronunciationCheckbox.addEventListener('change', function () {
+            // 英単語以外の問題セットで発音機能を有効にしようとした場合は無効にする
+            if (this.checked && !isProblemSetEnglish()) {
+                notie.alert({
+                    type: 'warning',
+                    text: '発音機能は英単語問題でのみ利用可能です。',
+                    time: 3
+                });
+                this.checked = false;
+                globalSettings.pronunciation = false;
+            } else {
+                globalSettings.pronunciation = this.checked;
+            }
+            
+            saveSettings();
+            
+            notie.alert({
+                type: 'info',
+                text: this.checked ? '発音機能を有効にしました' : '発音機能を無効にしました',
+                time: 1.5
+            });
         });
 
         // 出題モード選択のイベントリスナー
@@ -2022,6 +2097,13 @@
                 text: '正解',
                 time: 1
             });
+            
+            // 発音機能：正解の英単語を発音
+            const isReversed = globalSettings.replaceMondai;
+            const correctAnswer = isReversed ? questions[currentIndex].description :
+                questions[currentIndex].word;
+            playCorrectAnswerPronunciation(correctAnswer);
+            
             updateProgressDisplay();
             updateStats();
 

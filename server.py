@@ -23,6 +23,8 @@ from gtts import gTTS
 from io import BytesIO
 import aiohttp
 import asyncio
+import glob
+import time
 
 from sqlalchemy import Column, Integer, String, Float, func, case, desc
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -80,12 +82,67 @@ class MondaiStats(Base):
 
 templates = Jinja2Templates(directory="templates")
 
+# バックグラウンドタスク用のフラグ
+cleanup_task = None
+
+async def cleanup_temp_images():
+    """
+    定期的にtempディレクトリ内の1時間以上古いimgファイルを削除する
+    """
+    while True:
+        try:
+            # tempディレクトリのパス
+            temp_dir = "./data/upload/temp/img"
+            
+            # ディレクトリが存在しない場合は作成
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            # 現在時刻
+            current_time = time.time()
+            one_hour_ago = current_time - 3600  # 1時間 = 3600秒
+            
+            # tempディレクトリ内のすべてのファイルをチェック
+            pattern = os.path.join(temp_dir, "*")
+            for file_path in glob.glob(pattern):
+                if os.path.isfile(file_path):
+                    # ファイルの作成時刻を取得
+                    file_creation_time = os.path.getctime(file_path)
+                    
+                    # 1時間以上古いファイルを削除
+                    if file_creation_time < one_hour_ago:
+                        try:
+                            os.remove(file_path)
+                            print(f"古いtempファイルを削除しました: {file_path}")
+                        except Exception as e:
+                            print(f"ファイル削除エラー: {file_path}, エラー: {e}")
+            
+        except Exception as e:
+            print(f"tempファイルクリーンアップエラー: {e}")
+        
+        # 10分間待機してから再実行
+        await asyncio.sleep(600)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global cleanup_task
+    
     # アプリ起動時の処理（startup）
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # バックグラウンドタスクを開始
+    cleanup_task = asyncio.create_task(cleanup_temp_images())
+    print("tempファイルクリーンアップタスクを開始しました")
+    
     yield
+    
+    # アプリ終了時の処理（shutdown）
+    if cleanup_task:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            print("tempファイルクリーンアップタスクを停止しました")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -637,18 +694,22 @@ async def reqAI(prompt: str, model: str = "gemini-2.0-flash", images=None):
             raise Exception(f"AI generation failed: Gemini error: {str(gemini_error)}; OpenRouter error: {str(openrouter_error)}")
 
 @app.get("/play/")
+@app.get("/play")
 async def play(request: Request):
     return templates.TemplateResponse("play.html", {"request": request})
 
 @app.get("/select/")
+@app.get("/select")
 async def select(request: Request):
     return templates.TemplateResponse("select.html", {"request": request})
 
 @app.get("/listening/")
+@app.get("/listening")
 async def listening(request: Request):
     return templates.TemplateResponse("listening.html", {"request": request})
 
 @app.get("/flashcard/")
+@app.get("/flashcard")
 async def flashcards(request: Request):
     """
     単語帳モードのページを表示する
@@ -737,37 +798,45 @@ async def ranking(
     sort_by: str = Query("total", enum=["correct", "accuracy", "total"])
 ):
     async with async_session() as session:
-
-        columns_to_select = [Account.userid, Account.correct, Account.bad]
-
-        total_expr = (Account.correct + Account.bad)
-
-        accuracy_expr = case(
-            (total_expr > 0, func.cast(Account.correct, Float) / total_expr),
-            else_=0.0
-        )
-
-        base_query = sa_select(*columns_to_select).where(total_expr > 0)
-
+        # 必要な列のみを選択し、計算式を最適化
         if sort_by == "accuracy":
-            query = base_query.order_by(desc(accuracy_expr))
+            # 正答率ソートの場合のみaccuracy_exprを計算
+            accuracy_expr = func.cast(Account.correct, Float) / (Account.correct + Account.bad)
+            query = sa_select(
+                Account.userid,
+                Account.correct,
+                Account.bad,
+                accuracy_expr.label('accuracy')
+            ).where(
+                (Account.correct + Account.bad) > 0
+            ).order_by(desc('accuracy')).limit(count)
         elif sort_by == "total":
-            query = base_query.order_by(desc(total_expr))
+            # 総問題数ソート
+            total_expr = Account.correct + Account.bad
+            query = sa_select(
+                Account.userid,
+                Account.correct,
+                Account.bad
+            ).where(
+                total_expr > 0
+            ).order_by(desc(total_expr)).limit(count)
         else:
-            query = base_query.order_by(desc(Account.correct))
+            # 正解数ソート（デフォルト）
+            query = sa_select(
+                Account.userid,
+                Account.correct,
+                Account.bad
+            ).where(
+                (Account.correct + Account.bad) > 0
+            ).order_by(desc(Account.correct)).limit(count)
 
-        result = await session.execute(query.limit(count))
-
-        try:
-            ranking_list = [
-                {"userid": row.userid, "correct": row.correct, "bad": row.bad}
-                for row in result.mappings()
-            ]
-        except AttributeError:
-            ranking_list = [
-                {"userid": row[0], "correct": row[1], "bad": row[2]}
-                for row in result.fetchall()
-            ]
+        result = await session.execute(query)
+        
+        # エラーハンドリングを簡素化
+        ranking_list = [
+            {"userid": row[0], "correct": row[1], "bad": row[2]}
+            for row in result.fetchall()
+        ]
 
     return ranking_list
 
@@ -812,7 +881,7 @@ async def make_mondai(data: MondaiData):
     return {"status": "success"}
 
 @app.post("/api/upload/image")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...), usage: str = Query("ai", enum=["ai", "problem"])):
     if not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=400, detail="File is not an image."
@@ -821,6 +890,13 @@ async def upload_image(file: UploadFile = File(...)):
     try:
         # Read the file contents
         contents = await file.read()
+
+        # Check file size (15MB limit per image)
+        if len(contents) > 15 * 1024 * 1024:  # 15MB in bytes
+            raise HTTPException(
+                status_code=400, 
+                detail="画像ファイルのサイズが15MBの上限を超えています。"
+            )
 
         # Validate as a picture
         try:
@@ -832,16 +908,29 @@ async def upload_image(file: UploadFile = File(...)):
         # Create file ID using hash of content and original filename
         file_id = xxhash.xxh64(contents).hexdigest()
         
-        # Ensure upload directory exists
-        os.makedirs("./data/upload/img", exist_ok=True)
-
-        # Save image to disk
-        file_path = f"./data/upload/img/{file_id}"
-        img = Image.open(io.BytesIO(contents))
-        img.save(file_path, format=img.format or "JPEG")
+        # Determine save path based on usage
+        if usage == "ai":
+            # AI用: tempディレクトリに保存（元の形式維持）
+            os.makedirs("./data/upload/temp/img", exist_ok=True)
+            file_path = f"./data/upload/temp/img/{file_id}"
+            img = Image.open(io.BytesIO(contents))
+            img.save(file_path, format=img.format or "JPEG")
+        else:
+            # 問題文用: upload/imgディレクトリにwebpで保存
+            os.makedirs("./data/upload/img", exist_ok=True)
+            file_path = f"./data/upload/img/{file_id}.webp"
+            img = Image.open(io.BytesIO(contents))
+            # WebP形式で保存（品質を90に設定）
+            img.save(file_path, format="WEBP", quality=90)
         
         return JSONResponse(
-            content={"id": file_id, "filename": file.filename, "message": "Image uploaded successfully."},
+            content={
+                "id": file_id,
+                "filename": file.filename,
+                "format": "webp" if usage == "problem" else img.format or "JPEG",
+                "path": file_path,
+                "message": "Image uploaded successfully."
+            },
             status_code=200
         )
     except Exception as e:
@@ -966,7 +1055,7 @@ async def process_image(data: Union[ImageData, TextData]):
         return await process_text(data)
     
     # 画像処理の場合
-    image_path = f"./data/upload/img/{data.id}"
+    image_path = f"./data/upload/temp/img/{data.id}"
     if not os.path.exists(image_path):
         raise HTTPException(
             status_code=404,
@@ -1074,7 +1163,37 @@ async def process_image(data: Union[ImageData, TextData]):
                     print(f"Unexpected JSON structure: {parsed_json}")
         except json.JSONDecodeError as e:
             print(f"JSONDecodeError: {e} in response: {json_str_debug[:100]}...")
-            questions = extract_questions_from_text(question_response_text)
+            # JSONが正しく解析できなかった場合、AIに修正してもらう
+            try:
+                fix_prompt = f"""以下のテキストから、正しいJSON形式の問題と回答のリストを抽出してください。
+                出力は以下の形式でお願いします：
+                ```json
+                [
+                    {{"question": "問題文", "answer": "回答"}},
+                    {{"question": "問題文2", "answer": "回答2"}}
+                ]
+                ```
+
+                元のテキスト:
+                {question_response_text}"""
+                
+                fixed_response = await reqAI(fix_prompt)
+                
+                # 修正されたレスポンスからJSONを再抽出
+                fixed_json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', fixed_response, re.DOTALL)
+                if fixed_json_match:
+                    fixed_json_str = fixed_json_match.group(1).strip()
+                    parsed_json = json.loads(fixed_json_str)
+                    if isinstance(parsed_json, list):
+                        questions = parsed_json
+                    elif isinstance(parsed_json, dict) and "questions" in parsed_json:
+                        questions = parsed_json["questions"]
+                else:
+                    # 修正後も抽出できない場合はフォールバック
+                    questions = extract_questions_from_text(question_response_text)
+            except Exception as fix_error:
+                print(f"Error fixing JSON: {fix_error}")
+                questions = extract_questions_from_text(question_response_text)
         except Exception as e:
             print(f"Error parsing questions: {type(e).__name__}: {e}")
             print(f"Original text snippet: {question_response_text[:200]}...")
@@ -1117,14 +1236,8 @@ async def process_image(data: Union[ImageData, TextData]):
             detail=f"Error processing image: {str(e)}"
         )
     finally:
-        await asyncio.sleep(5)
-        # 画像処理後、ファイルを削除
-        if os.path.exists(image_path):
-            try:
-                os.remove(image_path)
-                print(f"Successfully deleted image: {image_path}")
-            except Exception as e:
-                print(f"Error deleting image {image_path}: {e}")
+        # 画像処理完了（ファイルは定期クリーンアップで1時間後に削除される）
+        print(f"Image processing completed: {image_path}")
 
 @app.post("/api/edit/mondai")
 async def edit_mondai(data: MondaiData):
@@ -1441,7 +1554,7 @@ async def search_problems(query: str = Query(..., min_length=1)):
     # 1. 範囲検索パターンの検出 (例：「801-850」)
     # ReDoS対策：正規表現を改善し、非数字の繰り返しに上限を設定
     # ReDoS脆弱性対策：バックトラッキングを制限する安全な正規表現
-    range_match = re.search(r'(\d+)[-~〜から]\s*(\d+)', query)
+    range_match = re.search(r'(\d{1,6})[-~〜から](\d{1,6})', query)
     range_keywords = []
     if range_match:
         start_num, end_num = int(range_match.group(1)), int(range_match.group(2))
@@ -1677,88 +1790,6 @@ async def listening_mode(word:str):
             detail=f"音声生成に失敗しました: {str(e)}"
         )
 
-@app.post("/api/generate/questions")
-async def generate_questions(data: GenerateQuestionsData):
-    """
-    テキストから問題と回答のペアを生成するエンドポイント
-    """
-    try:
-        # 問題数と種類の制限をチェック
-        count = min(max(data.count, 1), 10)  # 1-10問の間に制限
-        
-        # 問題タイプに応じたプロンプトを作成
-        prompt = generate_question_prompt(data.text, data.type, count)
-        
-        # Geminiに問題生成をリクエスト
-        response = await reqAI(prompt)
-        
-        # レスポンスをパースして問題と回答のペアを抽出
-        questions = parse_gemini_response(response)
-        
-        return JSONResponse(
-            content={"status": "success", "questions": questions},
-            status_code=200
-        )
-    except Exception as e:
-        print(f"Error generating questions: {str(e)}")
-        return JSONResponse(
-            content={"status": "failed", "message": "問題生成中にエラーが発生しました"},
-            status_code=500
-        )
-
-def generate_question_prompt(text, type, count):
-    """問題タイプに応じたプロンプトを生成する"""
-    # 問題タイプに応じたプロンプトを返す
-    base_prompt = f"""以下の文章から{count}個の問題と回答を作成してください。
-    問題と回答は明確で、文章の内容に基づいたものにしてください。
-
-    文章:
-    {text}"""
-
-    type_prompts = {
-        "basic": "基本的な質問と回答のペアを作成してください。",
-        "multiple-choice": "4つの選択肢から選ぶ問題を作成してください。正解の選択肢を明示してください。",
-        "true-false": "○×（真偽）の問題を作成してください。",
-        "mixed": "様々なタイプの問題（基本問題、選択問題、○×問題）をバランス良く混ぜて作成してください。"
-    }
-
-    format_instruction = """以下の形式でJSONとして出力してください：
-    [
-        {
-            "question": "問題文",
-            "answer": "回答"
-        },
-        ...
-    ]"""
-
-    return base_prompt + "\n" + type_prompts.get(type, type_prompts["mixed"]) + "\n" + format_instruction
-
-def parse_gemini_response(response_text):
-    """GeminiのレスポンスからJSON形式の問題データを抽出する"""
-    try:
-        # JSON部分を抽出（コードブロックの中身を取得）
-        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response_text)
-        json_str = json_match.group(1) if json_match else response_text
-        
-        # 余分な空白やインデントを取り除く
-        json_str = json_str.strip()
-        
-        questions = json.loads(json_str)
-        
-        # 形式の検証
-        if not isinstance(questions, list):
-            raise ValueError("Response is not a list")
-            
-        for q in questions:
-            if not isinstance(q, dict) or "question" not in q or "answer" not in q:
-                raise ValueError("Invalid question format")
-        
-        return questions
-    except Exception as e:
-        print(f"Error parsing response: {e}")
-        # ダミーの質問を1つ返す（エラーケース）
-        return [{"question": "エラー: 問題の生成に失敗しました", "answer": "エラーが発生しました"}]
-
 @app.post("/api/get/advice")
 async def get_advice(data: Data):
     """
@@ -1767,225 +1798,80 @@ async def get_advice(data: Data):
     if await DB.password(data.id) != data.password:
         return {"message": "password is wrong"}
     
-    # 学習データを取得
-    all_answers = await DB.get_all_answers(data.id)
-    if not all_answers:
-        return {"advice": "アドバイスを生成するためのデータがありません"}
-    
-    # 現在の日付から30日前までの日付を計算
-    today = datetime.now()
-    thirty_days_ago = today - timedelta(days=30)
-    today_str = today.strftime("%Y年%m月%d日")
-    
-    # 解答データから日付ごとの統計を集計
-    # データベース構造に合わせて、正解・不正解データを取得
+    # 基本データ取得
     user_data = await DB.get_all(data.id)
     if not user_data:
-        return {"advice": "アドバイスを生成するためのデータがありません"}
+        return {"advice": "学習データがありません"}
     
-    # 日付別の学習統計を取得（空の辞書をデフォルト値として使用）
+    # 正解・不正解データ取得
     correct_data = user_data.get("correct", {})
     bad_data = user_data.get("bad", {})
     
-    # 直近30日間の日付を生成（YYYY/MM/DD形式）
-    date_format = "%Y/%m/%d"
-    recent_dates = []
-    for i in range(30):
-        date = today - timedelta(days=i)
-        recent_dates.append(date.strftime(date_format))
+    # 今日の日付
+    today = datetime.now().strftime("%Y年%m月%d日")
     
-    # 日付ごとの統計情報を構築
-    daily_stats_lines = []
-    study_dates = []  # 学習を行った日付
+    # 総問題数計算
+    total_correct = sum(sum(subjects.values()) for subjects in correct_data.values())
+    total_bad = sum(sum(subjects.values()) for subjects in bad_data.values())
+    total_problems = total_correct + total_bad
     
-    for date_str in recent_dates:
-        if date_str in correct_data or date_str in bad_data:
-            # その日の正解数を集計
-            correct_count = sum(count for subject, count in correct_data.get(date_str, {}).items())
-            # その日の不正解数を集計
-            bad_count = sum(count for subject, count in bad_data.get(date_str, {}).items())
-            # 総取り組み数
-            total_count = correct_count + bad_count
+    if total_problems == 0:
+        return {"advice": "まだ問題を解いていないようです。まずは問題にチャレンジしてみましょう！"}
+    
+    # 正答率計算
+    accuracy = round((total_correct / total_problems) * 100, 1)
+    
+    # 科目別データ集計
+    subject_stats = {}
+    for date_data in correct_data.values():
+        for subject, count in date_data.items():
+            if subject not in subject_stats:
+                subject_stats[subject] = {"correct": 0, "total": 0}
+            subject_stats[subject]["correct"] += count
+            subject_stats[subject]["total"] += count
+    
+    for date_data in bad_data.values():
+        for subject, count in date_data.items():
+            if subject not in subject_stats:
+                subject_stats[subject] = {"correct": 0, "total": 0}
+            subject_stats[subject]["total"] += count
+    
+    # 苦手科目特定
+    weak_subjects = []
+    for subject, stats in subject_stats.items():
+        if stats["total"] >= 5:  # 5問以上やった科目のみ対象
+            rate = (stats["correct"] / stats["total"]) * 100
+            if rate < 60:  # 60%未満を苦手科目とする
+                weak_subjects.append({"name": subject, "rate": round(rate, 1)})
+    
+    weak_subjects.sort(key=lambda x: x["rate"])  # 正答率が低い順
+    
+    # アドバイス生成用プロンプト
+    prompt = f"""今日は{today}です。
+        以下の学習データを基に、200字程度で学習アドバイスをお願いします。
+
+        【学習状況】
+        - 総問題数: {total_problems}問
+        - 正答率: {accuracy}%
+        - 正解数: {total_correct}問
+        - 不正解数: {total_bad}問
+        """
             
-            if total_count > 0:
-                study_dates.append(date_str)  # 学習日として記録
-                # 日付をYYYY/MM/DD形式からMM月DD日形式に変換
-                try:
-                    date_obj = datetime.strptime(date_str, date_format)
-                    formatted_date = date_obj.strftime("%m月%d日")
-                    daily_stats_lines.append(f"{formatted_date} 総取り組み数 {total_count} 正解数 {correct_count} 不正解数 {bad_count}")
-                except ValueError:
-                    # 日付形式が異なる場合はそのまま使用
-                    daily_stats_lines.append(f"{date_str} 総取り組み数 {total_count} 正解数 {correct_count} 不正解数 {bad_count}")
-    
-    # カテゴリ別の問題数と週ごとの正答率を集計
-    category_counts = {}
-    category_weekly_accuracy = {}
-    
-    # 直近30日間のデータからカテゴリを集計し、各週ごとの正答率も計算
-    for i, date_str in enumerate(recent_dates):
-        week_num = i // 7  # 0: 最新の週、1: 1週間前、2: 2週間前、3: 3週間前
+    if weak_subjects:
+            prompt += f"\n【苦手分野】\n"
+            for subject in weak_subjects[:2]:  # 上位2つまで
+                prompt += f"- {subject['name']}: {subject['rate']}%\n"
         
-        # その日のカテゴリごとの正解・不正解を集計
-        for subject, correct_count in correct_data.get(date_str, {}).items():
-            if subject not in category_counts:
-                category_counts[subject] = 0
-                category_weekly_accuracy[subject] = {0: [0, 0], 1: [0, 0], 2: [0, 0], 3: [0, 0]}  # [正解数, 合計問題数]
-            
-            category_counts[subject] += correct_count
-            # 週ごとの正解数と総問題数を更新
-            category_weekly_accuracy[subject][week_num][0] += correct_count
-            category_weekly_accuracy[subject][week_num][1] += correct_count
-        
-        for subject, bad_count in bad_data.get(date_str, {}).items():
-            if subject not in category_counts:
-                category_counts[subject] = 0
-                category_weekly_accuracy[subject] = {0: [0, 0], 1: [0, 0], 2: [0, 0], 3: [0, 0]}
-            
-            category_counts[subject] += bad_count
-            # 週ごとの総問題数のみ更新（不正解なので正解数は更新しない）
-            category_weekly_accuracy[subject][week_num][1] += bad_count
-    
-    # 学習の継続性を分析
-    study_continuity = {
-        "max_consecutive_days": 0,
-        "current_streak": 0,
-        "study_gaps": []
-    }
-    
-    # 学習日を日付順にソート
-    study_dates.sort()
-    
-    # 連続学習日数と中断期間を計算
-    consecutive_days = 0
-    last_date = None
-    for date_str in study_dates:
-        current_date = datetime.strptime(date_str, date_format)
-        
-        if last_date:
-            # 前回の学習日との差を計算
-            delta = (current_date - last_date).days
-            
-            if delta == 1:
-                # 連続学習
-                consecutive_days += 1
-            else:
-                # 学習の中断があった
-                if delta > 2:  # 2日以上の中断を記録
-                    study_continuity["study_gaps"].append(delta)
-                
-                # 連続記録をリセット
-                consecutive_days = 1
-        else:
-            consecutive_days = 1
-        
-        # 最大連続学習日数を更新
-        study_continuity["max_consecutive_days"] = max(study_continuity["max_consecutive_days"], consecutive_days)
-        last_date = current_date
-    
-    # 現在の連続学習日数を設定
-    if study_dates and (today - datetime.strptime(study_dates[-1], date_format)).days <= 1:
-        study_continuity["current_streak"] = consecutive_days
-    
-    # 成長停滞分野を特定
-    stagnant_categories = []
-    for category, weekly_data in category_weekly_accuracy.items():
-        # 最新の週と1週間前の週に十分なデータがある場合のみ分析
-        if weekly_data[0][1] >= 5 and weekly_data[1][1] >= 5:
-            # 各週の正答率を計算
-            current_week_rate = (weekly_data[0][0] / weekly_data[0][1]) * 100 if weekly_data[0][1] > 0 else 0
-            prev_week_rate = (weekly_data[1][0] / weekly_data[1][1]) * 100 if weekly_data[1][1] > 0 else 0
-            
-            # 正答率が改善していない場合は停滞分野として記録
-            if current_week_rate <= prev_week_rate:
-                stagnant_categories.append({
-                    "name": category,
-                    "current_rate": round(current_week_rate, 1),
-                    "prev_rate": round(prev_week_rate, 1),
-                    "change": round(current_week_rate - prev_week_rate, 1)
-                })
-    
-    # 停滞分野を正答率の低い順にソート
-    stagnant_categories.sort(key=lambda x: x["current_rate"])
-    
-    # カテゴリ統計行を生成
-    category_stats_lines = []
-    for category, count in category_counts.items():
-        if count > 0:
-            category_stats_lines.append(f"{category} {count}問")
-    
-    # 統計データがない場合は代替テキストを設定
-    if not daily_stats_lines:
-        daily_stats_text = "データがありません"
-    else:
-        daily_stats_text = "\n        ".join(daily_stats_lines[:10])  # 最新の10日分のデータのみ表示
-    
-    if not category_stats_lines:
-        category_stats_text = "データがありません"
-    else:
-        category_stats_text = "\n        ".join(category_stats_lines)
-    
-    # 学習の継続性に関する情報をテキスト化
-    continuity_text = ""
-    if study_continuity["current_streak"] > 0:
-        continuity_text += f"現在の連続学習日数: {study_continuity['current_streak']}日\n        "
-    if study_continuity["max_consecutive_days"] > 0:
-        continuity_text += f"最長連続学習日数: {study_continuity['max_consecutive_days']}日\n        "
-    if study_continuity["study_gaps"]:
-        avg_gap = sum(study_continuity["study_gaps"]) / len(study_continuity["study_gaps"])
-        continuity_text += f"平均学習中断期間: {round(avg_gap, 1)}日\n        "
-    
-    # 停滞分野に関する情報をテキスト化
-    stagnant_text = ""
-    for i, cat in enumerate(stagnant_categories[:2]):  # 最大2つの停滞分野を表示
-        if i == 0:
-            stagnant_text += f"停滞が見られる分野: {cat['name']} (正答率: {cat['current_rate']}%, 前週比: {cat['change']}%)\n        "
-        else:
-            stagnant_text += f"他の停滞分野: {cat['name']} (正答率: {cat['current_rate']}%)\n        "
-
-    # 学習傾向を分析するための追加データ
-    total_answers = len(all_answers)
-    correct_answers = sum(1 for ans in all_answers if ans["result"])
-    if total_answers > 0:
-        overall_accuracy = round((correct_answers / total_answers) * 100, 1)
-    else:
-        overall_accuracy = 0
-
-    prompt = f"""#目的
-        学習アドバイザーの専門家として、
-        以下の学習データを分析して
-        今後の具体的な学習方法などについてアドバイスをしてください。
-
-        #出力条件
-        280字から340字程度。
-        文章は簡潔に、分かりやすく。
-
-        #前提データ
-        今日は{today_str}です。
-        総解答数: {total_answers}問
-        全体的な正答率: {overall_accuracy}%
-
-        #学習継続性
-        {continuity_text}
-
-        #成長停滞分野
-        {stagnant_text}
-
-        #学習データ
-        直近の学習動向(10日以内)
-        {daily_stats_text}
-
-        学習カテゴリ(30日以内)
-        {category_stats_text}"""
+            prompt += """
+            具体的で実践的なアドバイスを簡潔にお願いします。
+            """
 
     try:
-        model = genai.GenerativeModel("gemini-pro-vision")
-        response = await model.generate_content_async([prompt])
-        advice = response.text.replace("\n", "<br>") 
-        
+        response = await reqAI(prompt, "gemini-2.0-flash")
+        advice = response.replace("\n", "<br>")
         return {"advice": advice}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating advice: {str(e)}")
+        return {"advice": "アドバイス生成中にエラーが発生しました"}
 
 # 教材ごとの範囲データを定義
 
@@ -2063,13 +1949,6 @@ async def get_ranges_progress(request: Request, book_id: str, ranges: str = Quer
             "total": total_words
         }
     }
-
-@app.get("/select/")
-async def select_page(request: Request):
-    """
-    問題範囲を選択するページ
-    """
-    return templates.TemplateResponse("select.html", {"request": request})
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

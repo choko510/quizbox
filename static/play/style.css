@@ -871,6 +871,56 @@ ul.custom-list li .content {
     display: none;
 }
 
+/* 戻るボタン */
+.back {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #000000;
+    font-size: 14px;
+    font-weight: normal;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    border: none;
+    opacity: 0.7;
+}
+
+.back:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+    color: #333;
+    opacity: 1;
+}
+
+.back::before {
+    content: '←';
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* スマホ対応 */
+@media screen and (max-width: 540px) {
+    .back {
+        top: 10px;
+        left: 10px;
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        opacity: 0.6;
+    }
+    
+    .back::before {
+        font-size: 14px;
+    }
+}
+
 /* 検索結果メッセージスタイル */
 .no-result-message {
     margin-top: 20px;
