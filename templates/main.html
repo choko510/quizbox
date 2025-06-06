@@ -110,10 +110,16 @@
 
     <script>
         if (!Cookies.get('id')) {
-            const cookieId = Math.random().toString(36).substring(2);
+            const cookieId = generateSecureRandomString();
             Cookies.set('id', cookieId, { expires: 120 });
-            const password = Math.random().toString(36).substring(2);
+            const password = generateSecureRandomString();
             Cookies.set('password', password, { expires: 120 });
+
+            function generateSecureRandomString() {
+                const array = new Uint8Array(16); // 16 bytes = 128 bits of randomness
+                window.crypto.getRandomValues(array);
+                return Array.from(array, byte => byte.toString(36).padStart(2, '0')).join('').substring(0, 16);
+            }
             (async () => {
                 const response = await fetch('api/registration', {
                     method: 'POST',
