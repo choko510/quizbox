@@ -480,25 +480,3 @@ body {
     /* グレー - 未学習 */
     height: 100%;
 }
-
-/* レスポンシブ対応 */
-@media screen and (max-width: 767px) {
-    .flashcard-banner {
-        width: 100%;
-        margin: 15px 0;
-    }
-    
-    .flashcard-link {
-        padding: 15px;
-    }
-    
-    .flashcard-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-    }
-    
-    .flashcard-info h3 {
-        font-size: 1.1rem;
-    }
-}

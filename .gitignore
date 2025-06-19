@@ -3,3 +3,50 @@
 *.db
 *.mp3
 data/upload/*
+
+# 高速辞書検索システム関連
+dict_cache.pkl
+*.pyd
+*.so
+*.dll
+build/
+dist/
+*.egg-info/
+
+# Python関連
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 開発・テスト関連
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# エディタ・IDE関連
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS関連
+Thumbs.db
+*.log
+
+# 一時ファイル・キャッシュ
+*.tmp
+*.temp
+*.cache
+data/audio/
+data/temp/

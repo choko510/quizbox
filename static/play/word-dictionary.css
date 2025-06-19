@@ -59,3 +59,76 @@
 #dictionary-modal .modal__btn:hover {
     background-color: #0056b3;
 }
+
+/* 単語リストの詳細情報スタイル - 元のデザインと統一 */
+.word-details {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    font-size: 1em;
+    line-height: 1.4;
+    border-left: 3px solid #007bff;
+}
+
+.pos-tag {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: 500;
+    margin-left: 6px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+
+.past-forms {
+    color: #495057;
+    font-weight: 500;
+    display: block;
+    margin: 8px 0;
+    font-size: 1em;
+}
+
+.other-meanings {
+    color: #6c757d;
+    display: block;
+    margin-top: 8px;
+    font-size: 1em;
+    line-height: 1.4;
+}
+
+.past-forms::before {
+    content: "過去形・過去分詞: ";
+    font-weight: normal;
+    color: #6c757d;
+}
+
+.other-meanings::before {
+    content: "他の意味: ";
+    font-weight: normal;
+    color: #6c757d;
+}
+
+/* モバイル対応 */
+@media screen and (max-width: 600px) {
+    .word-details {
+        font-size: 0.9em;
+        padding: 10px 12px;
+        margin-top: 8px;
+    }
+    
+    .pos-tag {
+        font-size: 0.7em;
+        padding: 1px 4px;
+        margin-left: 4px;
+    }
+    
+    .past-forms, .other-meanings {
+        font-size: 0.9em;
+        margin: 6px 0;
+    }
+}

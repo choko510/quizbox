@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import io
 import json
 import os
@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 from typing import List, Union, Dict, Any, Optional
 import base64
 import urllib.parse
+import sys
+import pickle
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query
@@ -30,6 +32,116 @@ from sqlalchemy import Column, Integer, String, Float, func, case, desc
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select as sa_select
 from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 辞書検索システム
+class SearchDictionary:
+    """辞書検索システム"""
+    
+    def __init__(self, json_file: str = "data/dictionary.json", cache_file: str = "dict_cache.pkl"):
+        self.cache_file = cache_file
+        self.word_cache = {}
+        self.frequent_words_cache = {}
+        self.load_optimized_dictionary(json_file)
+        self.precompile_frequent_searches()
+    
+    def load_optimized_dictionary(self, json_file: str) -> None:
+        """最適化された辞書読み込み"""
+        if (os.path.exists(self.cache_file) and
+            os.path.exists(json_file) and
+            os.path.getmtime(self.cache_file) > os.path.getmtime(json_file)):
+            try:
+                with open(self.cache_file, 'rb') as f:
+                    cache_data = pickle.load(f)
+                    self.dictionary = cache_data['dictionary']
+                    self.word_list = cache_data['word_list']
+                    self.rank_index = cache_data['rank_index']
+                return
+            except:
+                pass
+        
+        # JSONから読み込み
+        with open(json_file, 'r', encoding='utf-8') as f:
+            raw_dict = json.load(f)
+        
+        # 辞書の最適化
+        self.dictionary = {}
+        self.word_list = []
+        self.rank_index = {}
+        
+        for word, data in raw_dict.items():
+            word_interned = sys.intern(word.lower())
+            self.dictionary[word_interned] = {
+                'ja': [sys.intern(meaning) for meaning in data.get('ja', [])],
+                'rank': data.get('rank'),
+                'pos': sys.intern(data.get('pos', '')) if data.get('pos') else ''
+            }
+            self.word_list.append(word_interned)
+            
+            if data.get('rank'):
+                self.rank_index[data['rank']] = word_interned
+        
+        # キャッシュを保存
+        cache_data = {
+            'dictionary': self.dictionary,
+            'word_list': self.word_list,
+            'rank_index': self.rank_index
+        }
+        
+        try:
+            with open(self.cache_file, 'wb') as f:
+                pickle.dump(cache_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+        except:
+            pass
+    
+    def precompile_frequent_searches(self) -> None:
+        """頻繁に検索される単語を事前キャッシュ"""
+        frequent_words = []
+        for rank in range(1, 1001):
+            if rank in self.rank_index:
+                frequent_words.append(self.rank_index[rank])
+        
+        for word in frequent_words[:100]:
+            if word in self.dictionary:
+                self.frequent_words_cache[word] = self.dictionary[word]
+    
+    def search_word_ultra_fast(self, word: str) -> Optional[Dict]:
+        """究極高速単語検索"""
+        word_lower = sys.intern(word.lower())
+        
+        if word_lower in self.frequent_words_cache:
+            return self.frequent_words_cache[word_lower]
+        
+        if word_lower in self.word_cache:
+            return self.word_cache[word_lower]
+        
+        result = self.dictionary.get(word_lower)
+        
+        if len(self.word_cache) < 10000:
+            self.word_cache[word_lower] = result
+        
+        return result
+    
+    def batch_search_ultra_fast(self, words: List[str]) -> Dict[str, Optional[Dict]]:
+        """究極高速一括検索"""
+        results = {}
+        normalized_words = [(word, sys.intern(word.lower())) for word in words]
+        
+        for original_word, word_lower in normalized_words:
+            if word_lower in self.frequent_words_cache:
+                results[original_word] = self.frequent_words_cache[word_lower]
+            elif word_lower in self.word_cache:
+                results[original_word] = self.word_cache[word_lower]
+            else:
+                result = self.dictionary.get(word_lower)
+                results[original_word] = result
+                
+                if len(self.word_cache) < 10000:
+                    self.word_cache[word_lower] = result
+        
+        return results
+
+# グローバルな辞書インスタンス
+fast_dict = None
 
 
 load_dotenv()
@@ -124,11 +236,19 @@ async def cleanup_temp_images():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global cleanup_task
+    global cleanup_task, fast_dict
     
     # アプリ起動時の処理（startup）
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # 高速辞書システムを初期化
+    try:
+        fast_dict = SearchDictionary()
+        print(f"⚡ 辞書検索システムが初期化されました: {len(fast_dict.dictionary):,} 単語")
+    except Exception as e:
+        print(f"⚠️  辞書初期化に失敗しました: {e}")
+        fast_dict = None
     
     # バックグラウンドタスクを開始
     cleanup_task = asyncio.create_task(cleanup_temp_images())
@@ -1683,12 +1803,212 @@ async def search_problems(query: str = Query(..., min_length=1)):
     
     return filtered_results
 
+class DictSearchData(BaseModel):
+    word: str
+    batch_words: Optional[List[str]] = None
+
+@app.post("/api/dict/search")
+async def fast_dict_search(data: DictSearchData):
+    """
+    高速辞書検索API - 単語または複数単語の意味を瞬時に検索
+    """
+    global fast_dict
+    
+    if not fast_dict:
+        return {
+            "success": False,
+            "error": "辞書システムが利用できません"
+        }
+    
+    try:
+        if data.batch_words:
+            # 複数単語検索
+            results = fast_dict.batch_search_ultra_fast(data.batch_words)
+            formatted_results = {}
+            
+            for word, word_data in results.items():
+                if word_data:
+                    # 過去形・過去分詞の情報を追加
+                    past_forms = get_past_forms(word)
+                    
+                    formatted_results[word] = {
+                        "found": True,
+                        "meanings": word_data.get('ja', []),
+                        "pos": word_data.get('pos', ''),
+                        "rank": word_data.get('rank'),
+                        "past_tense": past_forms.get('past_tense', ''),
+                        "past_participle": past_forms.get('past_participle', '')
+                    }
+                else:
+                    formatted_results[word] = {
+                        "found": False,
+                        "meanings": [],
+                        "pos": "",
+                        "rank": None,
+                        "past_tense": "",
+                        "past_participle": ""
+                    }
+            
+            return {
+                "success": True,
+                "type": "batch",
+                "total_words": len(data.batch_words),
+                "found_count": sum(1 for r in formatted_results.values() if r["found"]),
+                "results": formatted_results
+            }
+        else:
+            # 単語検索
+            word_data = fast_dict.search_word_ultra_fast(data.word)
+            
+            if word_data:
+                # 過去形・過去分詞の情報を追加
+                past_forms = get_past_forms(data.word)
+                
+                return {
+                    "success": True,
+                    "type": "single",
+                    "word": data.word,
+                    "found": True,
+                    "meanings": word_data.get('ja', []),
+                    "pos": word_data.get('pos', ''),
+                    "rank": word_data.get('rank'),
+                    "past_tense": past_forms.get('past_tense', ''),
+                    "past_participle": past_forms.get('past_participle', '')
+                }
+            else:
+                return {
+                    "success": True,
+                    "type": "single",
+                    "word": data.word,
+                    "found": False,
+                    "meanings": [],
+                    "pos": "",
+                    "rank": None,
+                    "past_tense": "",
+                    "past_participle": ""
+                }
+    
+    except Exception as e:
+        print(f"Dictionary search error: {e}")
+        return {
+            "success": False,
+            "error": "検索中にエラーが発生しました"
+        }
+
+def get_past_forms(word):
+    """
+    動詞の過去形・過去分詞を取得する関数
+    """
+    # 基本的な動詞の過去形・過去分詞のデータ
+    irregular_verbs = {
+        "be": {"past_tense": "was/were", "past_participle": "been"},
+        "have": {"past_tense": "had", "past_participle": "had"},
+        "do": {"past_tense": "did", "past_participle": "done"},
+        "say": {"past_tense": "said", "past_participle": "said"},
+        "get": {"past_tense": "got", "past_participle": "gotten"},
+        "make": {"past_tense": "made", "past_participle": "made"},
+        "go": {"past_tense": "went", "past_participle": "gone"},
+        "take": {"past_tense": "took", "past_participle": "taken"},
+        "come": {"past_tense": "came", "past_participle": "come"},
+        "see": {"past_tense": "saw", "past_participle": "seen"},
+        "know": {"past_tense": "knew", "past_participle": "known"},
+        "think": {"past_tense": "thought", "past_participle": "thought"},
+        "give": {"past_tense": "gave", "past_participle": "given"},
+        "find": {"past_tense": "found", "past_participle": "found"},
+        "tell": {"past_tense": "told", "past_participle": "told"},
+        "become": {"past_tense": "became", "past_participle": "become"},
+        "leave": {"past_tense": "left", "past_participle": "left"},
+        "feel": {"past_tense": "felt", "past_participle": "felt"},
+        "bring": {"past_tense": "brought", "past_participle": "brought"},
+        "begin": {"past_tense": "began", "past_participle": "begun"},
+        "keep": {"past_tense": "kept", "past_participle": "kept"},
+        "hold": {"past_tense": "held", "past_participle": "held"},
+        "write": {"past_tense": "wrote", "past_participle": "written"},
+        "stand": {"past_tense": "stood", "past_participle": "stood"},
+        "hear": {"past_tense": "heard", "past_participle": "heard"},
+        "let": {"past_tense": "let", "past_participle": "let"},
+        "mean": {"past_tense": "meant", "past_participle": "meant"},
+        "set": {"past_tense": "set", "past_participle": "set"},
+        "meet": {"past_tense": "met", "past_participle": "met"},
+        "run": {"past_tense": "ran", "past_participle": "run"},
+        "pay": {"past_tense": "paid", "past_participle": "paid"},
+        "sit": {"past_tense": "sat", "past_participle": "sat"},
+        "speak": {"past_tense": "spoke", "past_participle": "spoken"},
+        "lie": {"past_tense": "lay", "past_participle": "lain"},
+        "lead": {"past_tense": "led", "past_participle": "led"},
+        "read": {"past_tense": "read", "past_participle": "read"},
+        "grow": {"past_tense": "grew", "past_participle": "grown"},
+        "lose": {"past_tense": "lost", "past_participle": "lost"},
+        "fall": {"past_tense": "fell", "past_participle": "fallen"},
+        "send": {"past_tense": "sent", "past_participle": "sent"},
+        "build": {"past_tense": "built", "past_participle": "built"},
+        "understand": {"past_tense": "understood", "past_participle": "understood"},
+        "draw": {"past_tense": "drew", "past_participle": "drawn"},
+        "break": {"past_tense": "broke", "past_participle": "broken"},
+        "spend": {"past_tense": "spent", "past_participle": "spent"},
+        "cut": {"past_tense": "cut", "past_participle": "cut"},
+        "rise": {"past_tense": "rose", "past_participle": "risen"},
+        "drive": {"past_tense": "drove", "past_participle": "driven"},
+        "buy": {"past_tense": "bought", "past_participle": "bought"},
+        "wear": {"past_tense": "wore", "past_participle": "worn"},
+        "choose": {"past_tense": "chose", "past_participle": "chosen"}
+    }
+    
+    # 不規則動詞の場合
+    if word.lower() in irregular_verbs:
+        return irregular_verbs[word.lower()]
+    
+    # 規則動詞の場合の処理
+    if word.endswith('e'):
+        # -e で終わる場合は -d を追加
+        past_form = word + 'd'
+    elif word.endswith('y') and len(word) > 1 and word[-2] not in 'aeiou':
+        # 子音 + y で終わる場合は y を i に変えて -ed を追加
+        past_form = word[:-1] + 'ied'
+    elif len(word) >= 3 and word[-1] in 'bdfgklmnpqrstvwxz' and word[-2] in 'aeiou' and word[-3] not in 'aeiou':
+        # 子音-母音-子音のパターンで終わる場合は最後の子音を重複させて -ed を追加
+        past_form = word + word[-1] + 'ed'
+    else:
+        # その他の場合は -ed を追加
+        past_form = word + 'ed'
+    
+    return {"past_tense": past_form, "past_participle": past_form}
+
+@app.get("/api/dict/quick/{word}")
+async def quick_dict_search(word: str):
+    """
+    超高速単語検索API（GETリクエスト版）
+    """
+    global fast_dict
+    
+    if not fast_dict:
+        return {"found": False, "error": "辞書システムが利用できません"}
+    
+    try:
+        word_data = fast_dict.search_word_ultra_fast(word)
+        
+        if word_data:
+            return {
+                "found": True,
+                "word": word,
+                "meanings": word_data.get('ja', []),
+                "pos": word_data.get('pos', ''),
+                "rank": word_data.get('rank')
+            }
+        else:
+            return {
+                "found": False,
+                "word": word
+            }
+    except Exception as e:
+        return {"found": False, "error": str(e)}
+
 @app.post("/api/search/word/")
 async def search_word(data: WordData):
     """
-    辞書APIから単語の意味を取得するエンドポイント
+    辞書APIから単語の意味を取得するエンドポイント（AI生成説明付き）
     """
-
+    global fast_dict
     word = data.word
     
     if not word:
@@ -1698,9 +2018,31 @@ async def search_word(data: WordData):
             "success": False
         }
 
+    # まず高速辞書で検索
+    basic_info = ""
+    if fast_dict:
+        try:
+            word_data = fast_dict.search_word_ultra_fast(word)
+            if word_data:
+                meanings = word_data.get('ja', [])
+                pos = word_data.get('pos', '')
+                rank = word_data.get('rank', '')
+                
+                basic_info = f"""
+        【辞書情報】
+        意味: {', '.join(meanings[:3])}
+        品詞: {pos}
+        ランク: {rank}
+
+        """
+        except:
+            pass
+
     try:
-        # Corrected indentation for the prompt f-string
+        # AIによる詳細説明
         prompt = f"""以下の単語「{word}」について詳しく説明してください。
+        
+        {basic_info}
         
         以下の情報を含めてください：
         1. 基本的な定義と意味
@@ -1709,7 +2051,7 @@ async def search_word(data: WordData):
         4. 特定分野での専門的な意味（該当する場合）
         5. 「{data.mondai}」の文脈に関連した説明
         
-        回答は簡潔かつ分かりやすい日本語で、100-200字程度でまとめてください。
+        回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
         response = await reqAI(prompt, "gemini-2.0-flash-lite")
@@ -1720,6 +2062,13 @@ async def search_word(data: WordData):
         }
     except Exception as e:
         print(f"Error fetching definition: {e}")
+        # AIが失敗した場合、辞書データのみ返す
+        if basic_info:
+            return {
+                "word": word,
+                "definition": basic_info.strip(),
+                "success": True
+            }
         return {
             "word": word,
             "definition": "定義を取得できませんでした。",

@@ -516,7 +516,7 @@
             await showNextQuestion();
             updateProgressDisplay(); // 進捗表示を更新
             initializeChart();
-            populateWordList();
+            await populateWordList();
 
             // --- タイマー制御: 初期ロード時に問題画面ならタイマー開始 ---
             if (swiper.activeIndex === 1) {
@@ -672,8 +672,44 @@
             }
         }
 
-        function populateWordList() {
+        async function populateWordList() {
             let listHTML = ''; // HTML文字列を構築
+            const englishWords = []; // 英単語を格納する配列
+            
+            // 英単語を抽出
+            questions.forEach(question => {
+                const isEnglishWord = /^[a-zA-Z0-9\s.,'\-]+$/.test(question.word.trim()) &&
+                                    !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(question.word);
+                if (isEnglishWord) {
+                    englishWords.push(question.word);
+                }
+            });
+
+            // 英単語の辞書情報を一括取得
+            let dictResults = {};
+            if (englishWords.length > 0) {
+                try {
+                    const response = await fetch('/api/dict/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            word: '',
+                            batch_words: englishWords
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.results) {
+                            dictResults = data.results;
+                        }
+                    }
+                } catch (error) {
+                    console.error('辞書検索エラー:', error);
+                }
+            }
 
             questions.forEach(question => {
                 let titleHTML, contentHTML;
@@ -683,18 +719,54 @@
                 titleHTML = question.word;
                 contentHTML = question.description;
 
-                const isEnglishWord = /^[a-zA-Z0-9s.,'\-]+$/.test(titleHTML.trim());
+                const isEnglishWord = /^[a-zA-Z0-9\s.,'\-]+$/.test(titleHTML.trim()) &&
+                                    !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(titleHTML);
                 const speakerIcon = isEnglishWord ?
                     `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>` :
                     '';
 
+                // 英単語の場合、辞書情報を追加
+                let wordInfo = titleHTML;
+                let additionalInfo = '';
+                
+                if (isEnglishWord && dictResults[titleHTML]) {
+                    const dictInfo = dictResults[titleHTML];
+                    if (dictInfo.found) {
+                        // 品詞を表示
+                        if (dictInfo.pos) {
+                            wordInfo += ` <span class="pos-tag">${dictInfo.pos}</span>`;
+                        }
+                        
+                        additionalInfo = '<div class="word-details">';
+                        
+                        // 過去形・過去分詞を表示（動詞の場合）
+                        if (dictInfo.past_tense && dictInfo.past_participle) {
+                            if (dictInfo.past_tense === dictInfo.past_participle) {
+                                additionalInfo += `<div class="past-forms">${dictInfo.past_tense}</div>`;
+                            } else {
+                                additionalInfo += `<div class="past-forms">${dictInfo.past_tense} / ${dictInfo.past_participle}</div>`;
+                            }
+                        }
+                        
+                        // 他の意味を表示
+                        if (dictInfo.meanings && dictInfo.meanings.length > 0) {
+                            const otherMeanings = dictInfo.meanings.filter(meaning => meaning !== contentHTML);
+                            if (otherMeanings.length > 0) {
+                                additionalInfo += `<div class="other-meanings">${otherMeanings.join(', ')}</div>`;
+                            }
+                        }
+                        
+                        additionalInfo += '</div>';
+                    }
+                }
+
                 if (contentHTML.endsWith("か。") || contentHTML.endsWith("答えよ。") ||
                     contentHTML.endsWith("答えなさい。")) {
                     listHTML +=
-                        `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${titleHTML}</div></li>`;
+                        `<li><div class="${contentClass}">${contentHTML}${speakerIcon}</div><div class="${titleClass}">${wordInfo}</div>${additionalInfo}</li>`;
                 } else {
                     listHTML +=
-                        `<li><div class="${titleClass}">${titleHTML}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div></li>`;
+                        `<li><div class="${titleClass}">${wordInfo}${speakerIcon}</div><div class="${contentClass}">${contentHTML}</div>${additionalInfo}</li>`;
                 }
             });
 
@@ -730,7 +802,6 @@
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
 
-            // 問題文表示
             // 問題文表示
             if (!isHardMode) {
                 let textContent;
@@ -817,15 +888,198 @@
                         const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences
                             .length)]; // ランダムに1文選択
 
-                        // 問題文を書き換え
-                        // グローバルな正規表現を使用して、すべての | を <br> に置換
-                        title.innerHTML = sentenceForQuestion.replace(/|/g, "<br>").replace(new RegExp(
-                            escapeRegExp(correctAnswer), "g"), "(     )");
-
-                        // 正規表現のエスケープ関数（新たに追加）
+                        // 正規表現のエスケープ関数
                         function escapeRegExp(string) {
                             return string.replace(/[.*+?^${}()|[]\]/g, '\\$&');
                         }
+
+                        // 文章を日本語と英語に分割
+                        const parts = sentenceForQuestion.split('|');
+                        let processedSentence = sentenceForQuestion;
+                        
+                        if (parts.length >= 2) {
+                            const japanesePart = parts[0];
+                            const englishPart = parts[1];
+                            
+                            // 辞書検索APIで英単語の意味を取得してアンダーラインを追加
+                            try {
+                                const dictResponse = await fetch('/api/dict/search', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        word: correctAnswer
+                                    })
+                                });
+                                
+                                if (dictResponse.ok) {
+                                    const dictData = await dictResponse.json();
+                                    if (dictData.success && dictData.found && dictData.meanings && dictData.meanings.length > 0) {
+                                        let modifiedJapanesePart = japanesePart;
+                                        
+                                        // 各意味に対してアンダーラインを適用（語幹マッチング対応）
+                                        dictData.meanings.forEach(meaning => {
+                                            if (meaning && meaning.trim()) {
+                                                const cleanMeaning = meaning.trim();
+                                                
+                                                // 1. 完全一致をチェック
+                                                const exactRegex = new RegExp(escapeRegExp(cleanMeaning), 'g');
+                                                modifiedJapanesePart = modifiedJapanesePart.replace(exactRegex, `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${cleanMeaning}</u>`);
+                                                
+                                                // 2. 語幹ベースのマッチング（動詞・形容詞の活用形に対応）
+                                                if (cleanMeaning.length >= 3) {
+                                                    let stem = '';
+                                                    
+                                                    // 動詞の語幹抽出
+                                                    if (cleanMeaning.endsWith('む')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 楽しむ → 楽し
+                                                    } else if (cleanMeaning.endsWith('る')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 見る → 見
+                                                    } else if (cleanMeaning.endsWith('す')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 話す → 話
+                                                    } else if (cleanMeaning.endsWith('く')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 歩く → 歩
+                                                    } else if (cleanMeaning.endsWith('ぐ')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 泳ぐ → 泳
+                                                    } else if (cleanMeaning.endsWith('つ')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 待つ → 待
+                                                    } else if (cleanMeaning.endsWith('ぬ')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 死ぬ → 死
+                                                    } else if (cleanMeaning.endsWith('ぶ')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 遊ぶ → 遊
+                                                    } else if (cleanMeaning.endsWith('う')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 買う → 買
+                                                    } else if (cleanMeaning.endsWith('い')) {
+                                                        stem = cleanMeaning.slice(0, -1); // 楽しい → 楽し
+                                                    }
+                                                    
+                                                    // 語幹が抽出できた場合、関連する表現をマッチング
+                                                    if (stem.length >= 2) {
+                                                        // よくある活用パターンを直接指定
+                                                        let commonPatterns = [
+                                                            stem + 'める', // 楽しめる
+                                                            stem + 'んだ',  // 楽しんだ
+                                                            stem + 'んで',  // 楽しんで
+                                                            stem + 'みます', // 楽しみます
+                                                            stem + 'まない', // 楽しまない
+                                                            stem + 'ませんでした', // 楽しませんでした
+                                                            stem + 'もう',   // 楽しもう
+                                                            stem + 'そう',   // 楽しそう
+                                                            stem + 'く',     // 楽しく
+                                                            stem + 'かった', // 楽しかった
+                                                            stem + 'くない', // 楽しくない
+                                                            stem + 'さ',     // 楽しさ
+                                                            stem + 'み',     // 楽しみ
+                                                        ];
+                                                        
+                                                        // 特殊な音変化パターンを追加
+                                                        if (cleanMeaning.endsWith('つ')) {
+                                                            // つ動詞の音変化: 待つ → 待ち、待って
+                                                            commonPatterns.push(
+                                                                stem + 'ち',     // 待ち
+                                                                stem + 'ちます',  // 待ちます
+                                                                stem + 'ちません', // 待ちません
+                                                                stem + 'ちたい',  // 待ちたい
+                                                                stem + 'ちきれない', // 待ちきれない
+                                                                stem + 'ちわびる', // 待ちわびる
+                                                                stem + 'って',    // 待って
+                                                                stem + 'った',    // 待った
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('く')) {
+                                                            // く動詞の音変化: 歩く → 歩き、歩いて
+                                                            commonPatterns.push(
+                                                                stem + 'き',     // 歩き
+                                                                stem + 'きます',  // 歩きます
+                                                                stem + 'きません', // 歩きません
+                                                                stem + 'きたい',  // 歩きたい
+                                                                stem + 'いて',    // 歩いて
+                                                                stem + 'いた',    // 歩いた
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('ぐ')) {
+                                                            // ぐ動詞の音変化: 泳ぐ → 泳ぎ、泳いで
+                                                            commonPatterns.push(
+                                                                stem + 'ぎ',     // 泳ぎ
+                                                                stem + 'ぎます',  // 泳ぎます
+                                                                stem + 'ぎません', // 泳ぎません
+                                                                stem + 'ぎたい',  // 泳ぎたい
+                                                                stem + 'いで',    // 泳いで
+                                                                stem + 'いだ',    // 泳いだ
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('ぶ')) {
+                                                            // ぶ動詞の音変化: 遊ぶ → 遊び、遊んで
+                                                            commonPatterns.push(
+                                                                stem + 'び',     // 遊び
+                                                                stem + 'びます',  // 遊びます
+                                                                stem + 'びません', // 遊びません
+                                                                stem + 'びたい',  // 遊びたい
+                                                                stem + 'んで',    // 遊んで
+                                                                stem + 'んだ',    // 遊んだ
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('む')) {
+                                                            // む動詞の音変化: 読む → 読み、読んで
+                                                            commonPatterns.push(
+                                                                stem + 'み',     // 読み
+                                                                stem + 'みます',  // 読みます
+                                                                stem + 'みません', // 読みません
+                                                                stem + 'みたい',  // 読みたい
+                                                                stem + 'んで',    // 読んで
+                                                                stem + 'んだ',    // 読んだ
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('ぬ')) {
+                                                            // ぬ動詞の音変化: 死ぬ → 死に、死んで
+                                                            commonPatterns.push(
+                                                                stem + 'に',     // 死に
+                                                                stem + 'にます',  // 死にます
+                                                                stem + 'にません', // 死にません
+                                                                stem + 'にたい',  // 死にたい
+                                                                stem + 'んで',    // 死んで
+                                                                stem + 'んだ',    // 死んだ
+                                                            );
+                                                        } else if (cleanMeaning.endsWith('す')) {
+                                                            // す動詞の音変化: 話す → 話し、話して
+                                                            commonPatterns.push(
+                                                                stem + 'し',     // 話し
+                                                                stem + 'します',  // 話します
+                                                                stem + 'しません', // 話しません
+                                                                stem + 'したい',  // 話したい
+                                                                stem + 'して',    // 話して
+                                                                stem + 'した',    // 話した
+                                                            );
+                                                        }
+                                                        
+                                                        commonPatterns.forEach(pattern => {
+                                                            try {
+                                                                const patternRegex = new RegExp(escapeRegExp(pattern), 'g');
+                                                                modifiedJapanesePart = modifiedJapanesePart.replace(patternRegex, (match) => {
+                                                                    // 既にアンダーラインが引かれていないかチェック
+                                                                    if (!modifiedJapanesePart.includes(`<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`)) {
+                                                                        return `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`;
+                                                                    }
+                                                                    return match;
+                                                                });
+                                                            } catch (regexError) {
+                                                                // 正規表現エラーは無視
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        });
+                                        
+                                        processedSentence = modifiedJapanesePart + '|' + englishPart;
+                                    }
+                                }
+                            } catch (dictError) {
+                                console.log('辞書検索エラー:', dictError);
+                                // エラーが発生しても処理を続行
+                            }
+                        }
+
+                        // 問題文を書き換え
+                        // グローバルな正規表現を使用して、すべての | を <br> に置換
+                        title.innerHTML = processedSentence.replace(/\|/g, "<br>").replace(new RegExp(
+                            escapeRegExp(correctAnswer), "g"), "(     )");
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
                         if (screenWidth < 600 || screenHeight < 600) {
@@ -1855,7 +2109,7 @@
             saveSettings();
 
             // 現在の画面に合わせて更新
-            populateWordList(); // 単語リスト再表示
+            await populateWordList(); // 単語リスト再表示
 
             if (swiper.activeIndex === 1) {
                 // 問題画面表示中なら問題も更新
