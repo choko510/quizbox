@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css"></noscript>
     <link rel="stylesheet" href="/select/style.css">
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css">
     <title>範囲選択</title>
@@ -72,6 +73,42 @@
                 </button>
                 <div class="special-range-text">単語リストを表示します</div>
             </div>
+
+            <!-- 前回プレイした範囲 -->
+            <div class="special-range-item" id="last-played-item" style="display:none;">
+                <button id="last-played-button" class="special-range-button">
+                    <i class="fas fa-history"></i> 前回の範囲
+                </button>
+                <div class="special-range-text" id="last-played-text">前回プレイした範囲をもう一度プレイします</div>
+            </div>
+
+            <!-- カスタム範囲選択 -->
+            <div class="special-range-item custom-range-item">
+                <div class="custom-range-content">
+                    <div class="range-header">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>カスタム範囲でプレイ</span>
+                    </div>
+                    <div class="range-controls">
+                        <div class="range-inputs">
+                            <input type="number" id="custom-start" min="1" max="9999" value="1" placeholder="開始">
+                            <span class="range-dash">～</span>
+                            <input type="number" id="custom-end" min="1" max="9999" value="100" placeholder="終了">
+                            <span id="range-count" class="range-count">100問</span>
+                        </div>
+                        <div class="range-slider">
+                            <div class="slider-track"></div>
+                            <div class="slider-fill" id="slider-fill"></div>
+                            <input type="range" id="start-slider" min="1" max="9999" value="1" class="slider-input start-slider">
+                            <input type="range" id="end-slider" min="1" max="9999" value="100" class="slider-input end-slider">
+                        </div>
+                    </div>
+                    <button id="custom-range-play" class="custom-play-button">
+                        <i class="fas fa-play"></i> この範囲でプレイ
+                    </button>
+                    <div id="custom-range-error" class="custom-error" style="display:none;"></div>
+                </div>
+            </div>
             
             <div id="range-container" class="range-container"></div>
         </div>
@@ -132,6 +169,8 @@
             const playAllButton = document.getElementById('play-all-button');
             playAllButton.addEventListener('click', function() {
                 const maxRange = getMaxRangeForBook(bookId);
+                // 前回プレイした範囲を保存
+                saveLastPlayedRange(bookId, 1, maxRange);
                 // 全範囲を選択してplay.htmlにリダイレクト
                 window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
             });
@@ -142,6 +181,12 @@
             toggleWordListButton.addEventListener('click', function() {
                 window.location.href = `/flashcard/?id=${bookId}`;
             });
+
+            // カスタム範囲の設定
+            setupCustomRangeSelector(bookId);
+            
+            // 前回プレイした範囲の設定
+            setupLastPlayedRange(bookId);
         });
 
         // 教材IDから教材名と画像を取得して表示
@@ -292,6 +337,8 @@
                 button.dataset.end = range.end;
                 
                 button.addEventListener('click', function() {
+                    // 前回プレイした範囲を保存
+                    saveLastPlayedRange(bookId, range.start, range.end);
                     // 選択された範囲でplay.htmlにリダイレクト
                     window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
                 });
@@ -346,6 +393,155 @@
             errorElement.textContent = message;
             errorElement.style.display = 'block';
             document.getElementById('loading').style.display = 'none';
+        }
+
+        // カスタム範囲選択器のセットアップ
+        function setupCustomRangeSelector(bookId) {
+            const maxRange = getMaxRangeForBook(bookId);
+            const customStart = document.getElementById('custom-start');
+            const customEnd = document.getElementById('custom-end');
+            const startSlider = document.getElementById('start-slider');
+            const endSlider = document.getElementById('end-slider');
+            const sliderFill = document.getElementById('slider-fill');
+            const playBtn = document.getElementById('custom-range-play');
+            const rangeCount = document.getElementById('range-count');
+            const errorDiv = document.getElementById('custom-range-error');
+            
+            // 最大値を設定
+            customStart.max = maxRange;
+            customEnd.max = maxRange;
+            startSlider.max = maxRange;
+            endSlider.max = maxRange;
+            customEnd.value = Math.min(100, maxRange);
+            endSlider.value = Math.min(100, maxRange);
+            
+            // 範囲更新関数
+            function updateRange() {
+                const start = parseInt(customStart.value) || 1;
+                const end = parseInt(customEnd.value) || 1;
+                const count = Math.max(0, end - start + 1);
+                rangeCount.textContent = `${count}問`;
+                
+                // スライダーの表示範囲を更新
+                updateSliderFill();
+                
+                // エラーチェック
+                errorDiv.style.display = 'none';
+                if (start > end) {
+                    errorDiv.textContent = '開始は終了以下にしてください';
+                    errorDiv.style.display = 'block';
+                } else if (start < 1 || end < 1) {
+                    errorDiv.textContent = '1以上の値を入力してください';
+                    errorDiv.style.display = 'block';
+                } else if (end > maxRange) {
+                    errorDiv.textContent = `最大${maxRange}まで指定可能です`;
+                    errorDiv.style.display = 'block';
+                }
+            }
+            
+            // スライダーの塗りつぶし範囲を更新
+            function updateSliderFill() {
+                const start = parseInt(customStart.value) || 1;
+                const end = parseInt(customEnd.value) || 1;
+                const startPercent = ((start - 1) / (maxRange - 1)) * 100;
+                const endPercent = ((end - 1) / (maxRange - 1)) * 100;
+                
+                sliderFill.style.left = startPercent + '%';
+                sliderFill.style.width = Math.max(0, endPercent - startPercent) + '%';
+            }
+            
+            // 入力フィールドのイベント
+            customStart.addEventListener('input', function() {
+                const val = parseInt(this.value) || 1;
+                startSlider.value = val;
+                if (val > parseInt(customEnd.value)) {
+                    customEnd.value = val;
+                    endSlider.value = val;
+                }
+                updateRange();
+            });
+            
+            customEnd.addEventListener('input', function() {
+                const val = parseInt(this.value) || 1;
+                endSlider.value = val;
+                if (val < parseInt(customStart.value)) {
+                    customStart.value = val;
+                    startSlider.value = val;
+                }
+                updateRange();
+            });
+            
+            // スライダーのイベント
+            startSlider.addEventListener('input', function() {
+                customStart.value = this.value;
+                if (parseInt(this.value) > parseInt(endSlider.value)) {
+                    endSlider.value = this.value;
+                    customEnd.value = this.value;
+                }
+                updateRange();
+            });
+            
+            endSlider.addEventListener('input', function() {
+                customEnd.value = this.value;
+                if (parseInt(this.value) < parseInt(startSlider.value)) {
+                    startSlider.value = this.value;
+                    customStart.value = this.value;
+                }
+                updateRange();
+            });
+            
+            // プレイボタンのイベント
+            playBtn.addEventListener('click', function() {
+                const start = parseInt(customStart.value);
+                const end = parseInt(customEnd.value);
+                
+                if (isNaN(start) || isNaN(end) || start < 1 || end < 1 || start > end || end > maxRange) {
+                    errorDiv.textContent = `1～${maxRange}の正しい範囲を指定してください`;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                // 前回プレイした範囲を保存
+                saveLastPlayedRange(bookId, start, end);
+                
+                window.location.href = `/play/?id=${bookId}&start=${start}&end=${end}`;
+            });
+            
+            updateRange();
+        }
+
+        // 前回プレイした範囲の設定
+        function setupLastPlayedRange(bookId) {
+            const lastPlayed = getLastPlayedRange(bookId);
+            if (lastPlayed) {
+                const item = document.getElementById('last-played-item');
+                const button = document.getElementById('last-played-button');
+                const text = document.getElementById('last-played-text');
+                
+                text.textContent = `前回の範囲: ${lastPlayed.start}～${lastPlayed.end}問 (${lastPlayed.end - lastPlayed.start + 1}問)`;
+                item.style.display = 'flex';
+                
+                button.addEventListener('click', function() {
+                    saveLastPlayedRange(bookId, lastPlayed.start, lastPlayed.end);
+                    window.location.href = `/play/?id=${bookId}&start=${lastPlayed.start}&end=${lastPlayed.end}`;
+                });
+            }
+        }
+
+        // 前回プレイした範囲を保存
+        function saveLastPlayedRange(bookId, start, end) {
+            const data = { start: start, end: end, timestamp: Date.now() };
+            localStorage.setItem(`lastPlayed_${bookId}`, JSON.stringify(data));
+        }
+
+        // 前回プレイした範囲を取得
+        function getLastPlayedRange(bookId) {
+            try {
+                const data = localStorage.getItem(`lastPlayed_${bookId}`);
+                return data ? JSON.parse(data) : null;
+            } catch (e) {
+                return null;
+            }
         }
     </script>
 </body>

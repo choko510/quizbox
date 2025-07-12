@@ -573,6 +573,208 @@ body {
   font-size: 14px;
 }
 
+/* カスタム範囲選択のスタイル */
+.custom-range-item {
+  padding: 18px 20px;
+}
+
+.custom-range-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.range-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.range-header i {
+  color: #4caf50;
+  font-size: 18px;
+}
+
+.range-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.range-inputs input {
+  width: 70px;
+  padding: 8px 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.range-inputs input:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.range-dash {
+  font-size: 16px;
+  font-weight: 500;
+  color: #4caf50;
+}
+
+.range-count {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.range-slider {
+  position: relative;
+  height: 30px;
+  margin: 0 10px;
+}
+
+.slider-track {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+}
+
+.slider-fill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.slider-input {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 30px;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.slider-input::-webkit-slider-track {
+  background: transparent;
+  border: none;
+}
+
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.slider-input::-moz-range-track {
+  background: transparent;
+  border: none;
+  height: 0;
+}
+
+.slider-input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 2;
+}
+
+.start-slider {
+  z-index: 2;
+}
+
+.end-slider {
+  z-index: 3;
+}
+
+.end-slider::-webkit-slider-thumb {
+  background: #2e7d32;
+}
+
+.end-slider::-moz-range-thumb {
+  background: #2e7d32;
+}
+
+.custom-play-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: flex-start;
+}
+
+.custom-play-button:hover {
+  background-color: #3d8b40;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.custom-play-button:active {
+  transform: translateY(0);
+}
+
+.custom-error {
+  color: #f44336;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  text-align: center;
+}
+
 /* レスポンシブデザイン */
 @media screen and (max-width: 1200px) {
   .range-container {
@@ -588,8 +790,27 @@ body {
     padding: 25px;
   }
 }
-
 @media screen and (max-width: 768px) {
+  .custom-range-item {
+    padding: 16px;
+  }
+  
+  .range-inputs {
+    gap: 10px;
+  }
+  
+  .range-inputs input {
+    width: 60px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .custom-play-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  
   .range-container {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 15px;
@@ -652,8 +873,29 @@ body {
     height: 10px;
   }
 }
-
 @media screen and (max-width: 480px) {
+  .custom-range-item {
+    padding: 12px;
+  }
+  
+  .range-inputs {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .range-inputs input {
+    width: 55px;
+    padding: 6px;
+    font-size: 13px;
+  }
+  
+  .custom-play-button {
+    padding: 10px 14px;
+    font-size: 13px;
+    align-self: center;
+  }
+  
+  
   .range-container {
     grid-template-columns: 1fr;
     gap: 12px;
