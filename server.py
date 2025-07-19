@@ -29,9 +29,9 @@ import glob
 import time
 
 from sqlalchemy import Column, Integer, String, Float, func, case, desc
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.future import select as sa_select
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base
 
 # 辞書検索システム
 class SearchDictionary:
@@ -152,11 +152,20 @@ if not os.getenv("GEMINI_APIKEY") or os.getenv("GEMINI_APIKEY") == "":
     else:
         raise ValueError("Please set GEMINI_APIKEY in .env file")
 
-genai.configure(api_key=os.getenv("GEMINI_APIKEY"))
+# google-generativeaiライブラリは、`GOOGLE_API_KEY` 環境変数を自動的に読み込みます。
+# `genai.configure` が存在しないというエラーに対応するため、環境変数を設定する方法に切り替えます。
+gemini_api_key = os.getenv("GEMINI_APIKEY")
+if not gemini_api_key:
+    # このチェックは元のコードにも存在していたため、Noneの可能性を排除します。
+    if not os.path.exists(".env"):
+        raise ValueError("Please create .env file")
+    else:
+        raise ValueError("Please set GEMINI_APIKEY in .env file")
+os.environ['GOOGLE_API_KEY'] = gemini_api_key
 
 DATABASE_URL = "sqlite+aiosqlite:///data.db"
 engine = create_async_engine(DATABASE_URL)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
 
@@ -285,11 +294,11 @@ class DB:
             return {}
             
     @staticmethod
-    async def _update_data(user, subject: str, is_correct: bool):
+    async def _update_data(user, subject: Optional[str], is_correct: bool):
         """ユーザーの正解・不正解データを更新する共通処理"""
         nowtime = DB.get_today()
-        correctdata = DB.safe_load_json(user.correctdata)
-        baddata = DB.safe_load_json(user.baddata)
+        correctdata = DB.safe_load_json(user.correctdata)  # type: ignore
+        baddata = DB.safe_load_json(user.baddata)  # type: ignore
         
         if nowtime not in correctdata:
             correctdata[nowtime] = {}
@@ -304,14 +313,14 @@ class DB:
             user.bad += 1
             baddata[nowtime][subject_key] = baddata[nowtime].get(subject_key, 0) + 1
             
-        user.correctdata = json.dumps(correctdata)
-        user.baddata = json.dumps(baddata)
+        user.correctdata = json.dumps(correctdata)  # type: ignore
+        user.baddata = json.dumps(baddata)  # type: ignore
     
     @staticmethod
     async def password(id: str):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             return user.password if user else None
 
     @staticmethod
@@ -332,14 +341,14 @@ class DB:
     async def get_correct(id: str):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             return user.correct if user else None
 
     @staticmethod
-    async def add_correct(id: str, subject: str = None):
+    async def add_correct(id: str, subject: Optional[str] = None):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 # _update_dataメソッドを使用して共通処理を実行
                 await DB._update_data(user, subject, True)
@@ -350,10 +359,10 @@ class DB:
                     await DB.update_mondai_stats(subject, True)
 
     @staticmethod
-    async def add_bad(id: str, subject: str = None):
+    async def add_bad(id: str, subject: Optional[str] = None):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 # _update_dataメソッドを使用して共通処理を実行
                 await DB._update_data(user, subject, False)
@@ -366,18 +375,18 @@ class DB:
     async def get_bad(id: str):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             return user.bad if user else None
 
     @staticmethod
     async def get_all(id: str):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 return {
-                    "correct": DB.safe_load_json(user.correctdata),
-                    "bad": DB.safe_load_json(user.baddata)
+                    "correct": DB.safe_load_json(user.correctdata),  # type: ignore
+                    "bad": DB.safe_load_json(user.baddata)  # type: ignore
                 }
             return None
 
@@ -389,14 +398,14 @@ class DB:
         """
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if not user:
                 return []
 
             try:
                 # 正解と不正解のデータを取得と検証
-                correct_data = DB.safe_load_json(user.correctdata)
-                bad_data = DB.safe_load_json(user.baddata)
+                correct_data = DB.safe_load_json(user.correctdata) # type: ignore
+                bad_data = DB.safe_load_json(user.baddata) # type: ignore
 
                 # 全ての日付のデータを集計
                 all_answers = []
@@ -425,12 +434,12 @@ class DB:
     async def get(id: str):
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 return {
                     "correct": user.correct,
                     "bad": user.bad,
-                    "progress_data": DB.safe_load_json(user.progress_data)
+                    "progress_data": DB.safe_load_json(user.progress_data)  # type: ignore
                 }
             return None
 
@@ -450,10 +459,10 @@ class DB:
                 query = query.limit(1)
             
             result = await session.execute(query)
-            mondai = result.scalar_one_or_none()
+            mondai: Optional[Mondai] = result.scalar_one_or_none()
             
             if mondai:
-                return json.loads(mondai.mondai)
+                return json.loads(mondai.mondai)  # type: ignore
             
             return None
 
@@ -481,7 +490,7 @@ class DB:
             detail_list = []
             for m in mondai_list:
                 try:
-                    mondai_data = json.loads(m.mondai) if m.mondai else []
+                    mondai_data = json.loads(m.mondai) if m.mondai else []  # type: ignore
                     detail_list.append({
                         "name": m.name,
                         "data": mondai_data,
@@ -512,16 +521,16 @@ class DB:
             await session.commit()
 
     @staticmethod
-    async def edit_mondai(name: str, userid: str, mondai_data, is_public: bool = None):
+    async def edit_mondai(name: str, userid: str, mondai_data, is_public: Optional[bool] = None):
         async with async_session() as session:
             result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
-            mondai = result.scalar_one_or_none()
+            mondai: Optional[Mondai] = result.scalar_one_or_none()
             if mondai:
-                mondai.mondai = json.dumps(mondai_data)
-                mondai.updated_at = datetime.now().isoformat()
+                mondai.mondai = json.dumps(mondai_data)  # type: ignore
+                mondai.updated_at = datetime.now().isoformat()  # type: ignore
                 # 公開状態も更新する場合
                 if is_public is not None:
-                    mondai.is_public = 1 if is_public else 0
+                    mondai.is_public = 1 if is_public else 0  # type: ignore
                 await session.commit()
                 return True
             else:
@@ -534,12 +543,12 @@ class DB:
         """
         async with async_session() as session:
             result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
-            mondai = result.scalar_one_or_none()
+            mondai: Optional[Mondai] = result.scalar_one_or_none()
             if mondai:
-                mondai.is_public = 1 if mondai.is_public == 0 else 0
-                mondai.updated_at = datetime.now().isoformat()
+                mondai.is_public = 1 if mondai.is_public == 0 else 0  # type: ignore
+                mondai.updated_at = datetime.now().isoformat()  # type: ignore
                 await session.commit()
-                return {"is_public": bool(mondai.is_public)}
+                return {"is_public": bool(mondai.is_public)}  # type: ignore
             else:
                 return None
     
@@ -575,8 +584,8 @@ class DB:
         async with async_session() as session:
             # load raw progress data
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
-            raw = DB.safe_load_json(user.progress_data) if user else {}
+            user: Optional[Account] = result.scalar_one_or_none()
+            raw = DB.safe_load_json(user.progress_data) if user else {}  # type: ignore
         summary = {}
         for ps, prog in raw.items():
             total = 0
@@ -587,9 +596,9 @@ class DB:
             else:
                 async with async_session() as s2:
                     res = await s2.execute(sa_select(Mondai).filter_by(userid=id, name=ps))
-                    m = res.scalar_one_or_none()
-                    if m and m.mondai:
-                        total = len(json.loads(m.mondai))
+                    m: Optional[Mondai] = res.scalar_one_or_none()
+                    if m and m.mondai:  # type: ignore
+                        total = len(json.loads(m.mondai))  # type: ignore
             learned = prog.get("learned", 0)
             learning = prog.get("learning", 0)
             unlearned = max(0, total - learned - learning)
@@ -603,18 +612,18 @@ class DB:
         """
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 try:
                     # 既存のサマリデータを取得・更新
-                    all_summary_data = DB.safe_load_json(user.progress_data)
+                    all_summary_data = DB.safe_load_json(user.progress_data)  # type: ignore
                     all_summary_data[problem_set] = summary
-                    user.progress_data = json.dumps(all_summary_data)
+                    user.progress_data = json.dumps(all_summary_data)  # type: ignore
 
                     # 既存の詳細データを取得・更新
-                    all_details_data = DB.safe_load_json(user.progress_details)
+                    all_details_data = DB.safe_load_json(user.progress_details)  # type: ignore
                     all_details_data[problem_set] = details
-                    user.progress_details = json.dumps(all_details_data)
+                    user.progress_details = json.dumps(all_details_data)  # type: ignore
 
                     await session.commit()
                     return True
@@ -625,7 +634,7 @@ class DB:
             return False
             
     @staticmethod
-    async def get_progress_data(id: str, problem_set: str = None):
+    async def get_progress_data(id: str, problem_set: Optional[str] = None):
         """
         ユーザーの学習進捗 *詳細* データを取得する (progress_details カラムから)
         問題セットが指定された場合はその問題セットのデータのみを返す
@@ -633,11 +642,11 @@ class DB:
         """
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
-            user = result.scalar_one_or_none()
+            user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 try:
                     # Load from progress_details column
-                    all_details_data = DB.safe_load_json(user.progress_details)
+                    all_details_data = DB.safe_load_json(user.progress_details)  # type: ignore
 
                     if problem_set:
                         # Return details for the specific problem set
@@ -661,7 +670,7 @@ class DB:
             result = await session.execute(
                 sa_select(MondaiStats).filter_by(mondai_name=mondai_name)
             )
-            stats = result.scalar_one_or_none()
+            stats: Optional[MondaiStats] = result.scalar_one_or_none()
             
             if not stats:
                 # 統計データがなければ新規作成
@@ -675,12 +684,12 @@ class DB:
                 session.add(stats)
             else:
                 # 既存データを更新
-                stats.usage_count += 1
+                stats.usage_count += 1  # type: ignore
                 if is_correct:
-                    stats.correct_count += 1
+                    stats.correct_count += 1  # type: ignore
                 else:
-                    stats.incorrect_count += 1
-                stats.last_updated = datetime.now().isoformat()
+                    stats.incorrect_count += 1  # type: ignore
+                stats.last_updated = datetime.now().isoformat()  # type: ignore
             
             await session.commit()
             return True
@@ -694,7 +703,7 @@ class DB:
             result = await session.execute(
                 sa_select(MondaiStats).filter_by(mondai_name=mondai_name)
             )
-            stats = result.scalar_one_or_none()
+            stats: Optional[MondaiStats] = result.scalar_one_or_none()
             
             if not stats:
                 # 統計データがない場合はデフォルト値を返す
@@ -853,15 +862,16 @@ async def registration(data: Data):
 
 @app.post("/api/get_correct")
 async def get_correct(data: Data):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     correct = await DB.get_correct(data.id)
     return {"correct": correct}
 
 class AnswerData(BaseModel):
     id: str
     password: str
-    subject: str = None
+    subject: Optional[str] = None
 
 class ProgressData(BaseModel):
     id: str
@@ -872,8 +882,9 @@ class ProgressData(BaseModel):
 
 @app.post("/api/add_correct")
 async def add_correct(data: AnswerData):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # ユーザーの正解データを更新（内部でmondai_statsも更新される）
     await DB.add_correct(data.id, data.subject)
@@ -881,8 +892,9 @@ async def add_correct(data: AnswerData):
 
 @app.post("/api/add_bad")
 async def add_bad(data: AnswerData):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # ユーザーの不正解データを更新（内部でmondai_statsも更新される）
     await DB.add_bad(data.id, data.subject)
@@ -890,26 +902,30 @@ async def add_bad(data: AnswerData):
 
 @app.post("/api/get_bad")
 async def get_bad(data: Data):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     bad = await DB.get_bad(data.id)
     return {"bad": bad}
 
 @app.post("/api/get")
 async def get_user(data: Data):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     # fetch base user data
     user_data = await DB.get(data.id)
-    # include progress summary
-    progress_summary = await DB.get_progress_summary(data.id)
-    user_data["progress_summary"] = progress_summary
+    if user_data:
+        # include progress summary
+        progress_summary = await DB.get_progress_summary(data.id)
+        user_data["progress_summary"] = progress_summary
     return user_data
 
 @app.post("/api/get/user")
 async def get_all(data: Data):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     return await DB.get_all(data.id)
 
 @app.get("/api/ranking")
@@ -962,26 +978,28 @@ async def ranking(
 
 @app.post("/api/change/name/{newname}")
 async def change_name(data: Data, newname: str):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     async with async_session() as session:
         result = await session.execute(sa_select(Account).filter_by(userid=data.id))
-        user = result.scalar_one_or_none()
+        user: Optional[Account] = result.scalar_one_or_none()
         if user:
-            user.userid = newname
+            user.userid = newname  # type: ignore
             await session.commit()
             return {"message": "change name successful"}
     return {"message": "user not found"}
 
 @app.post("/api/change/password/{newpassword}")
 async def change_password(data: Data, newpassword: str):
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     async with async_session() as session:
         result = await session.execute(sa_select(Account).filter_by(userid=data.id))
-        user = result.scalar_one_or_none()
+        user: Optional[Account] = result.scalar_one_or_none()
         if user:
-            user.password = newpassword
+            user.password = newpassword  # type: ignore
             await session.commit()
             return {"message": "change password successful"}
     return {"message": "user not found"}
@@ -995,14 +1013,15 @@ class MondaiData(BaseModel):
 
 @app.post("/api/make/mondai")
 async def make_mondai(data: MondaiData):
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     await DB.save_mondai(data.name, data.userid, data.mondai)
     return {"status": "success"}
 
 @app.post("/api/upload/image")
 async def upload_image(file: UploadFile = File(...), usage: str = Query("ai", enum=["ai", "problem"])):
-    if not file.content_type.startswith("image/"):
+    if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=400, detail="File is not an image."
         )
@@ -1171,8 +1190,12 @@ def extract_questions_from_text(text):
 @app.post("/api/process/image")
 async def process_image(data: Union[ImageData, TextData]):
     # テキスト処理の場合
-    if hasattr(data, 'text'):
+    if isinstance(data, TextData):
         return await process_text(data)
+
+    # Unionとisinstanceガードにより、ここからはdataがImageDataであることが保証される
+    if not isinstance(data, ImageData):
+         raise HTTPException(status_code=400, detail="Invalid request data type")
     
     # 画像処理の場合
     image_path = f"./data/upload/temp/img/{data.id}"
@@ -1223,7 +1246,7 @@ async def process_image(data: Union[ImageData, TextData]):
         # reqAI関数を使用して画像処理を実行
         question_response_text = await reqAI(
             prompt=question_generation_prompt,
-            model="gemini-2.5-flash-preview-05-20",
+            model="gemini-1.5-flash",
             images=image
         )
 
@@ -1361,8 +1384,9 @@ async def process_image(data: Union[ImageData, TextData]):
 
 @app.post("/api/edit/mondai")
 async def edit_mondai(data: MondaiData):
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     status = await DB.edit_mondai(data.name, data.userid, data.mondai)
 
@@ -1372,7 +1396,7 @@ async def edit_mondai(data: MondaiData):
         return {"status": "failed"}
 
 @app.get("/api/get/mondai/{name}.json")
-async def get_mondai(name: str, start: int = 0, end: int = None):
+async def get_mondai(name: str, start: int = 0, end: Optional[int] = None):
 
     # パスインジェクション対策：ファイル名のみを抽出し、ディレクトリトラバーサルを防止
     safe_name = os.path.basename(name)
@@ -1407,8 +1431,11 @@ async def get_mondai(name: str, start: int = 0, end: int = None):
 
     return results
 
+sentences_cache: List[str] = []
+
 @app.post("/api/get/sentences")
 async def get_sentences(request: Request):
+    global sentences_cache
     try:
         # Parse JSON request body
         data = await request.json()
@@ -1431,8 +1458,7 @@ async def get_sentences(request: Request):
         words_map = {word.lower(): word for word in words}
         
         # 静的キャッシュ変数を定義
-        if not hasattr(get_sentences, "sentences_cache"):
-            get_sentences.sentences_cache = []
+        if not sentences_cache:
             
             # ファイルが大きい場合のパフォーマンス改善策
             # バッチサイズを大きくして一度に読み込む行数を増やす
@@ -1450,15 +1476,15 @@ async def get_sentences(request: Request):
                         
                         # バッチサイズに達したらキャッシュに追加
                         if batch_count >= batch_size:
-                            get_sentences.sentences_cache.extend(sentences_batch)
+                            sentences_cache.extend(sentences_batch)
                             sentences_batch = []
                             batch_count = 0
                             
                 # 残りのバッチをキャッシュに追加
                 if sentences_batch:
-                    get_sentences.sentences_cache.extend(sentences_batch)
+                    sentences_cache.extend(sentences_batch)
             
-        all_sentences = get_sentences.sentences_cache
+        all_sentences = sentences_cache
 
         for word_lower, original_word in words_map.items():
             matching_sentences = []
@@ -1516,8 +1542,11 @@ async def get_dashboard_problems(data: Data):
     """
     ダッシュボード用のユーザーの問題一覧詳細を取得するAPI
     """
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    if not data.id:
+        return {"message": "user id is required"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     problems = await DB.get_mondai_details(data.id)
     return {"problems": problems}
@@ -1533,8 +1562,9 @@ async def toggle_problem_visibility(data: MondaiIdData):
     問題の公開/非公開状態を切り替えるAPI
     """
     # パスワード検証
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # 公開状態の切り替え
     result = await DB.toggle_mondai_visibility(data.name, data.userid)
@@ -1551,8 +1581,9 @@ async def delete_problem(data: MondaiIdData):
     """
     問題を削除するAPI
     """
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     try:
         success = await DB.delete_mondai(data.name, data.userid)
@@ -1574,8 +1605,9 @@ async def duplicate_problem(data: DuplicateMondaiData):
     """
     問題を複製するAPI
     """
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # オリジナルの問題を取得
     mondai = await DB.get_mondai(data.userid, data.original_name)
@@ -1599,11 +1631,16 @@ async def get_problem_stats(data: MondaiIdData, request: Request):
     """
     問題の使用統計を取得するAPI
     """
-    if await DB.password(data.userid) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # 指定された問題の存在確認
-    mondai_data = await DB.get_mondai(request.cookies.get("id"),data.name)
+    user_id = request.cookies.get("id")
+    if not user_id:
+        return {"status": "failed", "message": "User not logged in"}
+
+    mondai_data = await DB.get_mondai(user_id, data.name)
     if not mondai_data:
         return {"status": "failed", "message": "Problem not found"}
     
@@ -1620,8 +1657,9 @@ async def save_progress(data: ProgressData):
     """
     ユーザーの学習進捗データを保存するエンドポイント
     """
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
 
     success = await DB.save_progress_data(data.id, data.problem_set, data.summary, data.details)
     if success:
@@ -1638,8 +1676,9 @@ async def get_progress(data: GetProgressData):
     """
     特定の問題セットに関するユーザーの学習進捗データを取得するエンドポイント
     """
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # 進捗データを取得
     details_data = await DB.get_progress_data(data.id, data.problem_set)
@@ -1650,8 +1689,9 @@ async def get_all_progress(data: Data):
     """
     ユーザーの全問題セットの学習進捗データを一括で取得するエンドポイント
     """
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # 全問題セットの進捗データを取得
     all_details_data = await DB.get_progress_data(data.id)
@@ -2144,8 +2184,9 @@ async def get_advice(data: Data):
     """
     ユーザーに対してアドバイスを提供するエンドポイント
     """
-    if await DB.password(data.id) != data.password:
-        return {"message": "password is wrong"}
+    password = await DB.password(data.id)
+    if password is None or password != data.password:  # type: ignore
+        return {"message": "password is wrong or user not found"}
     
     # 基本データ取得
     user_data = await DB.get_all(data.id)
