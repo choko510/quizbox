@@ -82,13 +82,16 @@
                 <div class="special-range-text" id="last-played-text">前回プレイした範囲をもう一度プレイします</div>
             </div>
 
-            <!-- カスタム範囲選択 -->
-            <div class="special-range-item custom-range-item">
-                <div class="custom-range-content">
+            <!-- カスタム範囲選択 (アコーディオン) -->
+            <div class="special-range-item custom-range-item accordion" id="custom-range-accordion">
+                <div class="accordion-header" id="custom-range-header">
                     <div class="range-header">
                         <i class="fas fa-sliders-h"></i>
                         <span>カスタム範囲でプレイ</span>
                     </div>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </div>
+                <div class="accordion-content" id="custom-range-content">
                     <div class="range-controls">
                         <div class="range-inputs">
                             <input type="number" id="custom-start" min="1" max="9999" value="1" placeholder="開始">
@@ -187,6 +190,13 @@
             
             // 前回プレイした範囲の設定
             setupLastPlayedRange(bookId);
+
+            // カスタム範囲アコーディオンの設定
+            const accordionHeader = document.getElementById('custom-range-header');
+            const accordion = document.getElementById('custom-range-accordion');
+            accordionHeader.addEventListener('click', () => {
+                accordion.classList.toggle('active');
+            });
         });
 
         // 教材IDから教材名と画像を取得して表示
@@ -450,45 +460,89 @@
                 sliderFill.style.width = Math.max(0, endPercent - startPercent) + '%';
             }
             
-            // 入力フィールドのイベント
-            customStart.addEventListener('input', function() {
-                const val = parseInt(this.value) || 1;
-                startSlider.value = val;
-                if (val > parseInt(customEnd.value)) {
-                    customEnd.value = val;
-                    endSlider.value = val;
-                }
-                updateRange();
-            });
-            
-            customEnd.addEventListener('input', function() {
-                const val = parseInt(this.value) || 1;
-                endSlider.value = val;
-                if (val < parseInt(customStart.value)) {
-                    customStart.value = val;
-                    startSlider.value = val;
-                }
-                updateRange();
-            });
-            
-            // スライダーのイベント
+            // スライダーのイベント (ドラッグ中に5刻み処理)
             startSlider.addEventListener('input', function() {
-                customStart.value = this.value;
-                if (parseInt(this.value) > parseInt(endSlider.value)) {
-                    endSlider.value = this.value;
-                    customEnd.value = this.value;
+                // 1を基点として5刻みにスナップ
+                let startValue = Math.floor((parseInt(this.value) - 1) / 5) * 5 + 1;
+                this.value = startValue;
+                customStart.value = startValue;
+
+                let endValue = parseInt(endSlider.value);
+                if (startValue > endValue) {
+                    // startValue以上で最も近い5の倍数にendValueを更新
+                    let newEndValue = Math.ceil(startValue / 5) * 5;
+                    newEndValue = Math.min(newEndValue, maxRange);
+                    endSlider.value = newEndValue;
+                    customEnd.value = newEndValue;
                 }
                 updateRange();
             });
-            
+
             endSlider.addEventListener('input', function() {
-                customEnd.value = this.value;
-                if (parseInt(this.value) < parseInt(startSlider.value)) {
-                    startSlider.value = this.value;
-                    customStart.value = this.value;
+                // 5の倍数にスナップ
+                let endValue = Math.ceil(parseInt(this.value) / 5) * 5;
+                endValue = Math.min(endValue, maxRange);
+                this.value = endValue;
+                customEnd.value = endValue;
+
+                let startValue = parseInt(startSlider.value);
+                if (endValue < startValue) {
+                    // endValue以下で最も近い「1を基点とする5刻み」の値にstartValueを更新
+                    let newStartValue = Math.floor((endValue - 1) / 5) * 5 + 1;
+                    newStartValue = Math.max(1, newStartValue); // 1未満にならないように
+                    startSlider.value = newStartValue;
+                    customStart.value = newStartValue;
                 }
                 updateRange();
             });
+
+            // 入力フィールドのイベント (入力中はスライダーに値を反映するだけ)
+            customStart.addEventListener('input', () => {
+                startSlider.value = customStart.value;
+                updateRange();
+            });
+            customEnd.addEventListener('input', () => {
+                endSlider.value = customEnd.value;
+                updateRange();
+            });
+
+            // 入力フィールドからフォーカスが外れた時に5刻み処理を行う
+            function snapInputsOnBlur() {
+                let startValue = parseInt(customStart.value) || 1;
+                let endValue = parseInt(customEnd.value) || 1;
+
+                startValue = Math.floor((startValue - 1) / 5) * 5 + 1;
+                endValue = Math.ceil(endValue / 5) * 5;
+                endValue = Math.min(endValue, maxRange);
+
+                if (startValue > endValue) {
+                    endValue = Math.ceil(startValue / 5) * 5;
+                    endValue = Math.min(endValue, maxRange);
+                }
+
+                customStart.value = startValue;
+                startSlider.value = startValue;
+                customEnd.value = endValue;
+                endSlider.value = endValue;
+                updateRange();
+            }
+            customStart.addEventListener('change', snapInputsOnBlur);
+            customEnd.addEventListener('change', snapInputsOnBlur);
+
+            // スライダーの重なり順を動的に変更して操作性を向上させる
+            function setSliderZIndex(slider, zIndex) {
+                slider.style.zIndex = zIndex;
+            }
+
+            startSlider.addEventListener('mousedown', () => setSliderZIndex(startSlider, 10));
+            startSlider.addEventListener('mouseup', () => setSliderZIndex(startSlider, ''));
+            startSlider.addEventListener('touchstart', () => setSliderZIndex(startSlider, 10));
+            startSlider.addEventListener('touchend', () => setSliderZIndex(startSlider, ''));
+
+            endSlider.addEventListener('mousedown', () => setSliderZIndex(endSlider, 10));
+            endSlider.addEventListener('mouseup', () => setSliderZIndex(endSlider, ''));
+            endSlider.addEventListener('touchstart', () => setSliderZIndex(endSlider, 10));
+            endSlider.addEventListener('touchend', () => setSliderZIndex(endSlider, ''));
             
             // プレイボタンのイベント
             playBtn.addEventListener('click', function() {

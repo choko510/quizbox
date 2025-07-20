@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 import json
 import os
@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from PIL import Image
 import aiofiles
 import xxhash
-import google.generativeai as genai
+from google.generativeai.generative_models import GenerativeModel 
 from gtts import gTTS
 from io import BytesIO
 import aiohttp
@@ -785,7 +785,7 @@ async def reqAI(prompt: str, model: str = "gemini-2.0-flash", images=None):
     
     # 1. まずGeminiでの生成を試みる
     try:
-        gemini_model = genai.GenerativeModel(model)
+        gemini_model = GenerativeModel(model)
         response = await gemini_model.generate_content_async(input_contents)
         return response.text
     except Exception as gemini_error:
@@ -931,48 +931,93 @@ async def get_all(data: Data):
 @app.get("/api/ranking")
 async def ranking(
     count: int = Query(20, ge=1, le=20),
-    sort_by: str = Query("total", enum=["correct", "accuracy", "total"])
+    sort_by: str = Query("total", enum=["correct", "accuracy", "total"]),
+    period: Optional[str] = Query(None, enum=["7d", "30d"])
 ):
     async with async_session() as session:
-        # 必要な列のみを選択し、計算式を最適化
-        if sort_by == "accuracy":
-            # 正答率ソートの場合のみaccuracy_exprを計算
-            accuracy_expr = func.cast(Account.correct, Float) / (Account.correct + Account.bad)
-            query = sa_select(
-                Account.userid,
-                Account.correct,
-                Account.bad,
-                accuracy_expr.label('accuracy')
-            ).where(
-                (Account.correct + Account.bad) > 0
-            ).order_by(desc('accuracy')).limit(count)
-        elif sort_by == "total":
-            # 総問題数ソート
-            total_expr = Account.correct + Account.bad
-            query = sa_select(
-                Account.userid,
-                Account.correct,
-                Account.bad
-            ).where(
-                total_expr > 0
-            ).order_by(desc(total_expr)).limit(count)
-        else:
-            # 正解数ソート（デフォルト）
-            query = sa_select(
-                Account.userid,
-                Account.correct,
-                Account.bad
-            ).where(
-                (Account.correct + Account.bad) > 0
-            ).order_by(desc(Account.correct)).limit(count)
+        if period in ["7d", "30d"]:
+            days = 7 if period == "7d" else 30
+            from_date_str = (datetime.now() - timedelta(days=days)).strftime("%Y/%m/%d")
+            
+            user_stats = []
+            
+            # stream_scalarsを使用して、一度に全ユーザーをメモリにロードするのを防ぎ、メモリ効率を向上
+            result = await session.stream_scalars(sa_select(Account))
+            async for user in result:
+                correct_count_period = 0
+                bad_count_period = 0
+                
+                correct_data = DB.safe_load_json(user.correctdata)  # type: ignore
+                for date_str, subjects in correct_data.items():
+                    # datetimeオブジェクトへの変換を避け、文字列比較にすることで高速化
+                    if date_str >= from_date_str and isinstance(subjects, dict):
+                        # 値が数値でない場合を考慮して安全に合計
+                        correct_count_period += sum(v for v in subjects.values() if isinstance(v, int))
 
-        result = await session.execute(query)
-        
-        # エラーハンドリングを簡素化
-        ranking_list = [
-            {"userid": row[0], "correct": row[1], "bad": row[2]}
-            for row in result.fetchall()
-        ]
+                bad_data = DB.safe_load_json(user.baddata)  # type: ignore
+                for date_str, subjects in bad_data.items():
+                    if date_str >= from_date_str and isinstance(subjects, dict):
+                        bad_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+                
+                total = correct_count_period + bad_count_period
+                if total > 0:
+                    user_stats.append({
+                        "userid": user.userid,
+                        "correct": correct_count_period,
+                        "bad": bad_count_period,
+                        "total": total,
+                        "accuracy": (correct_count_period / total) * 100 if total > 0 else 0
+                    })
+            
+            # ソート処理
+            if sort_by == "accuracy":
+                user_stats.sort(key=lambda x: x["accuracy"], reverse=True)
+            elif sort_by == "total":
+                user_stats.sort(key=lambda x: x["total"], reverse=True)
+            else:
+                user_stats.sort(key=lambda x: x["correct"], reverse=True)
+                
+            # 上位N件を抽出
+            ranking_list = [
+                {"userid": u["userid"], "correct": u["correct"], "bad": u["bad"]}
+                for u in user_stats[:count]
+            ]
+        else:
+            # 既存の累計ランキングロジック
+            if sort_by == "accuracy":
+                accuracy_expr = func.cast(Account.correct, Float) / (Account.correct + Account.bad)
+                query = sa_select(
+                    Account.userid,
+                    Account.correct,
+                    Account.bad,
+                    accuracy_expr.label('accuracy')
+                ).where(
+                    (Account.correct + Account.bad) > 0
+                ).order_by(desc('accuracy')).limit(count)
+            elif sort_by == "total":
+                total_expr = Account.correct + Account.bad
+                query = sa_select(
+                    Account.userid,
+                    Account.correct,
+                    Account.bad
+                ).where(
+                    total_expr > 0
+                ).order_by(desc(total_expr)).limit(count)
+            else:
+                query = sa_select(
+                    Account.userid,
+                    Account.correct,
+                    Account.bad
+                ).where(
+                    (Account.correct + Account.bad) > 0
+                ).order_by(desc(Account.correct)).limit(count)
+
+            result = await session.execute(query)
+            
+            ranking_list = [
+                {"userid": row[0], "correct": row[1], "bad": row[2]}
+                for row in result.fetchall()
+            ]
 
     return ranking_list
 

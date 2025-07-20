@@ -868,7 +868,7 @@ async function generateAdvice() {
 }
 
 // ランキングデータを取得して表示する関数
-async function fetchAndDisplayRanking(sortBy = 'total') { // デフォルトのソート基準を 'total' に
+async function fetchAndDisplayRanking(sortBy = 'total', period = 'all') { // デフォルトのソート基準と期間
     // ランキングリスト要素がなければ処理中断
     if (!rankingList) {
         console.error("Ranking list element not found.");
@@ -896,8 +896,11 @@ async function fetchAndDisplayRanking(sortBy = 'total') { // デフォルトの�
     }
 
     try {
-        // ソート基準をクエリパラメータに追加
-        const url = `/api/ranking?sort_by=${sortBy}`;
+        // ソート基準と期間をクエリパラメータに追加
+        let url = `/api/ranking?sort_by=${sortBy}`;
+        if (period && period !== 'all') {
+            url += `&period=${period}`;
+        }
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -986,14 +989,28 @@ function setupRankingEventListeners() {
     sortButtons.forEach(button => {
         if (!button.hasEventListener) {
             button.addEventListener('click', function() {
-                // 全てのボタンから active クラスを削除
                 sortButtons.forEach(btn => btn.classList.remove('active'));
-                // クリックされたボタンに active クラスを追加
                 this.classList.add('active');
-                // データ属性からソート基準を取得
                 const sortBy = this.getAttribute('data-sort');
-                // ランキングを更新
-                fetchAndDisplayRanking(sortBy);
+                const activePeriodButton = document.querySelector('.period-button.active');
+                const period = activePeriodButton ? activePeriodButton.getAttribute('data-period') : 'all';
+                fetchAndDisplayRanking(sortBy, period);
+            });
+            button.hasEventListener = true;
+        }
+    });
+
+    // 期間ボタンのイベント設定
+    const periodButtons = document.querySelectorAll('.period-button');
+    periodButtons.forEach(button => {
+        if (!button.hasEventListener) {
+            button.addEventListener('click', function() {
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                const period = this.getAttribute('data-period');
+                const activeSortButton = document.querySelector('.sort-button.active');
+                const sortBy = activeSortButton ? activeSortButton.getAttribute('data-sort') : 'total';
+                fetchAndDisplayRanking(sortBy, period);
             });
             button.hasEventListener = true;
         }
@@ -1001,14 +1018,15 @@ function setupRankingEventListeners() {
     
     // リフレッシュボタンのクリックイベント
     const refreshBtn = document.getElementById('ranking-refresh');
-    if (refreshBtn && !refreshBtn.hasEventListener) { // イベントリスナーが重複しないようにチェック
+    if (refreshBtn && !refreshBtn.hasEventListener) {
         refreshBtn.addEventListener('click', function() {
-            // アクティブなボタンからソート基準を取得
             const activeButton = document.querySelector('.sort-button.active');
-            const sortBy = activeButton ? activeButton.getAttribute('data-sort') : 'correct';
-            fetchAndDisplayRanking(sortBy); // 現在のソート基準でランキングを再取得
+            const sortBy = activeButton ? activeButton.getAttribute('data-sort') : 'total';
+            const activePeriodButton = document.querySelector('.period-button.active');
+            const period = activePeriodButton ? activePeriodButton.getAttribute('data-period') : 'all';
+            fetchAndDisplayRanking(sortBy, period);
         });
-        refreshBtn.hasEventListener = true; // リスナーが設定されたことをマーク
+        refreshBtn.hasEventListener = true;
     }
 }
 

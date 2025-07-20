@@ -314,13 +314,15 @@
     align-items: center;
 }
 
-/* ソート用ボタングループ */
-.ranking-sort-buttons {
+/* ソート・期間ボタングループ */
+.ranking-sort-buttons,
+.ranking-period-buttons {
     display: flex;
     gap: 5px;
 }
 
-.sort-button {
+.sort-button,
+.period-button {
     padding: 8px 12px;
     border: 1px solid #e0e0e0;
     border-radius: 6px;
@@ -331,11 +333,13 @@
     transition: all 0.2s ease;
 }
 
-.sort-button:hover {
+.sort-button:hover,
+.period-button:hover {
     background-color: #e0e0e0;
 }
 
-.sort-button.active {
+.sort-button.active,
+.period-button.active {
     background-color: #4a6cf7;
     color: white;
     border-color: #4a6cf7;
