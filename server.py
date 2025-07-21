@@ -28,7 +28,7 @@ import asyncio
 import glob
 import time
 
-from sqlalchemy import Column, Integer, String, Float, func, case, desc
+from sqlalchemy import Column, Integer, String, Float, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.future import select as sa_select
 from sqlalchemy.orm import declarative_base
@@ -73,7 +73,9 @@ class SearchDictionary:
             self.dictionary[word_interned] = {
                 'ja': [sys.intern(meaning) for meaning in data.get('ja', [])],
                 'rank': data.get('rank'),
-                'pos': sys.intern(data.get('pos', '')) if data.get('pos') else ''
+                'pos': sys.intern(data.get('pos', '')) if data.get('pos') else '',
+                'past_tense': sys.intern(data.get('past_tense', '')) if data.get('past_tense') else '',
+                'past_participle': sys.intern(data.get('past_participle', '')) if data.get('past_participle') else ''
             }
             self.word_list.append(word_interned)
             
@@ -104,8 +106,8 @@ class SearchDictionary:
             if word in self.dictionary:
                 self.frequent_words_cache[word] = self.dictionary[word]
     
-    def search_word_ultra_fast(self, word: str) -> Optional[Dict]:
-        """究極高速単語検索"""
+    def search_word(self, word: str) -> Optional[Dict]:
+        """単語検索"""
         word_lower = sys.intern(word.lower())
         
         if word_lower in self.frequent_words_cache:
@@ -120,9 +122,9 @@ class SearchDictionary:
             self.word_cache[word_lower] = result
         
         return result
-    
-    def batch_search_ultra_fast(self, words: List[str]) -> Dict[str, Optional[Dict]]:
-        """究極高速一括検索"""
+
+    def batch_search(self, words: List[str]) -> Dict[str, Optional[Dict]]:
+        """一括検索"""
         results = {}
         normalized_words = [(word, sys.intern(word.lower())) for word in words]
         
@@ -752,13 +754,13 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(prompt: str, model: str = "gemini-2.0-flash", images=None):
+async def reqAI(prompt: str, model: str = "gemini-2.5-flash", images=None):
     """
     AIモデルにテキスト生成リクエストを送信する非同期関数
 
     Parameters:
     - prompt: 送信するプロンプト文字列
-    - model: 使用するモデル名（デフォルト: gemini-2.0-flash）
+    - model: 使用するモデル名（デフォルト: gemini-2.5-flash）
     - images: 単一の画像または画像リスト（PIL.Image.Image型または画像のパス）
 
     Returns:
@@ -1240,7 +1242,7 @@ async def process_image(data: Union[ImageData, TextData]):
 
     # Unionとisinstanceガードにより、ここからはdataがImageDataであることが保証される
     if not isinstance(data, ImageData):
-         raise HTTPException(status_code=400, detail="Invalid request data type")
+        raise HTTPException(status_code=400, detail="Invalid request data type")
     
     # 画像処理の場合
     image_path = f"./data/upload/temp/img/{data.id}"
@@ -1291,7 +1293,7 @@ async def process_image(data: Union[ImageData, TextData]):
         # reqAI関数を使用して画像処理を実行
         question_response_text = await reqAI(
             prompt=question_generation_prompt,
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             images=image
         )
 
@@ -1908,21 +1910,18 @@ async def fast_dict_search(data: DictSearchData):
     try:
         if data.batch_words:
             # 複数単語検索
-            results = fast_dict.batch_search_ultra_fast(data.batch_words)
+            results = fast_dict.batch_search(data.batch_words)
             formatted_results = {}
             
             for word, word_data in results.items():
                 if word_data:
-                    # 過去形・過去分詞の情報を追加
-                    past_forms = get_past_forms(word)
-                    
                     formatted_results[word] = {
                         "found": True,
                         "meanings": word_data.get('ja', []),
                         "pos": word_data.get('pos', ''),
                         "rank": word_data.get('rank'),
-                        "past_tense": past_forms.get('past_tense', ''),
-                        "past_participle": past_forms.get('past_participle', '')
+                        "past_tense": word_data.get('past_tense', ''),
+                        "past_participle": word_data.get('past_participle', '')
                     }
                 else:
                     formatted_results[word] = {
@@ -1943,11 +1942,10 @@ async def fast_dict_search(data: DictSearchData):
             }
         else:
             # 単語検索
-            word_data = fast_dict.search_word_ultra_fast(data.word)
+            word_data = fast_dict.search_word(data.word)
             
             if word_data:
                 # 過去形・過去分詞の情報を追加
-                past_forms = get_past_forms(data.word)
                 
                 return {
                     "success": True,
@@ -1957,8 +1955,8 @@ async def fast_dict_search(data: DictSearchData):
                     "meanings": word_data.get('ja', []),
                     "pos": word_data.get('pos', ''),
                     "rank": word_data.get('rank'),
-                    "past_tense": past_forms.get('past_tense', ''),
-                    "past_participle": past_forms.get('past_participle', '')
+                    "past_tense": word_data.get('past_tense', ''),
+                    "past_participle": word_data.get('past_participle', '')
                 }
             else:
                 return {
@@ -1980,85 +1978,6 @@ async def fast_dict_search(data: DictSearchData):
             "error": "検索中にエラーが発生しました"
         }
 
-def get_past_forms(word):
-    """
-    動詞の過去形・過去分詞を取得する関数
-    """
-    # 基本的な動詞の過去形・過去分詞のデータ
-    irregular_verbs = {
-        "be": {"past_tense": "was/were", "past_participle": "been"},
-        "have": {"past_tense": "had", "past_participle": "had"},
-        "do": {"past_tense": "did", "past_participle": "done"},
-        "say": {"past_tense": "said", "past_participle": "said"},
-        "get": {"past_tense": "got", "past_participle": "gotten"},
-        "make": {"past_tense": "made", "past_participle": "made"},
-        "go": {"past_tense": "went", "past_participle": "gone"},
-        "take": {"past_tense": "took", "past_participle": "taken"},
-        "come": {"past_tense": "came", "past_participle": "come"},
-        "see": {"past_tense": "saw", "past_participle": "seen"},
-        "know": {"past_tense": "knew", "past_participle": "known"},
-        "think": {"past_tense": "thought", "past_participle": "thought"},
-        "give": {"past_tense": "gave", "past_participle": "given"},
-        "find": {"past_tense": "found", "past_participle": "found"},
-        "tell": {"past_tense": "told", "past_participle": "told"},
-        "become": {"past_tense": "became", "past_participle": "become"},
-        "leave": {"past_tense": "left", "past_participle": "left"},
-        "feel": {"past_tense": "felt", "past_participle": "felt"},
-        "bring": {"past_tense": "brought", "past_participle": "brought"},
-        "begin": {"past_tense": "began", "past_participle": "begun"},
-        "keep": {"past_tense": "kept", "past_participle": "kept"},
-        "hold": {"past_tense": "held", "past_participle": "held"},
-        "write": {"past_tense": "wrote", "past_participle": "written"},
-        "stand": {"past_tense": "stood", "past_participle": "stood"},
-        "hear": {"past_tense": "heard", "past_participle": "heard"},
-        "let": {"past_tense": "let", "past_participle": "let"},
-        "mean": {"past_tense": "meant", "past_participle": "meant"},
-        "set": {"past_tense": "set", "past_participle": "set"},
-        "meet": {"past_tense": "met", "past_participle": "met"},
-        "run": {"past_tense": "ran", "past_participle": "run"},
-        "pay": {"past_tense": "paid", "past_participle": "paid"},
-        "sit": {"past_tense": "sat", "past_participle": "sat"},
-        "speak": {"past_tense": "spoke", "past_participle": "spoken"},
-        "lie": {"past_tense": "lay", "past_participle": "lain"},
-        "lead": {"past_tense": "led", "past_participle": "led"},
-        "read": {"past_tense": "read", "past_participle": "read"},
-        "grow": {"past_tense": "grew", "past_participle": "grown"},
-        "lose": {"past_tense": "lost", "past_participle": "lost"},
-        "fall": {"past_tense": "fell", "past_participle": "fallen"},
-        "send": {"past_tense": "sent", "past_participle": "sent"},
-        "build": {"past_tense": "built", "past_participle": "built"},
-        "understand": {"past_tense": "understood", "past_participle": "understood"},
-        "draw": {"past_tense": "drew", "past_participle": "drawn"},
-        "break": {"past_tense": "broke", "past_participle": "broken"},
-        "spend": {"past_tense": "spent", "past_participle": "spent"},
-        "cut": {"past_tense": "cut", "past_participle": "cut"},
-        "rise": {"past_tense": "rose", "past_participle": "risen"},
-        "drive": {"past_tense": "drove", "past_participle": "driven"},
-        "buy": {"past_tense": "bought", "past_participle": "bought"},
-        "wear": {"past_tense": "wore", "past_participle": "worn"},
-        "choose": {"past_tense": "chose", "past_participle": "chosen"}
-    }
-    
-    # 不規則動詞の場合
-    if word.lower() in irregular_verbs:
-        return irregular_verbs[word.lower()]
-    
-    # 規則動詞の場合の処理
-    if word.endswith('e'):
-        # -e で終わる場合は -d を追加
-        past_form = word + 'd'
-    elif word.endswith('y') and len(word) > 1 and word[-2] not in 'aeiou':
-        # 子音 + y で終わる場合は y を i に変えて -ed を追加
-        past_form = word[:-1] + 'ied'
-    elif len(word) >= 3 and word[-1] in 'bdfgklmnpqrstvwxz' and word[-2] in 'aeiou' and word[-3] not in 'aeiou':
-        # 子音-母音-子音のパターンで終わる場合は最後の子音を重複させて -ed を追加
-        past_form = word + word[-1] + 'ed'
-    else:
-        # その他の場合は -ed を追加
-        past_form = word + 'ed'
-    
-    return {"past_tense": past_form, "past_participle": past_form}
-
 @app.get("/api/dict/quick/{word}")
 async def quick_dict_search(word: str):
     """
@@ -2070,7 +1989,7 @@ async def quick_dict_search(word: str):
         return {"found": False, "error": "辞書システムが利用できません"}
     
     try:
-        word_data = fast_dict.search_word_ultra_fast(word)
+        word_data = fast_dict.search_word(word)
         
         if word_data:
             return {
@@ -2107,7 +2026,7 @@ async def search_word(data: WordData):
     basic_info = ""
     if fast_dict:
         try:
-            word_data = fast_dict.search_word_ultra_fast(word)
+            word_data = fast_dict.search_word(word)
             if word_data:
                 meanings = word_data.get('ja', [])
                 pos = word_data.get('pos', '')
@@ -2139,7 +2058,7 @@ async def search_word(data: WordData):
         回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt, "gemini-2.0-flash-lite")
+        response = await reqAI(prompt, "gemini-2.5-flash-lite-preview-06-17")
         return {
             "word": word,
             "definition": response,
@@ -2302,7 +2221,7 @@ async def get_advice(data: Data):
             """
 
     try:
-        response = await reqAI(prompt, "gemini-2.0-flash")
+        response = await reqAI(prompt, "gemini-2.5-flash")
         advice = response.replace("\n", "<br>")
         return {"advice": advice}
     except Exception as e:

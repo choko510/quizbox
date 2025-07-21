@@ -22,10 +22,7 @@ function startTutorial(switchViewCallback) {
                     align: 'start'
                 },
                 onNextClick: () => {
-                    if (typeof switchViewCallback === 'function') {
-                        switchViewCallback('create');
-                    }
-                    driverObj.moveNext();
+                    document.getElementById("option-create-new").click();
                 }
             },
             {

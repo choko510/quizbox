@@ -8,6 +8,19 @@ body {
     background-color: #ebedf1;
 }
 
+.speak-icon {
+    cursor: pointer;
+    margin-left: 5px; /* 元のHTMLにあるスペースを考慮 */
+    padding: 14px; /* クリック可能な範囲を広げる */
+    border-radius: 50%; /* 円形にする */
+    transition: background-color 0.2s ease;
+}
+
+.speak-icon:hover {
+    background-color: rgba(0, 123, 255, 0.1); /* ホバー時の背景色 */
+}
+
+
 .swiper-container {
     width: 100%;
     height: 100%;
@@ -682,7 +695,7 @@ ul.custom-list li .content {
     
     .main {
         box-shadow: none;
-        height: 70vh;
+        height: 60vh;
     }
     
     button {
