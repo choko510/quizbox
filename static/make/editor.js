@@ -110,20 +110,19 @@ function initializeEditor() {
  * イベントリスナーの設定
  */
 function setupEventListeners() {
-    // タブ切り替え
-    document.querySelectorAll('.sidebar-nav li').forEach(item => {
-        item.addEventListener('click', () => {
+    // タブ切り替え（サイドバーとモバイルフッター）
+    document.querySelectorAll('.sidebar-nav li, .mobile-footer-nav .nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
             const viewId = item.dataset.view;
             switchView(viewId);
-            
+
             // createビューに切り替える際の表形式エディタ初期化
             if (viewId === 'create') {
-                // 表形式エディタが存在する場合は初期化
                 if (window.tableEditor) {
                     window.tableEditor.loadProblemsFromStorage();
                     window.tableEditor.render();
                 } else if (problems.length === 0) {
-                    // フォールバック: 古いエディタの初期化
                     initializeEditor();
                 }
             }
@@ -367,6 +366,40 @@ function setupEventListeners() {
         });
     }
 }
+
+/**
+ * チュートリアルボタンのイベントリスナー
+ */
+document.getElementById('start-tutorial-btn').addEventListener('click', function() {
+    if (document.querySelector('script[src*="driver.js"]')) {
+        if (typeof startTutorial === 'function') {
+            startTutorial(switchView);
+        }
+        return;
+    }
+
+    const driver_css = document.createElement('link');
+    driver_css.rel = 'stylesheet';
+    driver_css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';
+    document.head.appendChild(driver_css);
+
+    const driver_script = document.createElement('script');
+    driver_script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';
+    document.body.appendChild(driver_script);
+
+    driver_script.onload = () => {
+        const tutorial_script = document.createElement('script');
+        tutorial_script.src = '/make/tutorial.js';
+        document.body.appendChild(tutorial_script);
+
+        tutorial_script.onload = () => {
+            if (typeof startTutorial === 'function') {
+                startTutorial(switchView);
+            }
+        }
+    }
+});
+
 /**
  * リッチテキストエディタの初期化
  */
@@ -555,11 +588,11 @@ function applyTheme(theme) {
  * ビューを切り替える
  */
 function switchView(viewId) {
-    // アクティブなタブを更新
-    document.querySelectorAll('.sidebar-nav li').forEach(item => {
+    // サイドバーとモバイルフッターのアクティブなタブを更新
+    document.querySelectorAll('.sidebar-nav li, .mobile-footer-nav .nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.view === viewId);
     });
-    
+
     // アクティブなビューを更新
     document.querySelectorAll('.editor-view').forEach(view => {
         view.classList.toggle('active', view.id === `${viewId}-view`);

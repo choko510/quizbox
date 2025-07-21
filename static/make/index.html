@@ -26,6 +26,7 @@
         </div>
         <div class="top-right">
             <a href="/dashboard" class="create-btn">問題管理</a>
+            <button id="start-tutorial-btn" class="create-btn">チュートリアル</button>
         </div>
     </div>
 
@@ -630,6 +631,26 @@
 
     <!-- トースト通知コンテナ -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- モバイル用フッターナビゲーション -->
+    <nav class="mobile-footer-nav">
+        <a href="#" class="nav-item active" data-view="welcome">
+            <i class="bi bi-house-door"></i>
+            <span>スタート</span>
+        </a>
+        <a href="#" class="nav-item" data-view="create">
+            <i class="bi bi-pencil-square"></i>
+            <span>作成</span>
+        </a>
+        <a href="#" class="nav-item" data-view="template">
+            <i class="bi bi-file-earmark-text"></i>
+            <span>テンプレート</span>
+        </a>
+        <a href="#" class="nav-item" data-view="import">
+            <i class="bi bi-upload"></i>
+            <span>インポート</span>
+        </a>
+    </nav>
 
     <!-- 必要なスクリプト -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>

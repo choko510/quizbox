@@ -1161,6 +1161,9 @@ class TableEditor {
 
     // ヘッダーのスクロール制御を有効化
     enableHeaderScrollControl() {
+        // 既存のハンドラを削除して重複を防ぐ
+        this.disableHeaderScrollControl();
+
         const scrollHandler = () => {
             const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const header = document.getElementById('mainHeader');
