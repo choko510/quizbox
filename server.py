@@ -1454,9 +1454,16 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
     intended_dir = os.path.abspath("./data/mondaiset")
     if not abs_path.startswith(intended_dir) or not os.path.isfile(abs_path):
         raise HTTPException(status_code=404, detail="Not found")
+    # まずコメント行と空行を除いた全ての問題行を読み込む
+    lines = []
+    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+        async for raw in f:
+            line = raw.strip()
+            if line and not line.startswith('#'):
+                lines.append(line)
 
     results = []
-    
+
     # ranges パラメータが指定されている場合
     if ranges:
         selected_indices = set()
@@ -1472,10 +1479,6 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
 
         if not selected_indices:
             return []
-
-        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-            # インデックスで直接アクセスできるように全行読み込み
-            lines = [line.strip() for line in await f.readlines() if line.strip()]
         
         for index in sorted(list(selected_indices)):
             if index < len(lines):
@@ -1483,28 +1486,16 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
 
     # 従来の start/end パラメータの場合
     elif start is not None and end is not None:
-        start = max(start, 0)
-        count = 0
-        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-            async for raw in f:
-                line = raw.rstrip("\n")
-                if not line.strip():
-                    continue
-                
-                # start/end は1始まりなので、count+1で比較
-                if (count + 1) >= start and (count + 1) <= end:
-                    results.append(line)
+        # 1始まりを0始まりのインデックスに変換
+        start_index = max(start - 1, 0)
+        end_index = end
+        
+        if start_index < len(lines):
+            results = lines[start_index:end_index]
 
-                count += 1
-                if (count + 1) > end:
-                    break
     else: # パラメータがない場合は全件返す
-        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-            async for raw in f:
-                line = raw.rstrip("\n")
-                if not line.strip():
-                    continue
-                results.append(line)
+        results = lines
+        results.append(line)
 
     if not results:
         raise HTTPException(status_code=404, detail="Not found or no matching lines")
@@ -2292,7 +2283,74 @@ async def get_ranges(book_id: str):
     教材IDに基づいて、その教材の問題範囲リストを返すAPI
     例: /api/get/ranges/target1200 で target1200 の範囲リストを取得
     """
-    return BOOK_RANGES.get(book_id, [])
+    if book_id in BOOK_RANGES:
+        return BOOK_RANGES.get(book_id, [])
+    else:
+        # ファイルパスを安全に構築
+        safe_name = os.path.basename(book_id)
+        path = f"./data/mondaiset/{safe_name}.txt"
+        
+        abs_path = os.path.abspath(path)
+        intended_dir = os.path.abspath("./data/mondaiset")
+        
+        if not abs_path.startswith(intended_dir) or not os.path.isfile(abs_path):
+            raise HTTPException(status_code=404, detail="Book not found")
+            
+        try:
+            ranges = []
+            current_label = None
+            range_start_line = 1
+            problem_count_in_range = 0
+            total_problem_count = 0
+
+            async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+                async for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    if line.startswith('#'):
+                        # 前の範囲を保存
+                        if current_label is not None and problem_count_in_range > 0:
+                            ranges.append({
+                                "start": range_start_line,
+                                "end": range_start_line + problem_count_in_range - 1,
+                                "label": current_label
+                            })
+                            range_start_line += problem_count_in_range
+                        
+                        # 新しい範囲の開始
+                        current_label = line.lstrip('#').strip()
+                        problem_count_in_range = 0
+                    else:
+                        problem_count_in_range += 1
+                        total_problem_count += 1
+            
+            # ファイル末尾の最後の範囲を保存
+            if current_label is not None and problem_count_in_range > 0:
+                ranges.append({
+                    "start": range_start_line,
+                    "end": range_start_line + problem_count_in_range - 1,
+                    "label": current_label
+                })
+
+            # もし#区切りが一つもなければ、ファイル全体を一つの範囲として扱う
+            if not ranges and total_problem_count > 0:
+                 ranges.append({
+                    "start": 1,
+                    "end": total_problem_count,
+                    "label": book_id # ラベルはbook_idにする
+                })
+
+            return ranges
+            
+        except FileNotFoundError:
+            # このチェックは既にあるが、念のため
+            raise HTTPException(status_code=404, detail="Book not found")
+        except Exception as e:
+            # サーバーログにエラーを出力するとデバッグに役立つ
+            print(f"Error processing range file for {book_id}: {e}")
+            raise HTTPException(status_code=500, detail="Error processing file")
 
 @app.get("/api/get/ranges_progress/{book_id}")
 async def get_ranges_progress(request: Request, book_id: str, ranges: str = Query(...)):
