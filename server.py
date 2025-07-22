@@ -1443,7 +1443,7 @@ async def edit_mondai(data: MondaiData):
         return {"status": "failed"}
 
 @app.get("/api/get/mondai/{name}.json")
-async def get_mondai(name: str, start: int = 0, end: Optional[int] = None):
+async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] = None, ranges: Optional[str] = None):
 
     # パスインジェクション対策：ファイル名のみを抽出し、ディレクトリトラバーサルを防止
     safe_name = os.path.basename(name)
@@ -1455,26 +1455,59 @@ async def get_mondai(name: str, start: int = 0, end: Optional[int] = None):
     if not abs_path.startswith(intended_dir) or not os.path.isfile(abs_path):
         raise HTTPException(status_code=404, detail="Not found")
 
-    start = max(start, 0000)
     results = []
-    count = 0
+    
+    # ranges パラメータが指定されている場合
+    if ranges:
+        selected_indices = set()
+        for part in ranges.split(','):
+            if '-' in part:
+                try:
+                    start_range, end_range = map(int, part.split('-'))
+                    # 1始まりを0始まりのインデックスに変換
+                    for i in range(start_range - 1, end_range):
+                        selected_indices.add(i)
+                except ValueError:
+                    continue # 不正なフォーマットは無視
 
-    # パスインジェクション対策：検証済みの絶対パスを使用
-    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-        async for raw in f:
-            line = raw.rstrip("\n")
-            if not line.strip():
-                continue
+        if not selected_indices:
+            return []
 
-            if count >= start and (end is None or count < end):
+        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+            # インデックスで直接アクセスできるように全行読み込み
+            lines = [line.strip() for line in await f.readlines() if line.strip()]
+        
+        for index in sorted(list(selected_indices)):
+            if index < len(lines):
+                results.append(lines[index])
+
+    # 従来の start/end パラメータの場合
+    elif start is not None and end is not None:
+        start = max(start, 0)
+        count = 0
+        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+            async for raw in f:
+                line = raw.rstrip("\n")
+                if not line.strip():
+                    continue
+                
+                # start/end は1始まりなので、count+1で比較
+                if (count + 1) >= start and (count + 1) <= end:
+                    results.append(line)
+
+                count += 1
+                if (count + 1) > end:
+                    break
+    else: # パラメータがない場合は全件返す
+        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+            async for raw in f:
+                line = raw.rstrip("\n")
+                if not line.strip():
+                    continue
                 results.append(line)
 
-            count += 1
-            if end is not None and count >= end:
-                break
-
-    if count == 0:
-        raise HTTPException(status_code=404, detail="Not found")
+    if not results:
+        raise HTTPException(status_code=404, detail="Not found or no matching lines")
 
     return results
 

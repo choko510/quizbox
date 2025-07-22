@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css"></noscript>
+    <link rel="preload" href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css"></noscript>
     <link rel="stylesheet" href="/select/style.css">
-    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css">
     <title>範囲選択</title>
     <link rel="manifest" href="/manifest.json">
 </head>
@@ -116,9 +117,14 @@
             <div id="range-container" class="range-container"></div>
         </div>
 
+   <div class="multiselect-footer">
+       <button id="multiselect-play-button" disabled>選択した範囲でプレイ (0)</button>
+   </div>
+
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 
     <script>
+       let selectedRanges = [];
         
         function pageback() {
             const referrer = document.referrer;
@@ -153,11 +159,16 @@
             // URLから教材IDを取得
             const urlParams = new URLSearchParams(window.location.search);
             const bookId = urlParams.get('id');
-            
+           const isMultiSelect = urlParams.get('multiselect') === 'true';
+
             if (!bookId) {
                 showError('教材IDが指定されていません。');
                 return;
             }
+           
+           if (isMultiSelect) {
+               document.body.classList.add('multiselect-mode');
+           }
             
             // 教材名を設定
             updateBookTitle(bookId);
@@ -166,18 +177,25 @@
             document.getElementById('book-title-name').textContent = bookTitles[bookId] || bookId;
             
             // サーバーから教材の範囲リストを取得
-            fetchRanges(bookId);
+           fetchRanges(bookId, isMultiSelect);
 
             // 全ての問題をプレイするボタンの設定
             const playAllButton = document.getElementById('play-all-button');
             playAllButton.addEventListener('click', function() {
                 const maxRange = getMaxRangeForBook(bookId);
-                // 前回プレイした範囲を保存
-                saveLastPlayedRange(bookId, 1, maxRange);
-                // 全範囲を選択してplay.htmlにリダイレクト
-                window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
+               if (isMultiSelect) {
+                   saveLastPlayedMultiRange(bookId, [{ start: 1, end: maxRange }]);
+                   window.location.href = `/play/?id=${bookId}&ranges=1-${maxRange}`;
+               } else {
+                   saveLastPlayedRange(bookId, 1, maxRange);
+                   window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
+               }
             });
             
+           if (isMultiSelect) {
+               setupMultiSelectPlayButton(bookId);
+               restoreLastPlayedMultiRange(bookId);
+           }
             // 単語リスト表示ボタンの設定
             const toggleWordListButton = document.getElementById('toggle-word-list');
             
@@ -186,7 +204,7 @@
             });
 
             // カスタム範囲の設定
-            setupCustomRangeSelector(bookId);
+            setupCustomRangeSelector(bookId, isMultiSelect);
             
             // 前回プレイした範囲の設定
             setupLastPlayedRange(bookId);
@@ -288,7 +306,7 @@
                 } catch (e) {
                 }
             }
-        async function fetchRanges(bookId) {
+        async function fetchRanges(bookId, isMultiSelect = false) {
             try {
                 // APIからデータを取得
                 // 注: このAPIエンドポイントはserver.pyに実装する必要があります
@@ -304,7 +322,7 @@
                 if (ranges.length === 0) {
                     generateDefaultRanges(bookId);
                 } else {
-                    displayRanges(bookId, ranges);
+                   displayRanges(bookId, ranges, isMultiSelect);
                     if (window.Cookies && Cookies.get('id') && Cookies.get('password')) {
                         loadRangeProgress(bookId, ranges);
                     }
@@ -334,11 +352,14 @@
         }
         
         // 範囲リストを表示
-        function displayRanges(bookId, ranges) {
+       function displayRanges(bookId, ranges, isMultiSelect) {
             const container = document.getElementById('range-container');
             container.innerHTML = '';
             
             ranges.forEach(range => {
+               const rangeItem = document.createElement('div');
+               rangeItem.className = 'range-item';
+
                 // 通常の問題ボタン
                 const button = document.createElement('button');
                 button.className = 'range-button';
@@ -346,12 +367,14 @@
                 button.dataset.start = range.start;
                 button.dataset.end = range.end;
                 
-                button.addEventListener('click', function() {
-                    // 前回プレイした範囲を保存
-                    saveLastPlayedRange(bookId, range.start, range.end);
-                    // 選択された範囲でplay.htmlにリダイレクト
-                    window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
-                });
+               button.addEventListener('click', function() {
+                   if (isMultiSelect) {
+                       toggleRangeSelection(rangeItem, range);
+                   } else {
+                       saveLastPlayedRange(bookId, range.start, range.end);
+                       window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                   }
+               });
                 
                 // 単語カードボタン（新規追加）
                 const flashcardButton = document.createElement('button');
@@ -375,9 +398,6 @@
                 buttonsContainer.className = 'range-buttons';
                 buttonsContainer.appendChild(button);
                 buttonsContainer.appendChild(flashcardButton);
-                
-                const rangeItem = document.createElement('div');
-                rangeItem.className = 'range-item';
 
                 // 進捗表示用コンテナを作成
                 const progressContainer = document.createElement('div');
@@ -406,7 +426,7 @@
         }
 
         // カスタム範囲選択器のセットアップ
-        function setupCustomRangeSelector(bookId) {
+        function setupCustomRangeSelector(bookId, isMultiSelect) {
             const maxRange = getMaxRangeForBook(bookId);
             const customStart = document.getElementById('custom-start');
             const customEnd = document.getElementById('custom-end');
@@ -555,14 +575,47 @@
                     return;
                 }
                 
-                // 前回プレイした範囲を保存
-                saveLastPlayedRange(bookId, start, end);
-                
-                window.location.href = `/play/?id=${bookId}&start=${start}&end=${end}`;
+               if (isMultiSelect) {
+                   saveLastPlayedMultiRange(bookId, [{ start, end }]);
+                   window.location.href = `/play/?id=${bookId}&ranges=${start}-${end}`;
+               } else {
+                   saveLastPlayedRange(bookId, start, end);
+                   window.location.href = `/play/?id=${bookId}&start=${start}&end=${end}`;
+               }
             });
             
             updateRange();
         }
+       
+       function setupMultiSelectPlayButton(bookId) {
+           const playButton = document.getElementById('multiselect-play-button');
+           playButton.addEventListener('click', () => {
+               if (selectedRanges.length > 0) {
+                   saveLastPlayedMultiRange(bookId, selectedRanges);
+                   const rangesParam = selectedRanges.map(r => `${r.start}-${r.end}`).join(',');
+                   window.location.href = `/play/?id=${bookId}&ranges=${rangesParam}`;
+               }
+           });
+       }
+
+       function toggleRangeSelection(itemElement, range) {
+           const index = selectedRanges.findIndex(r => r.start === range.start && r.end === range.end);
+           if (index > -1) {
+               selectedRanges.splice(index, 1);
+               itemElement.classList.remove('selected');
+           } else {
+               selectedRanges.push(range);
+               itemElement.classList.add('selected');
+           }
+           updateMultiSelectPlayButton();
+       }
+
+       function updateMultiSelectPlayButton() {
+           const playButton = document.getElementById('multiselect-play-button');
+           const count = selectedRanges.length;
+           playButton.textContent = `選択した範囲でプレイ (${count})`;
+           playButton.disabled = count === 0;
+       }
 
         // 前回プレイした範囲の設定
         function setupLastPlayedRange(bookId) {
@@ -582,6 +635,36 @@
             }
         }
 
+       function saveLastPlayedMultiRange(bookId, ranges) {
+           localStorage.setItem(`lastPlayed_multi_${bookId}`, JSON.stringify(ranges));
+       }
+
+       function getLastPlayedMultiRange(bookId) {
+           try {
+               const data = localStorage.getItem(`lastPlayed_multi_${bookId}`);
+               return data ? JSON.parse(data) : [];
+           } catch (e) {
+               return [];
+           }
+       }
+
+       function restoreLastPlayedMultiRange(bookId) {
+           const lastPlayed = getLastPlayedMultiRange(bookId);
+           if (lastPlayed.length > 0) {
+               selectedRanges = lastPlayed;
+               const allRanges = Array.from(document.querySelectorAll('.range-item .range-button'));
+               selectedRanges.forEach(savedRange => {
+                   const rangeElement = allRanges.find(btn =>
+                       parseInt(btn.dataset.start) === savedRange.start &&
+                       parseInt(btn.dataset.end) === savedRange.end
+                   );
+                   if (rangeElement) {
+                       rangeElement.closest('.range-item').classList.add('selected');
+                   }
+               });
+               updateMultiSelectPlayButton();
+           }
+       }
         // 前回プレイした範囲を保存
         function saveLastPlayedRange(bookId, start, end) {
             const data = { start: start, end: end, timestamp: Date.now() };
