@@ -814,6 +814,10 @@ body {
   display: block;
 }
 
+.multiselect-mode .main {
+  padding-bottom: 100px; /* フッターの高さ分を確保 */
+}
+
 #multiselect-play-button {
   width: 90%;
   max-width: 400px;

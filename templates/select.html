@@ -194,7 +194,6 @@
             
            if (isMultiSelect) {
                setupMultiSelectPlayButton(bookId);
-               restoreLastPlayedMultiRange(bookId);
            }
             // 単語リスト表示ボタンの設定
             const toggleWordListButton = document.getElementById('toggle-word-list');
@@ -359,6 +358,17 @@
             ranges.forEach(range => {
                const rangeItem = document.createElement('div');
                rangeItem.className = 'range-item';
+               rangeItem.dataset.start = range.start;
+               rangeItem.dataset.end = range.end;
+
+               rangeItem.addEventListener('click', function() {
+                   if (isMultiSelect) {
+                       toggleRangeSelection(this, range);
+                   } else {
+                       saveLastPlayedRange(bookId, range.start, range.end);
+                       window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                   }
+               });
 
                 // 通常の問題ボタン
                 const button = document.createElement('button');
@@ -367,7 +377,10 @@
                 button.dataset.start = range.start;
                 button.dataset.end = range.end;
                 
-               button.addEventListener('click', function() {
+               button.addEventListener('click', function(event) {
+                   // rangeItemのクリックイベントが発火するので、ここでは何もしないか、
+                   // もしくは、rangeItemのイベントに伝播させないようにする
+                   event.stopPropagation(); // 親要素へのイベント伝播を停止
                    if (isMultiSelect) {
                        toggleRangeSelection(rangeItem, range);
                    } else {
@@ -415,6 +428,10 @@
 
                 container.appendChild(rangeItem);
             });
+
+           if (isMultiSelect) {
+               restoreLastPlayedMultiRange(bookId);
+           }
         }
         
         // エラーメッセージを表示
@@ -652,14 +669,14 @@
            const lastPlayed = getLastPlayedMultiRange(bookId);
            if (lastPlayed.length > 0) {
                selectedRanges = lastPlayed;
-               const allRanges = Array.from(document.querySelectorAll('.range-item .range-button'));
+               const allRangeItems = Array.from(document.querySelectorAll('.range-item'));
                selectedRanges.forEach(savedRange => {
-                   const rangeElement = allRanges.find(btn =>
-                       parseInt(btn.dataset.start) === savedRange.start &&
-                       parseInt(btn.dataset.end) === savedRange.end
+                   const rangeElement = allRangeItems.find(item =>
+                       parseInt(item.dataset.start) === savedRange.start &&
+                       parseInt(item.dataset.end) === savedRange.end
                    );
                    if (rangeElement) {
-                       rangeElement.closest('.range-item').classList.add('selected');
+                       rangeElement.classList.add('selected');
                    }
                });
                updateMultiSelectPlayButton();

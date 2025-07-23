@@ -97,7 +97,7 @@ li {
     margin-bottom: 20px;
 }
 
-button {
+.answer-btn {
     font-family: 'Noto Sans Japanese', sans-serif;
     border: none;
     border-radius: 5px;
@@ -117,7 +117,7 @@ button {
     transition: transform .3s, box-shadow .3s;
 }
 
-button:hover {
+.answer-btn:hover {
     box-shadow: 0 7px 10px rgb(0 0 0 / 15%);
 }
 
@@ -649,7 +649,7 @@ ul.custom-list li .content {
         height: 68vh;
     }
 
-    button {
+    .answer-btn {
         padding: .3em 1em;
     }
 }
@@ -698,7 +698,7 @@ ul.custom-list li .content {
         height: 60vh;
     }
     
-    button {
+    .answer-btn {
         width: 300px;
         font-size: 0.9em;
     }

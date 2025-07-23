@@ -103,16 +103,16 @@
                     </div>
                     <ul class="sp" id="choice-answers">
                         <li>
-                            <button id="answer1"></button>
+                            <button id="answer1" class="answer-btn"></button>
                         </li>
                         <li>
-                            <button id="answer2"></button>
+                            <button id="answer2" class="answer-btn"></button>
                         </li>
                         <li>
-                            <button id="answer3"></button>
+                            <button id="answer3" class="answer-btn"></button>
                         </li>
                         <li>
-                            <button id="answer4"></button>
+                            <button id="answer4" class="answer-btn"></button>
                         </li>
                     </ul>
                     <div id="input-area" style="display: none;" class="no-swiping">
@@ -816,35 +816,6 @@
             const title = document.getElementById('question');
             const isReversed = globalSettings.replaceMondai;
             const isHardMode = globalSettings.hardMode;
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-
-            // 問題文表示
-            if (!isHardMode) {
-                let textContent;
-                if (isReversed) {
-                    title.innerHTML = question.word;
-                    textContent = question.word;
-                } else {
-                    title.innerHTML = question.description;
-                    textContent = question.description;
-                }
-
-                const textLength = textContent.length;
-                if (screenWidth < 600 || screenHeight < 600) {
-                    if (textLength >= 150) title.style.fontSize = "0.8em";
-                    else if (textLength >= 100) title.style.fontSize = "1em";
-                    else title.style.fontSize = "1.3em";
-                } else if (screenWidth < 1200 || screenHeight < 800) {
-                    if (textLength >= 150) title.style.fontSize = "1em";
-                    else if (textLength >= 100) title.style.fontSize = "1.2em";
-                    else title.style.fontSize = "1.4em";
-                } else {
-                    if (textLength >= 150) title.style.fontSize = "1.2em";
-                    else if (textLength >= 100) title.style.fontSize = "1.3em";
-                    else title.style.fontSize = "1.4em";
-                }
-            }
 
             // 問題入れ替え＆発音オンの時、問題表示と同時に発音
             if (globalSettings.replaceMondai && globalSettings.pronunciation && isProblemSetEnglish()) {
@@ -1208,6 +1179,70 @@
                 options.forEach((answer, index) => {
                     document.getElementById('answer' + (index + 1)).textContent = answer;
                 });
+            }
+
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+
+            // 問題文表示
+            if (!isHardMode) {
+                let textContent;
+                if (isReversed) {
+                    title.innerHTML = question.word;
+                    textContent = question.word;
+                } else {
+                    title.innerHTML = question.description;
+                    textContent = question.description;
+                }
+
+                let textLength = textContent.length;
+                if (screenWidth < 600 || screenHeight < 600) {
+                    if (textLength >= 150) title.style.fontSize = "0.8em";
+                    else if (textLength >= 100) title.style.fontSize = "1em";
+                    else title.style.fontSize = "1.3em";
+                } else if (screenWidth < 1200 || screenHeight < 800) {
+                    if (textLength >= 150) title.style.fontSize = "1em";
+                    else if (textLength >= 100) title.style.fontSize = "1.2em";
+                    else title.style.fontSize = "1.4em";
+                } else {
+                    if (textLength >= 150) title.style.fontSize = "1.2em";
+                    else if (textLength >= 100) title.style.fontSize = "1.3em";
+                    else title.style.fontSize = "1.4em";
+                }
+
+                //　選択肢と問題文の全体の文字数を計算
+                let alltextLength = textContent.length;
+                options.forEach(option => {
+                    alltextLength += option.length;
+                });
+
+                if (alltextLength >= 200) {
+                    document.getElementsByClassName('main')[0].style.height = '90vh';
+                } else if (alltextLength >= 100) {
+                    document.getElementsByClassName('main')[0].style.height = '80vh';
+                } else if (screenWidth < 600) {
+                    document.getElementsByClassName('main')[0].style.height = '65vh';
+                } else {
+                    document.getElementsByClassName('main')[0].style.height = '75vh';
+                }
+
+                if (alltextLength >= 400 && screenWidth < 600) {
+                    Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
+                        btn.style.fontSize = '0.6em';
+                    });
+                } else if (alltextLength >= 200 && screenWidth < 600) {
+                    Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
+                        btn.style.fontSize = '0.7em';
+                    });
+                } else {
+                    // それ以外ではstyleをリセット
+                    Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
+                        btn.style.fontSize = '';
+                    });
+                }
+
+                console.log(`問題文: ${textContent}, 全体の文字数: ${alltextLength}`);
+
             }
             // --- 選択肢生成ここまで ---
 
