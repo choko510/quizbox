@@ -13,6 +13,7 @@ import pickle
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -593,8 +594,8 @@ class DB:
             total = 0
             file_path = Path("static/deta") / f"{ps}.txt"
             if file_path.exists():
-                with open(file_path, "r", encoding="utf-8") as f:
-                    total = sum(1 for l in f if l.strip())
+                async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                    total = sum(1 for l in await f.readlines() if l.strip())
             else:
                 async with async_session() as s2:
                     res = await s2.execute(sa_select(Mondai).filter_by(userid=id, name=ps))
@@ -939,7 +940,7 @@ async def ranking(
     async with async_session() as session:
         if period in ["7d", "30d"]:
             days = 7 if period == "7d" else 30
-            from_date_str = (datetime.now() - timedelta(days=days)).strftime("%Y/%m/%d")
+            from_date = (datetime.now() - timedelta(days=days)).date()
             
             user_stats = []
             
@@ -951,15 +952,26 @@ async def ranking(
                 
                 correct_data = DB.safe_load_json(user.correctdata)  # type: ignore
                 for date_str, subjects in correct_data.items():
-                    # datetimeオブジェクトへの変換を避け、文字列比較にすることで高速化
-                    if date_str >= from_date_str and isinstance(subjects, dict):
-                        # 値が数値でない場合を考慮して安全に合計
-                        correct_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+                    try:
+                        # 日付文字列をdatetimeオブジェクトに変換
+                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        if date_obj >= from_date and isinstance(subjects, dict):
+                            # 値が数値でない場合を考慮して安全に合計
+                            correct_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+                    except ValueError:
+                        # 日付フォーマットが不正な場合はスキップ
+                        continue
 
                 bad_data = DB.safe_load_json(user.baddata)  # type: ignore
                 for date_str, subjects in bad_data.items():
-                    if date_str >= from_date_str and isinstance(subjects, dict):
-                        bad_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+                    try:
+                        # 日付文字列をdatetimeオブジェクトに変換
+                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        if date_obj >= from_date and isinstance(subjects, dict):
+                            bad_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+                    except ValueError:
+                        # 日付フォーマットが不正な場合はスキップ
+                        continue
                 
                 total = correct_count_period + bad_count_period
                 if total > 0:
@@ -1086,28 +1098,30 @@ async def upload_image(file: UploadFile = File(...), usage: str = Query("ai", en
 
         # Validate as a picture
         try:
-            img = Image.open(io.BytesIO(contents))
-            img.verify()
+            def process_image(data):
+                img = Image.open(io.BytesIO(data))
+                img.verify()  # 画像の検証
+                return img
+
+            img = await run_in_threadpool(process_image, contents)
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Invalid image format or corrupted image.")
-        
+            raise HTTPException(status_code=400, detail=f"Invalid image format or corrupted image: {e}")
+
         # Create file ID using hash of content and original filename
         file_id = xxhash.xxh64(contents).hexdigest()
-        
+
         # Determine save path based on usage
         if usage == "ai":
             # AI用: tempディレクトリに保存（元の形式維持）
             os.makedirs("./data/upload/temp/img", exist_ok=True)
             file_path = f"./data/upload/temp/img/{file_id}"
-            img = Image.open(io.BytesIO(contents))
-            img.save(file_path, format=img.format or "JPEG")
+            await run_in_threadpool(img.save, file_path, format=img.format or "JPEG")
         else:
             # 問題文用: upload/imgディレクトリにwebpで保存
             os.makedirs("./data/upload/img", exist_ok=True)
             file_path = f"./data/upload/img/{file_id}.webp"
-            img = Image.open(io.BytesIO(contents))
             # WebP形式で保存（品質を90に設定）
-            img.save(file_path, format="WEBP", quality=90)
+            await run_in_threadpool(img.save, file_path, format="WEBP", quality=90)
         
         return JSONResponse(
             content={
@@ -1495,7 +1509,6 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
 
     else: # パラメータがない場合は全件返す
         results = lines
-        results.append(line)
 
     if not results:
         raise HTTPException(status_code=404, detail="Not found or no matching lines")
@@ -1841,8 +1854,9 @@ async def search_problems(query: str = Query(..., min_length=1)):
                     else:
                         # ファイルの内容も検索（最初の20行）
                         try:
-                            with open(file_path, "r", encoding="utf-8") as f:
-                                content = "".join([next(f, "") for _ in range(20)])
+                            async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+                                lines = [await f.readline() for _ in range(20)]
+                                content = "".join(lines)
                                 content_lower = content.lower()
                                 if query_lower in content_lower:
                                     deta_files.append((file_name, 70))
@@ -2082,7 +2096,7 @@ async def search_word(data: WordData):
         回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt, "gemini-2.5-flash-lite-preview-06-17")
+        response = await reqAI(prompt, "gemini-2.5-flash-lite")
         return {
             "word": word,
             "definition": response,
@@ -2119,13 +2133,16 @@ async def gen_speak(word: str):
     lang = "ja" if re.search(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]', word) else "en"
 
     try:
-        tts = gTTS(text=word, lang=lang, slow=True)
-        audio_bytes = BytesIO()
-        tts.write_to_fp(audio_bytes)
-        audio_data = audio_bytes.getvalue()
-        # ファイルに保存
-        with open(filename, "wb") as f:
-            f.write(audio_data)
+        def generate_audio(text, lang):
+            tts = gTTS(text=text, lang=lang, slow=True)
+            audio_bytes = BytesIO()
+            tts.write_to_fp(audio_bytes)
+            return audio_bytes.getvalue()
+
+        audio_data = await run_in_threadpool(generate_audio, word, lang)
+        
+        async with aiofiles.open(filename, "wb") as f:
+            await f.write(audio_data)
         return FileResponse(filename, media_type="audio/mpeg", filename=f"{word}.mp3")
     except Exception as e:
         raise HTTPException(
