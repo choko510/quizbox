@@ -384,10 +384,7 @@
             
             // 回答が英単語かどうかを確認
             if (isEnglishWord(answer)) {
-                // 少し遅延してから発音を再生（正解通知の後に再生されるように）
-                setTimeout(() => {
-                    playWord(answer);
-                }, 800);
+                playWord(answer);
             }
         }
 
@@ -803,7 +800,7 @@
                 if (questions.length > 0) {
                     currentIndex = 0;
                 } else {
-                    document.getElementById('question').innerHTML = "問題がありません。";
+                    document.getElementById('question').innerHTML = "問題を読み込み中";
                     return;
                 }
             }
@@ -1069,7 +1066,7 @@
                                     }
                                 }
                             } catch (dictError) {
-                                console.log('辞書検索エラー:', dictError);
+                                console.error('辞書検索エラー:', dictError);
                                 // エラーが発生しても処理を続行
                             }
                         }
@@ -1240,9 +1237,6 @@
                         btn.style.fontSize = '';
                     });
                 }
-
-                console.log(`問題文: ${textContent}, 全体の文字数: ${alltextLength}`);
-
             }
             // --- 選択肢生成ここまで ---
 
@@ -1445,15 +1439,16 @@
                     if (renzokuseikai > maxStreak) {
                         maxStreak = renzokuseikai;
                     }
+
+                    // 発音機能：正解の英単語を発音
+                    playCorrectAnswerPronunciation(correctAnswer);
+
                     stats.correctAnswers = (stats.correctAnswers || 0) + 1; // correctAnswersが存在しない場合も考慮
                     notie.alert({
                         type: 1,
                         text: '正解',
                         time: 1
                     });
-                    
-                    // 発音機能：正解の英単語を発音
-                    playCorrectAnswerPronunciation(correctAnswer);
                     
                     updateProgressDisplay();
                     document.getElementById('review-count').textContent = reviewQuestions.length;
@@ -1463,6 +1458,7 @@
                     await showNextQuestion();
                     sendScore("add_correct", accid, password);
                     saveProgressToServer(); // 進捗保存
+                    
                     // --- 復習モードの正解処理 ここまで ---
                 } else {
                     // --- 通常モードの正解処理 ---
@@ -2124,8 +2120,14 @@
             awaitOpenAnimation: true,
             awaitCloseAnimation: true
         });
+
         document.getElementById('settings-btn').addEventListener('click', function () {
-            MicroModal.show('settings-modal');
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal.getAttribute('aria-hidden') === 'false') {
+                MicroModal.close('settings-modal');
+            } else {
+                MicroModal.show('settings-modal');
+            }
         });
 
         // --- レーベンシュタイン距離計算関数 ---
