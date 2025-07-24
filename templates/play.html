@@ -1223,11 +1223,11 @@
                     document.getElementsByClassName('main')[0].style.height = '75vh';
                 }
 
-                if (alltextLength >= 400 && screenWidth < 600) {
+                if (alltextLength >= 400 && screenWidth < 1400) {
                     Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
                         btn.style.fontSize = '0.6em';
                     });
-                } else if (alltextLength >= 200 && screenWidth < 600) {
+                } else if (alltextLength >= 200 && screenWidth <  1400) {
                     Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
                         btn.style.fontSize = '0.7em';
                     });

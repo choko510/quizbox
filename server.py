@@ -510,18 +510,31 @@ class DB:
             return detail_list
 
     @staticmethod
-    async def save_mondai(name: str, userid: str, mondai_data, is_public: bool = True):
-        async with async_session() as session:
-            new_mondai = Mondai(
-                name=name,
-                userid=userid,
-                mondai=json.dumps(mondai_data),
-                is_public=1 if is_public else 0,
-                created_at=datetime.now().isoformat(),
-                updated_at=datetime.now().isoformat()
-            )
-            session.add(new_mondai)
-            await session.commit()
+    async def save_mondai(name: str, userid: str, mondai_data, is_public: bool = True, session: Optional[AsyncSession] = None):
+        if session:
+            s = session
+        else:
+            s = async_session()
+
+        if not session: # 外部からセッションが渡されていない場合のみasync withを使用
+            async with s as _s:
+                return await DB._save_mondai_internal(name, userid, mondai_data, is_public, _s, commit=True)
+        else:
+            return await DB._save_mondai_internal(name, userid, mondai_data, is_public, s, commit=False)
+
+    @staticmethod
+    async def _save_mondai_internal(name: str, userid: str, mondai_data, is_public: bool, s: AsyncSession, commit: bool):
+        new_mondai = Mondai(
+            name=name,
+            userid=userid,
+            mondai=json.dumps(mondai_data),
+            is_public=1 if is_public else 0,
+            created_at=datetime.now().isoformat(),
+            updated_at=datetime.now().isoformat()
+        )
+        s.add(new_mondai)
+        if commit:
+            await s.commit()
 
     @staticmethod
     async def edit_mondai(name: str, userid: str, mondai_data, is_public: Optional[bool] = None):
@@ -556,29 +569,42 @@ class DB:
                 return None
     
     @staticmethod
-    async def delete_mondai(name: str, userid: str):
+    async def delete_mondai(name: str, userid: str, session: Optional[AsyncSession] = None):
         """
         問題を削除する
         """
-        async with async_session() as session:
-            
-            # 対象のレコード数を事前にカウント
-            count_query = sa_select(func.count()).select_from(Mondai).filter_by(name=name, userid=userid)
-            count_result = await session.execute(count_query)
-            record_count = count_result.scalar_one()
-            
-            # 複数レコードの場合でも全て取得
-            result = await session.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
-            mondai_list = result.scalars().all()
-            
-            if mondai_list:
-                # 全ての該当レコードを削除
-                for mondai in mondai_list:
-                    await session.delete(mondai)
-                await session.commit()
-                return True
-            else:
-                return False
+        if session:
+            s = session
+        else:
+            s = async_session()
+
+        if not session: # 外部からセッションが渡されていない場合のみasync withを使用
+            async with s as _s:
+                return await DB._delete_mondai_internal(name, userid, _s, commit=True)
+        else:
+            return await DB._delete_mondai_internal(name, userid, s, commit=False)
+
+    @staticmethod
+    async def _delete_mondai_internal(name: str, userid: str, s: AsyncSession, commit: bool):
+        # 対象のレコード数を事前にカウント
+        count_query = sa_select(func.count()).select_from(Mondai).filter_by(name=name, userid=userid)
+        count_result = await s.execute(count_query)
+        record_count = count_result.scalar_one()
+        
+        # 複数レコードの場合でも全て取得
+        result = await s.execute(sa_select(Mondai).filter_by(name=name, userid=userid))
+        mondai_list = result.scalars().all()
+        
+        if mondai_list:
+            # 全ての該当レコードを削除
+            for mondai in mondai_list:
+                await s.delete(mondai)
+            if commit:
+                await s.commit()
+            return True
+        else:
+            return False
+
     @staticmethod
     async def get_progress_summary(id: str):
         """
@@ -1035,16 +1061,25 @@ async def ranking(
 
     return ranking_list
 
+
+def is_valid_username(username: str) -> bool:
+    """ユーザ名が有効か判定する"""
+    USERNAME_PATTERN = re.compile(r'^[A-Za-z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+$')
+    return bool(USERNAME_PATTERN.fullmatch(username))
+
 @app.post("/api/change/name/{newname}")
 async def change_name(data: Data, newname: str):
-    # 新しいユーザー名をサニタイズ（英数字、ハイフン、アンダースコアのみ許可）
-    sanitized_newname = re.sub(r'[^\w-]', '', newname).strip()
-
-    # バリデーション
-    if len(sanitized_newname) < 3:
+    if not is_valid_username(newname):
         return JSONResponse(
             status_code=400,
-            content={"message": "ユーザー名は3文字以上で、英数字、ハイフン、アンダースコアのみ使用できます。"}
+            content={"message": "ユーザー名に使用できない文字が含まれています。英数字、ひらがな、カタカナ、漢字のみ使用可能です。"}
+        )
+
+    # バリデーション
+    if len(newname) < 3:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "ユーザー名は3文字以上で、英数字、ひらがな、カタカナ、漢字のみ使用できます。"}
         )
 
     # パスワード検証
@@ -1053,48 +1088,47 @@ async def change_name(data: Data, newname: str):
         return JSONResponse(status_code=403, content={"message": "パスワードが違うか、ユーザーが見つかりません。"})
 
     # 現在のユーザー名と同じ場合は何もしない
-    if data.id == sanitized_newname:
-        return JSONResponse(status_code=200, content={"message": "ユーザー名は変更されていません。", "newname": sanitized_newname})
+    if data.id == newname:
+        return JSONResponse(status_code=200, content={"message": "既に同じユーザー名の為、変更されていません。", "newname": newname})
 
     async with async_session() as session:
-        # 新しいユーザー名の重複チェック
-        result = await session.execute(sa_select(Account).filter_by(userid=sanitized_newname))
-        if result.scalar_one_or_none():
-            return JSONResponse(status_code=409, content={"message": f"ユーザー名「{sanitized_newname}」は既に使用されています。"})
+        async with session.begin(): # トランザクションを開始
+            # 新しいユーザー名の重複チェック
+            result = await session.execute(sa_select(Account).filter_by(userid=newname))
+            if result.scalar_one_or_none():
+                return JSONResponse(status_code=409, content={"message": f"ユーザー名「{newname}」は既に使用されています。"})
 
-        # 現在のユーザーを取得
-        result = await session.execute(sa_select(Account).filter_by(userid=data.id))
-        user: Optional[Account] = result.scalar_one_or_none()
-        
-        if user:
-            old_userid = data.id
+            # 現在のユーザーを取得
+            result = await session.execute(sa_select(Account).filter_by(userid=data.id))
+            user: Optional[Account] = result.scalar_one_or_none()
             
-            # 新しいアカウントオブジェクトを作成し、データをコピー
-            new_user = Account(
-                userid=sanitized_newname,
-                password=user.password,
-                correct=user.correct,
-                bad=user.bad,
-                correctdata=user.correctdata,
-                baddata=user.baddata,
-                progress_data=user.progress_data,
-                progress_details=user.progress_details
-            )
+            if user:
+                old_userid = data.id
+                
+                # 新しいアカウントオブジェクトを作成し、データをコピー
+                new_user = Account(
+                    userid=newname,
+                    password=user.password,
+                    correct=user.correct,
+                    bad=user.bad,
+                    correctdata=user.correctdata,
+                    baddata=user.baddata,
+                    progress_data=user.progress_data,
+                    progress_details=user.progress_details
+                )
 
-            # 関連するMondaiテーブルのuseridを更新
-            mondai_result = await session.execute(sa_select(Mondai).filter_by(userid=old_userid))
-            user_mondais = mondai_result.scalars().all()
-            for mondai in user_mondais:
-                mondai.userid = sanitized_newname  # type: ignore
-            
-            # 古いユーザーを削除し、新しいユーザーを追加
-            await session.delete(user)
-            session.add(new_user)
-            
-            await session.commit()
-            
-            return JSONResponse(content={"message": "ユーザー名を変更しました。", "newname": sanitized_newname})
-            
+                # 関連するMondaiテーブルのuseridを更新
+                mondai_result = await session.execute(sa_select(Mondai).filter_by(userid=old_userid))
+                user_mondais = mondai_result.scalars().all()
+                for mondai in user_mondais:
+                    mondai.userid = newname  # type: ignore # sanitized_newname を newname に変更
+                
+                # 古いユーザーを削除し、新しいユーザーを追加
+                await session.delete(user)
+                session.add(new_user)
+
+                return JSONResponse(content={"message": "ユーザー名を変更しました。", "newname": newname})
+
     return JSONResponse(status_code=404, content={"message": "ユーザーが見つかりません。"})
 
 @app.post("/api/change/password/{newpassword}")
@@ -1741,22 +1775,26 @@ async def duplicate_problem(data: DuplicateMondaiData):
     if password is None or password != data.password:  # type: ignore
         return {"message": "password is wrong or user not found"}
     
-    # オリジナルの問題を取得
-    mondai = await DB.get_mondai(data.userid, data.original_name)
-    if not mondai:
-        return {"status": "failed", "message": "Original problem not found"}
-    
-    # 保存前に既存の同名問題を削除（重複を防ぐため）
-    try:
-        # 同名の問題を削除
-        await DB.delete_mondai(data.new_name, data.userid)
-        
-        # 新しい名前で保存
-        await DB.save_mondai(data.new_name, data.userid, mondai, True)
-        return {"status": "success"}
-    except Exception as e:
-        print(f"Error duplicating problem: {e}")
-        return {"status": "failed", "message": "問題の複製中にエラーが発生しました"}
+    async with async_session() as session:
+        async with session.begin(): # トランザクションを開始
+            # オリジナルの問題を取得
+            mondai = await DB.get_mondai(data.userid, data.original_name)
+            if not mondai:
+                return {"status": "failed", "message": "Original problem not found"}
+            
+            try:
+                # 同名の問題を削除 (トランザクション内で実行)
+                await DB.delete_mondai(data.new_name, data.userid, session=session)
+                
+                # 新しい名前で保存 (トランザクション内で実行)
+                await DB.save_mondai(data.new_name, data.userid, mondai, True, session=session)
+                
+                # commitはsession.begin()が自動で行うため不要
+                return {"status": "success"}
+            except Exception as e:
+                # エラーが発生した場合は自動的にロールバックされる
+                print(f"Error duplicating problem: {e}")
+                return {"status": "failed", "message": "問題の複製中にエラーが発生しました"}
 
 @app.post("/api/dashboard/stats")
 async def get_problem_stats(data: MondaiIdData, request: Request):
