@@ -295,28 +295,39 @@ async function handleNameChange(event) {
     const newName = document.getElementById('new-name').value;
     const id = Cookies.get('id');
     const password = Cookies.get('password');
-    
+
+    if (!newName || newName.trim().length < 3) {
+        alert("ユーザー名は3文字以上で入力してください。");
+        return;
+    }
+
     try {
-        const response = await fetch(`api/change/name/${newName}`, {
+        const response = await fetch(`api/change/name/${encodeURIComponent(newName)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ id, password })
         });
-        
+
         const data = await response.json();
-        if (data.message === "password is wrong") {
-            alert("認証に失敗しました");
-            return;
+
+        if (response.ok) {
+            // 成功した場合
+            const updatedName = data.newname;
+            Cookies.set('id', updatedName, { expires: 120 });
+            alert(data.message || "ユーザー名を変更しました。");
+            document.getElementById('change-name-form').reset();
+            // ページをリロードして変更を反映
+            window.location.reload();
+        } else {
+            // エラーの場合
+            alert(data.message || `エラーが発生しました (HTTP ${response.status})`);
         }
         
-        Cookies.set('id', newName, { expires: 30 });
-        alert("ユーザー名を変更しました");
-        document.getElementById('change-name-form').reset();
     } catch (error) {
         console.error('ユーザー名変更エラー:', error);
-        alert("ユーザー名変更中にエラーが発生しました");
+        alert("ユーザー名の変更処理中に予期せぬエラーが発生しました。");
     }
 }
 

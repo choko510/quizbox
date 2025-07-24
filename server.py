@@ -1037,17 +1037,65 @@ async def ranking(
 
 @app.post("/api/change/name/{newname}")
 async def change_name(data: Data, newname: str):
+    # 新しいユーザー名をサニタイズ（英数字、ハイフン、アンダースコアのみ許可）
+    sanitized_newname = re.sub(r'[^\w-]', '', newname).strip()
+
+    # バリデーション
+    if len(sanitized_newname) < 3:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "ユーザー名は3文字以上で、英数字、ハイフン、アンダースコアのみ使用できます。"}
+        )
+
+    # パスワード検証
     password = await DB.password(data.id)
     if password is None or password != data.password:  # type: ignore
-        return {"message": "password is wrong or user not found"}
+        return JSONResponse(status_code=403, content={"message": "パスワードが違うか、ユーザーが見つかりません。"})
+
+    # 現在のユーザー名と同じ場合は何もしない
+    if data.id == sanitized_newname:
+        return JSONResponse(status_code=200, content={"message": "ユーザー名は変更されていません。", "newname": sanitized_newname})
+
     async with async_session() as session:
+        # 新しいユーザー名の重複チェック
+        result = await session.execute(sa_select(Account).filter_by(userid=sanitized_newname))
+        if result.scalar_one_or_none():
+            return JSONResponse(status_code=409, content={"message": f"ユーザー名「{sanitized_newname}」は既に使用されています。"})
+
+        # 現在のユーザーを取得
         result = await session.execute(sa_select(Account).filter_by(userid=data.id))
         user: Optional[Account] = result.scalar_one_or_none()
+        
         if user:
-            user.userid = newname  # type: ignore
+            old_userid = data.id
+            
+            # 新しいアカウントオブジェクトを作成し、データをコピー
+            new_user = Account(
+                userid=sanitized_newname,
+                password=user.password,
+                correct=user.correct,
+                bad=user.bad,
+                correctdata=user.correctdata,
+                baddata=user.baddata,
+                progress_data=user.progress_data,
+                progress_details=user.progress_details
+            )
+
+            # 関連するMondaiテーブルのuseridを更新
+            mondai_result = await session.execute(sa_select(Mondai).filter_by(userid=old_userid))
+            user_mondais = mondai_result.scalars().all()
+            for mondai in user_mondais:
+                mondai.userid = sanitized_newname  # type: ignore
+            
+            # 古いユーザーを削除し、新しいユーザーを追加
+            await session.delete(user)
+            session.add(new_user)
+            
             await session.commit()
-            return {"message": "change name successful"}
-    return {"message": "user not found"}
+            
+            return JSONResponse(content={"message": "ユーザー名を変更しました。", "newname": sanitized_newname})
+            
+    return JSONResponse(status_code=404, content={"message": "ユーザーが見つかりません。"})
 
 @app.post("/api/change/password/{newpassword}")
 async def change_password(data: Data, newpassword: str):
