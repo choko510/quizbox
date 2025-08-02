@@ -21,7 +21,9 @@ from pydantic import BaseModel
 from PIL import Image
 import aiofiles
 import xxhash
-from google.generativeai.generative_models import GenerativeModel 
+from google import genai
+from google.genai import types
+from google.genai.errors import APIError
 from gtts import gTTS
 from io import BytesIO
 import aiohttp
@@ -155,16 +157,16 @@ if not os.getenv("GEMINI_APIKEY") or os.getenv("GEMINI_APIKEY") == "":
     else:
         raise ValueError("Please set GEMINI_APIKEY in .env file")
 
-# google-generativeaiライブラリは、`GOOGLE_API_KEY` 環境変数を自動的に読み込みます。
-# `genai.configure` が存在しないというエラーに対応するため、環境変数を設定する方法に切り替えます。
+# Google GenAI SDK 初期化
 gemini_api_key = os.getenv("GEMINI_APIKEY")
 if not gemini_api_key:
-    # このチェックは元のコードにも存在していたため、Noneの可能性を排除します。
     if not os.path.exists(".env"):
         raise ValueError("Please create .env file")
     else:
         raise ValueError("Please set GEMINI_APIKEY in .env file")
-os.environ['GOOGLE_API_KEY'] = gemini_api_key
+
+# クライアントは環境変数からもキーを自動検出するが、明示で渡す
+genai_client = genai.Client(api_key=gemini_api_key)
 
 DATABASE_URL = "sqlite+aiosqlite:///data.db"
 engine = create_async_engine(DATABASE_URL)
@@ -781,75 +783,74 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(prompt: str, model: str = "gemini-2.5-flash", images=None):
+async def reqAI(prompt: str, model: str = "gemini-2.5-flash", images=None, stream: bool = False) -> str:
     """
-    AIモデルにテキスト生成リクエストを送信する非同期関数
-
-    Parameters:
-    - prompt: 送信するプロンプト文字列
-    - model: 使用するモデル名（デフォルト: gemini-2.5-flash）
-    - images: 単一の画像または画像リスト（PIL.Image.Image型または画像のパス）
-
-    Returns:
-    - 生成されたテキスト
-    
-    Raises:
-    - Exception: 両方のAIプロバイダでリクエストが失敗した場合
+    Google GenAI SDK (google-genai) での統一的な生成関数
+    - prompt: テキストプロンプト
+    - model: 使用モデル（例: gemini-2.5-flash）
+    - images: PIL.Image.Image または その配列/パス
+    - stream: ストリーミング応答を使用するか
     """
-    # 入力の準備
-    input_contents = []
+    # contents 構築
+    contents: list[Any] = []
     if prompt:
-        input_contents.append(prompt)
-    
+        contents.append(prompt)
+
+    # 画像対応（PIL またはパス）
     if images:
-        if not isinstance(images, list):
-            images = [images]
-        
-        for img in images:
+        imgs = images if isinstance(images, list) else [images]
+        for img in imgs:
             if isinstance(img, str) and os.path.exists(img):
                 img = Image.open(img)
-            
             if img:
-                input_contents.append(img)
-    
-    # 1. まずGeminiでの生成を試みる
+                contents.append(img)
+
     try:
-        gemini_model = GenerativeModel(model)
-        response = await gemini_model.generate_content_async(input_contents)
-        return response.text
-    except Exception as gemini_error:
-        # Gemini失敗の詳細をログ出力
-        print(f"Gemini request failed: {str(gemini_error)}")
-        
-        # 画像が含まれている場合はフォールバックできないので直接エラーを返す
+        if stream:
+            # ストリーミング
+            stream_resp = genai_client.models.generate_content_stream(
+                model=model,
+                contents=contents,
+            )
+            chunks = []
+            for chunk in stream_resp:
+                if getattr(chunk, "text", None):
+                    chunks.append(chunk.text)
+            return "".join(chunks).strip()
+        else:
+            resp = genai_client.models.generate_content(
+                model=model,
+                contents=contents,
+            )
+            return (resp.text or "").strip()
+    except APIError as e:
+        # 内部詳細はログへ。外部には一般化した文面のみ返す
+        print(f"[reqAI] Gemini APIError: {e}")
         if images:
-            raise Exception(f"Gemini request with images failed: {str(gemini_error)}")
-        
-        # 2. テキストのみの場合のフォールバック: OpenRouterを使用
+            raise HTTPException(status_code=502, detail="AI生成に失敗しました（画像入力）")
+        # テキストのみはOpenRouterにフォールバック（動作は元コード踏襲）
         api_key = os.getenv("OPENROUTER_APIKEY")
         if not api_key:
-            raise Exception(f"Gemini request failed and OpenRouter API key is not set")
-            
-        # OpenRouterへのリクエスト
+            raise HTTPException(status_code=502, detail="AI生成に失敗しました（設定不備）")
+
         try:
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {api_key}"}
             payload = {
                 "model": "deepseek/deepseek-chat-v3-0324:free",
-                "messages": [{"role": "user", "content": prompt}]
+                "messages": [{"role": "user", "content": prompt}],
             }
-            
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise Exception(f"OpenRouter HTTP error {response.status}: {error_text}")
-                        
-                    result = await response.json()
+                async with session.post(url, headers=headers, json=payload) as r:
+                    if r.status != 200:
+                        error_text = await r.text()
+                        print(f"[reqAI] OpenRouter HTTP error {r.status}: {error_text}")
+                        raise HTTPException(status_code=502, detail="AI生成に失敗しました（フォールバック）")
+                    result = await r.json()
                     return result["choices"][0]["message"]["content"]
         except Exception as openrouter_error:
-            # 両方の方法が失敗した場合は詳細なエラーメッセージで例外を発生
-            raise Exception(f"AI generation failed: Gemini error: {str(gemini_error)}; OpenRouter error: {str(openrouter_error)}")
+            print(f"[reqAI] OpenRouter fallback error: {openrouter_error}")
+            raise HTTPException(status_code=502, detail="AI生成に失敗しました")
 
 @app.get("/play/")
 @app.get("/play")
@@ -1268,11 +1269,12 @@ async def process_text(data: TextData):
                     })
                 except Exception as err:
                     # 個別の問題の処理エラーを記録するが、全体の処理は続行
+                    # 内部詳細はログにのみ出力し、クライアントへは一般メッセージを返す
+                    print(f"[process_text] item_index={i} error={type(err).__name__}: {err}")
                     results.append({
-                        "feedback": f"この問題の処理中にエラーが発生しました。",
+                        "feedback": "この問題の処理中にエラーが発生しました。",
                         "index": i,
-                        "status": "error",
-                        "error": str(err)
+                        "status": "error"
                     })
         elif data.checkType == "summary":
             prompt = f"以下のテキストを要約してください：\n{' '.join(data.text)}"
@@ -2129,7 +2131,9 @@ async def quick_dict_search(word: str):
                 "word": word
             }
     except Exception as e:
-        return {"found": False, "error": str(e)}
+        # 内部詳細はログにのみ出力し、クライアントには一般化したメッセージのみ返す
+        print(f"[quick_dict_search] error={type(e).__name__}: {e}")
+        return {"found": False, "error": "内部エラーが発生しました"}
 
 @app.post("/api/search/word/")
 async def search_word(data: WordData):
@@ -2182,7 +2186,7 @@ async def search_word(data: WordData):
         回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt, "gemini-2.5-flash-lite")
+        response = await reqAI(prompt, "gemini-2.5-flash")
         return {
             "word": word,
             "definition": response,
