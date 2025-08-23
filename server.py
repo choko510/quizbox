@@ -263,6 +263,35 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️  辞書初期化に失敗しました: {e}")
         fast_dict = None
+
+    # データベースのクリーンアップ: 一度も問題を解かず、問題も作成していないユーザーを削除
+    try:
+        async with async_session() as session:
+            async with session.begin():
+                # 問題を作成したユーザーのIDリストを取得
+                mondai_users_stmt = sa_select(Mondai.userid).distinct()
+                mondai_users_result = await session.execute(mondai_users_stmt)
+                active_user_ids = mondai_users_result.scalars().all()
+
+                # 解答履歴がなく、問題も作成しておらず、かつIDとパスワードが初期状態（11文字）のユーザーを抽出
+                stmt = sa_select(Account).where(
+                    (Account.correct == 0) &
+                    (Account.bad == 0) &
+                    (func.length(Account.userid) == 11) &
+                    (func.length(Account.password) == 11) &
+                    (~Account.userid.in_(active_user_ids))
+                )
+                result = await session.execute(stmt)
+                users_to_delete = result.scalars().all()
+                
+                if users_to_delete:
+                    for user in users_to_delete:
+                        await session.delete(user)
+                    print(f"🧹 データベースのクリーンアップ: {len(users_to_delete)} 人の非アクティブなユーザーを削除しました。")
+                else:
+                    print("🧹 データベースのクリーンアップ: 削除対象の非アクティブなユーザーはいませんでした。")
+    except Exception as e:
+        print(f"⚠️ データベースのクリーンアップ中にエラーが発生しました: {e}")
     
     # バックグラウンドタスクを開始
     cleanup_task = asyncio.create_task(cleanup_temp_images())
@@ -2376,7 +2405,7 @@ def make_ranges(start, end, step, label_offset=0):
     return ranges
 
 BOOK_RANGES = {
-    "leap": make_ranges(1, 1935, 50),
+    "leap": make_ranges(1, 2300, 50),
     "systemeitango": make_ranges(1, 2027, 100),
     "target1000": make_ranges(1, 1000, 50),
     "target1200": make_ranges(1, 1700, 50),
