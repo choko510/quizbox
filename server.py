@@ -151,19 +151,22 @@ fast_dict = None
 
 load_dotenv()
 
-if not os.getenv("GEMINI_APIKEY") or os.getenv("GEMINI_APIKEY") == "":
+# Google GenAI SDK 初期化
+gemini_api_key = os.getenv("GEMINI_APIKEY")
+if not gemini_api_key or gemini_api_key == "":
     if not os.path.exists(".env"):
         raise ValueError("Please create .env file")
     else:
         raise ValueError("Please set GEMINI_APIKEY in .env file")
 
-# Google GenAI SDK 初期化
-gemini_api_key = os.getenv("GEMINI_APIKEY")
-if not gemini_api_key:
-    if not os.path.exists(".env"):
-        raise ValueError("Please create .env file")
-    else:
-        raise ValueError("Please set GEMINI_APIKEY in .env file")
+# admin password check
+admin_password = os.getenv("ADMIN_PASSWORD")
+if not admin_password or admin_password == "":
+    raise ValueError("Please set ADMIN_PASSWORD in .env file")
+elif len(admin_password) < 8:
+    raise ValueError("ADMIN_PASSWORD must be at least 8 characters long")
+elif re.match(r'^[a-zA-Z0-9_-]+$', admin_password) is None:
+    raise ValueError("ADMIN_PASSWORD must contain only alphanumeric characters, hyphens, or underscores")
 
 # クライアントは環境変数からもキーを自動検出するが、明示で渡す
 genai_client = genai.Client(api_key=gemini_api_key)
@@ -912,6 +915,175 @@ async def dashboard(request: Request):
         return RedirectResponse(url="/", status_code=302)
     
     return templates.TemplateResponse("dashboard.html", {"request": request})
+@app.get("/statistics/")
+@app.get("/statistics")
+async def statistics_page():
+    """
+    統計ページを表示する（admin password認証あり）
+    """
+    return templates.TemplateResponse("statistics.html", {"request": {}})
+
+class AdminAuthData(BaseModel):
+    password: str
+
+@app.post("/api/statistics/auth")
+async def auth_admin(data: AdminAuthData):
+    """
+    admin password認証エンドポイント
+    """
+    # 認可チェック
+    admin_password_env = admin_password
+    if data.password == admin_password_env:
+        return {"success": True}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid admin password")
+
+@app.get("/api/statistics")
+async def get_statistics():
+    """
+    統計データを取得するAPI
+    """
+    try:
+        # アカウント数取得
+        async with async_session() as session:
+            stmt = sa_select(func.count()).select_from(Account)
+            result = await session.execute(stmt)
+            total_accounts = result.scalar_one()
+
+            # 週内の回答数を取得（過去7日間のデータ）
+            seven_days_ago = datetime.now() - timedelta(days=7)
+            weekly_answers = 0
+
+            # 正解データを取得
+            all_stmt = sa_select(Account)
+            result = await session.execute(all_stmt)
+            accounts = result.scalars().all()
+            for account in accounts:
+                correct_data = DB.safe_load_json(account.correctdata)
+                bad_data = DB.safe_load_json(account.baddata)
+
+                # 週内のデータだけを集計
+                for date_str, subjects in correct_data.items():
+                    try:
+                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        if date_obj >= seven_days_ago.date():
+                            weekly_answers += sum(v for v in subjects.values() if isinstance(v, int))
+                    except ValueError:
+                        continue
+
+                for date_str, subjects in bad_data.items():
+                    try:
+                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        if date_obj >= seven_days_ago.date():
+                            weekly_answers += sum(v for v in subjects.values() if isinstance(v, int))
+                    except ValueError:
+                        continue
+
+            # 時間別回答数（過去24時間）のデータ取得
+            hourly_answers = [0] * 24
+            now = datetime.now()
+            one_day_ago = now - timedelta(days=1)
+
+            # 処理を共通化
+            def process_hourly_data(data, start_time):
+                for date_str, subjects in data.items():
+                    try:
+                        # 日付が24時間以内かチェック
+                        date_obj = datetime.strptime(date_str, "%Y/%m/%d")
+                        if date_obj.date() >= start_time.date():
+                            # 簡易的に時間帯を割り振る（実際の解答時間がないため）
+                            # 1日の解答を24時間に均等に分散させる
+                            total_answers_per_day = sum(v for v in subjects.values() if isinstance(v, int))
+                            if total_answers_per_day > 0:
+                                for i in range(24):
+                                     hourly_answers[i] += total_answers_per_day / 24
+
+                    except (ValueError, TypeError):
+                        continue
+            
+            # 各アカウントのデータを処理
+            for account in accounts:
+                correct_data = DB.safe_load_json(account.correctdata)
+                bad_data = DB.safe_load_json(account.baddata)
+                process_hourly_data(correct_data, one_day_ago)
+                process_hourly_data(bad_data, one_day_ago)
+
+            # MondaiStatsから問題使用統計を取得
+            problem_usage = []
+            stats_stmt = sa_select(MondaiStats).order_by(MondaiStats.usage_count.desc()).limit(10)
+            stats_result = await session.execute(stats_stmt)
+            top_problems = stats_result.scalars().all()
+
+            for problem in top_problems:
+                problem_usage.append({
+                    "name": problem.mondai_name,
+                    "count": problem.usage_count
+                })
+
+            # 人気の問題セットを決定
+            popular_set = problem_usage[0]["name"] if problem_usage else "なし"
+
+            return {
+                "totalAccounts": total_accounts,
+                "weeklyAnswers": weekly_answers,
+                "answersByHour": hourly_answers,
+                "problemUsage": problem_usage,
+                "popularSet": popular_set
+            }
+
+    except Exception as e:
+        print(f"統計データ取得エラー: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
+
+class UserSearchData(BaseModel):
+    userid: str
+
+@app.post("/api/statistics/user/{userid}")
+async def get_user_statistics(userid: str):
+    """
+    指定ユーザーの統計データを取得するAPI
+    """
+    try:
+        async with async_session() as session:
+            result = await session.execute(sa_select(Account).filter_by(userid=userid))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                return {"found": False}
+
+            # 正解・不正解データを取得
+            correct_data = DB.safe_load_json(user.correctdata)
+            bad_data = DB.safe_load_json(user.baddata)
+
+            total_correct = 0
+            total_incorrect = 0
+
+            # データ集計
+            for date_data in correct_data.values():
+                for subject_data in date_data.values():
+                    if isinstance(subject_data, dict):
+                        total_correct += sum(v for v in subject_data.values() if isinstance(v, int))
+
+            for date_data in bad_data.values():
+                for subject_data in date_data.values():
+                    if isinstance(subject_data, dict):
+                        total_incorrect += sum(v for v in subject_data.values() if isinstance(v, int))
+
+            total_answers = total_correct + total_incorrect
+            accuracy = (total_correct / total_answers * 100) if total_answers > 0 else 0
+
+            return {
+                "found": True,
+                "correct": total_correct,
+                "bad": total_incorrect,
+                "accuracy": round(accuracy, 2)
+            }
+
+    except Exception as e:
+        print(f"ユーザー統計取得エラー: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve user statistics")
+
+# APIエンドポイント
 
 # APIエンドポイント
 @app.post("/api/registration")

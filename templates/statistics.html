@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css"></noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="./statistics.css">
+    <title>統計 - Quizbox</title>
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <!-- Password Authentication Modal -->
+    <div class="auth-modal" id="auth-modal" style="display: block;">
+        <div class="auth-container">
+            <h2>管理者認証</h2>
+            <form id="auth-form">
+                <input type="password" id="admin-password" placeholder="管理者パスワード" required>
+                <button type="submit">認証</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="top">
+        <div class="top-left">
+            <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
+            <a href="/" class="create-btn">メイン</a>
+        </div>
+    </div>
+
+    <div class="main" id="statistics-content" style="display: none;">
+        <div class="statistics-dashboard">
+            <h1>統計ダッシュボード</h1>
+
+            <!-- Overview Cards -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <h3>総アカウント数</h3>
+                    <p id="total-accounts">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>今週の回答数</h3>
+                    <p id="weekly-answers">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>人気の問題セット</h3>
+                    <p id="popular-set">-</p>
+                </div>
+            </div>
+
+            <!-- Time-based Answer Chart -->
+            <div class="chart-section">
+                <h2>時間別回答数</h2>
+                <canvas id="answers-chart"></canvas>
+            </div>
+
+            <!-- Problem Usage Stats -->
+            <div class="chart-section">
+                <h2>問題使用統計</h2>
+                <canvas id="problem-usage-chart"></canvas>
+            </div>
+
+            <!-- User Search -->
+            <div class="user-search-section">
+                <h2>ユーザー検索</h2>
+                <input type="text" id="user-search" placeholder="ユーザーIDを検索">
+                <button id="search-user-btn">検索</button>
+                <div id="user-stats"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/micromodal@0.6.1/dist/micromodal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
+
+    <script>
+        // Authentication
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const password = document.getElementById('admin-password').value;
+
+            try {
+                const response = await fetch('/api/statistics/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({password: password})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('auth-modal').style.display = 'none';
+                    document.getElementById('statistics-content').style.display = 'block';
+                    loadStatistics();
+                } else {
+                    alert('パスワードが間違っています');
+                }
+            } catch (error) {
+                console.error('認証エラー:', error);
+                alert('認証に失敗しました');
+            }
+        });
+
+        // Load statistics data
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const data = await response.json();
+
+                // Update overview cards
+                document.getElementById('total-accounts').textContent = data.totalAccounts;
+                document.getElementById('weekly-answers').textContent = data.weeklyAnswers;
+                document.getElementById('popular-set').textContent = data.popularSet;
+
+                // Create time-based chart
+                createAnswerChart(data.answersByHour);
+
+                // Create problem usage chart
+                createProblemUsageChart(data.problemUsage);
+
+            } catch (error) {
+                console.error('統計データ読み込みエラー:', error);
+            }
+        }
+
+        // Create hourly answers chart
+        function createAnswerChart(answersByHour) {
+            const ctx = document.getElementById('answers-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: '回答数',
+                        data: answersByHour,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create problem usage chart
+        function createProblemUsageChart(problemUsage) {
+            const ctx = document.getElementById('problem-usage-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: problemUsage.map(item => item.name),
+                    datasets: [{
+                        label: '使用回数',
+                        data: problemUsage.map(item => item.count),
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // User search functionality
+        document.getElementById('search-user-btn').addEventListener('click', async function() {
+            const userId = document.getElementById('user-search').value;
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/statistics/user/${userId}`);
+                const data = await response.json();
+
+                const userStatsDiv = document.getElementById('user-stats');
+                if (data.found) {
+                    userStatsDiv.innerHTML = `
+                        <h3>ユーザー: ${userId}</h3>
+                        <p>正解数: ${data.correct}</p>
+                        <p>不正解数: ${data.bad}</p>
+                        <p>正答率: ${data.accuracy}%</p>
+                    `;
+                } else {
+                    userStatsDiv.innerHTML = '<p>ユーザーが見つかりません</p>';
+                }
+            } catch (error) {
+                console.error('ユーザー検索エラー:', error);
+            }
+        });
+
+        // Icon modal function
+        function iconmodal() {
+            if (typeof MicroModal !== 'undefined') {
+                MicroModal.show('modal-1');
+            }
+        }
+    </script>
+</body>
+
+</html>

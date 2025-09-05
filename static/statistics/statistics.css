@@ -1,0 +1,205 @@
+/*
+ * statistics.css
+ * Styles for the statistics dashboard page.
+ */
+
+body {
+    font-family: 'Noto Sans Japanese', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    color: #333;
+}
+
+.auth-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.auth-container {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+.auth-container h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+#auth-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+#auth-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+#auth-form button:hover {
+    background-color: #2980b9;
+}
+
+.statistics-dashboard {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.statistics-dashboard h1 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #555;
+    font-weight: 600;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.chart-section {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+}
+
+.chart-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.user-search-section {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.user-search-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #2c3e50;
+    text-align: center;
+}
+
+#user-search {
+    width: calc(100% - 100px);
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px 0 0 8px;
+    box-sizing: border-box;
+}
+
+#search-user-btn {
+    width: 100px;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    vertical-align: top;
+}
+
+#search-user-btn:hover {
+    background-color: #2980b9;
+}
+
+#user-stats {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+#user-stats h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+#user-stats p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    .statistics-dashboard {
+        padding: 15px;
+    }
+
+    .stats-overview {
+        grid-template-columns: 1fr;
+    }
+
+    #user-search {
+        width: calc(100% - 80px);
+    }
+
+    #search-user-btn {
+        width: 80px;
+    }
+}
