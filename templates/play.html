@@ -913,154 +913,51 @@
                                     if (dictData.success && dictData.found && dictData.meanings && dictData.meanings.length > 0) {
                                         let modifiedJapanesePart = japanesePart;
                                         
-                                        // 各意味に対してアンダーラインを適用（語幹マッチング対応）
-                                        dictData.meanings.forEach(meaning => {
-                                            if (meaning && meaning.trim()) {
+                                        // 各意味に対してアンダーラインを適用（語幹マッチング対応）- 改善版
+                                        const allMeanings = dictData.meanings.filter(m => m && m.trim());
+                                        if (allMeanings.length > 0) {
+                                            const patternsToUnderline = new Set();
+
+                                            allMeanings.forEach(meaning => {
                                                 const cleanMeaning = meaning.trim();
-                                                
-                                                // 1. 完全一致をチェック
-                                                const exactRegex = new RegExp(escapeRegExp(cleanMeaning), 'g');
-                                                modifiedJapanesePart = modifiedJapanesePart.replace(exactRegex, `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${cleanMeaning}</u>`);
-                                                
-                                                // 2. 語幹ベースのマッチング（動詞・形容詞の活用形に対応）
-                                                if (cleanMeaning.length >= 3) {
+                                                patternsToUnderline.add(cleanMeaning); // 完全一致
+
+                                                // 語幹ベースのマッチング
+                                                if (cleanMeaning.length >= 2) {
                                                     let stem = '';
-                                                    
-                                                    // 動詞の語幹抽出
-                                                    if (cleanMeaning.endsWith('む')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 楽しむ → 楽し
-                                                    } else if (cleanMeaning.endsWith('る')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 見る → 見
-                                                    } else if (cleanMeaning.endsWith('す')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 話す → 話
-                                                    } else if (cleanMeaning.endsWith('く')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 歩く → 歩
-                                                    } else if (cleanMeaning.endsWith('ぐ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 泳ぐ → 泳
-                                                    } else if (cleanMeaning.endsWith('つ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 待つ → 待
-                                                    } else if (cleanMeaning.endsWith('ぬ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 死ぬ → 死
-                                                    } else if (cleanMeaning.endsWith('ぶ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 遊ぶ → 遊
-                                                    } else if (cleanMeaning.endsWith('う')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 買う → 買
-                                                    } else if (cleanMeaning.endsWith('い')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 楽しい → 楽し
+                                                    const lastChar = cleanMeaning.slice(-1);
+                                                    const secondLastChar = cleanMeaning.length > 1 ? cleanMeaning.slice(-2, -1) : '';
+
+                                                    // 語幹抽出ロジック（よりシンプルに）
+                                                    if ('むるすくぐつぬぶうい'.includes(lastChar)) {
+                                                        stem = cleanMeaning.slice(0, -1);
                                                     }
-                                                    
-                                                    // 語幹が抽出できた場合、関連する表現をマッチング
-                                                    if (stem.length >= 2) {
-                                                        // よくある活用パターンを直接指定
-                                                        let commonPatterns = [
-                                                            stem + 'める', // 楽しめる
-                                                            stem + 'んだ',  // 楽しんだ
-                                                            stem + 'んで',  // 楽しんで
-                                                            stem + 'みます', // 楽しみます
-                                                            stem + 'まない', // 楽しまない
-                                                            stem + 'ませんでした', // 楽しませんでした
-                                                            stem + 'もう',   // 楽しもう
-                                                            stem + 'そう',   // 楽しそう
-                                                            stem + 'く',     // 楽しく
-                                                            stem + 'かった', // 楽しかった
-                                                            stem + 'くない', // 楽しくない
-                                                            stem + 'さ',     // 楽しさ
-                                                            stem + 'み',     // 楽しみ
-                                                        ];
-                                                        
-                                                        // 特殊な音変化パターンを追加
-                                                        if (cleanMeaning.endsWith('つ')) {
-                                                            // つ動詞の音変化: 待つ → 待ち、待って
-                                                            commonPatterns.push(
-                                                                stem + 'ち',     // 待ち
-                                                                stem + 'ちます',  // 待ちます
-                                                                stem + 'ちません', // 待ちません
-                                                                stem + 'ちたい',  // 待ちたい
-                                                                stem + 'ちきれない', // 待ちきれない
-                                                                stem + 'ちわびる', // 待ちわびる
-                                                                stem + 'って',    // 待って
-                                                                stem + 'った',    // 待った
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('く')) {
-                                                            // く動詞の音変化: 歩く → 歩き、歩いて
-                                                            commonPatterns.push(
-                                                                stem + 'き',     // 歩き
-                                                                stem + 'きます',  // 歩きます
-                                                                stem + 'きません', // 歩きません
-                                                                stem + 'きたい',  // 歩きたい
-                                                                stem + 'いて',    // 歩いて
-                                                                stem + 'いた',    // 歩いた
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぐ')) {
-                                                            // ぐ動詞の音変化: 泳ぐ → 泳ぎ、泳いで
-                                                            commonPatterns.push(
-                                                                stem + 'ぎ',     // 泳ぎ
-                                                                stem + 'ぎます',  // 泳ぎます
-                                                                stem + 'ぎません', // 泳ぎません
-                                                                stem + 'ぎたい',  // 泳ぎたい
-                                                                stem + 'いで',    // 泳いで
-                                                                stem + 'いだ',    // 泳いだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぶ')) {
-                                                            // ぶ動詞の音変化: 遊ぶ → 遊び、遊んで
-                                                            commonPatterns.push(
-                                                                stem + 'び',     // 遊び
-                                                                stem + 'びます',  // 遊びます
-                                                                stem + 'びません', // 遊びません
-                                                                stem + 'びたい',  // 遊びたい
-                                                                stem + 'んで',    // 遊んで
-                                                                stem + 'んだ',    // 遊んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('む')) {
-                                                            // む動詞の音変化: 読む → 読み、読んで
-                                                            commonPatterns.push(
-                                                                stem + 'み',     // 読み
-                                                                stem + 'みます',  // 読みます
-                                                                stem + 'みません', // 読みません
-                                                                stem + 'みたい',  // 読みたい
-                                                                stem + 'んで',    // 読んで
-                                                                stem + 'んだ',    // 読んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぬ')) {
-                                                            // ぬ動詞の音変化: 死ぬ → 死に、死んで
-                                                            commonPatterns.push(
-                                                                stem + 'に',     // 死に
-                                                                stem + 'にます',  // 死にます
-                                                                stem + 'にません', // 死にません
-                                                                stem + 'にたい',  // 死にたい
-                                                                stem + 'んで',    // 死んで
-                                                                stem + 'んだ',    // 死んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('す')) {
-                                                            // す動詞の音変化: 話す → 話し、話して
-                                                            commonPatterns.push(
-                                                                stem + 'し',     // 話し
-                                                                stem + 'します',  // 話します
-                                                                stem + 'しません', // 話しません
-                                                                stem + 'したい',  // 話したい
-                                                                stem + 'して',    // 話して
-                                                                stem + 'した',    // 話した
-                                                            );
+
+                                                    if (stem) {
+                                                        const conjugations = {
+                                                            'む': ['み', 'んで', 'んだ'], 'る': ['り', 'って', 'った'], 'す': ['し', 'して', 'した'],
+                                                            'く': ['き', 'いて', 'いた'], 'ぐ': ['ぎ', 'いで', 'いだ'], 'つ': ['ち', 'って', 'った'],
+                                                            'ぬ': ['に', 'んで', 'んだ'], 'ぶ': ['び', 'んで', 'んだ'], 'う': ['い', 'って', 'った'],
+                                                            'い': ['く', 'かった', 'さ', 'み']
+                                                        };
+                                                        if (conjugations[lastChar]) {
+                                                            conjugations[lastChar].forEach(conj => patternsToUnderline.add(stem + conj));
                                                         }
-                                                        
-                                                        commonPatterns.forEach(pattern => {
-                                                            try {
-                                                                const patternRegex = new RegExp(escapeRegExp(pattern), 'g');
-                                                                modifiedJapanesePart = modifiedJapanesePart.replace(patternRegex, (match) => {
-                                                                    // 既にアンダーラインが引かれていないかチェック
-                                                                    if (!modifiedJapanesePart.includes(`<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`)) {
-                                                                        return `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`;
-                                                                    }
-                                                                    return match;
-                                                                });
-                                                            } catch (regexError) {
-                                                                // 正規表現エラーは無視
-                                                            }
-                                                        });
                                                     }
                                                 }
+                                            });
+
+                                            // 正規表現を一度だけ構築
+                                            const sortedPatterns = Array.from(patternsToUnderline).sort((a, b) => b.length - a.length);
+                                            if (sortedPatterns.length > 0) {
+                                                const regex = new RegExp(`(?<!<[^>]*?)(${sortedPatterns.map(p => escapeRegExp(p)).join('|')})(?![^<]*?>)`, 'g');
+                                                
+                                                modifiedJapanesePart = modifiedJapanesePart.replace(regex, (match, p1) => {
+                                                    // p1 がキャプチャグループの内容
+                                                    return `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${p1}</u>`;
+                                                });
                                             }
-                                        });
+                                        }
                                         
                                         processedSentence = modifiedJapanesePart + '|' + englishPart;
                                     }
@@ -3235,21 +3132,17 @@
         //        }
         //        return;
         //    }
-
         //    const driver_css = document.createElement('link');
         //    driver_css.rel = 'stylesheet';
         //    driver_css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';
         //    document.head.appendChild(driver_css);
-
         //    const driver_script = document.createElement('script');
         //    driver_script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';
         //    document.body.appendChild(driver_script);
-
         //    driver_script.onload = () => {
         //        const tutorial_script = document.createElement('script');
         //        tutorial_script.src = '/play/tutorial.js';
         //        document.body.appendChild(tutorial_script);
-
         //        tutorial_script.onload = () => {
         //            if (typeof startTutorial === 'function') {
         //                startTutorial();

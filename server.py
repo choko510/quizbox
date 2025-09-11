@@ -2074,7 +2074,7 @@ class WordData(BaseModel):
     word: str
     mondai: str
 
-@app.post("/api/search")
+@app.get("/api/search")
 async def search_problems(query: str = Query(..., min_length=1)):
     """
     問題を検索するAPIエンドポイント
@@ -2583,6 +2583,7 @@ BOOK_RANGES = {
     "target1200": make_ranges(1, 1700, 50),
     "target1400": make_ranges(1, 1400, 50),
     "target1900": make_ranges(1, 1900, 100),
+    "deruz1k": make_ranges(1, 1900, 50),
 }
 
 @app.get("/api/get/ranges/{book_id}")

@@ -463,6 +463,36 @@ body {
     overflow: hidden;
 }
 
+/* 書籍折りたたみ機能 */
+@media screen and (max-width: 1000px) {
+    .collapsible-item {
+        display: none;
+    }
+    
+    .toggle-book {
+        display: block;
+        margin-top: 10px;
+        padding: 7px 16px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .toggle-book:hover {
+        background-color: #2980b9;
+    }
+    
+    .category-book.expanded .collapsible-item {
+        display: block;
+    }
+}
+
 .progress-learned {
     background: linear-gradient(90deg, #4caf50,90%, #ff9800);
     /* 緑色 - 学習済み */

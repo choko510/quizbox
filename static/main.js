@@ -405,6 +405,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // ページナビゲーションリスナーを設定
     setupPageNavigationListener();
     
+    // 折りたたみ初期化 (重複を避けるため、別途DOMContentLoadedで扱うが、ここでは不要)
+    
     // アプリケーションの初期化完了
     console.log('アプリケーションの初期化が完了しました');
 });
@@ -662,10 +664,27 @@ async function drawMainChart() {
             return;
         }
 
-        // 日付データを取得しソート
-        const dates = Object.keys(data.correct).sort((a, b) => {
-            return new Date(a) - new Date(b);
+        // 日付データを取得し、日単位で集計
+        const allKeys = [...new Set([...Object.keys(data.correct), ...Object.keys(data.bad)])];
+        const dailyData = {};
+        allKeys.forEach(key => {
+            const datePart = key.split(' ')[0]; // 日付部分のみ抽出
+            if (!dailyData[datePart]) {
+                dailyData[datePart] = { correct: 0, bad: 0 };
+            }
+            const valCorrect = data.correct[key];
+            const valBad = data.bad[key];
+            dailyData[datePart].correct += typeof valCorrect === 'object' && valCorrect !== null && valCorrect.hasOwnProperty('other') ? valCorrect.other : (valCorrect || 0);
+            dailyData[datePart].bad += typeof valBad === 'object' && valBad !== null && valBad.hasOwnProperty('other') ? valBad.other : (valBad || 0);
         });
+
+        // 全日付をソート
+        let dates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+
+        // 記録された日のうち最新の30日分に制限（データがない日はスキップ）
+        if (dates.length > 30) {
+            dates = dates.slice(-30);
+        }
 
         if (dates.length === 0) {
             displayChartError(ctx, '表示するデータがありません');
@@ -673,18 +692,11 @@ async function drawMainChart() {
         }
 
         // データを日付順に整理
-        const labels = dates.map(date => moment(date).format('YYYY/MM/DD'));
-        // オブジェクト形式の場合も考慮して数値を取得
-        const correctData = dates.map(date => {
-            const val = data.correct[date];
-            return typeof val === 'object' && val !== null && val.hasOwnProperty('other') ? val.other : (val || 0);
-        });
-        const badData = dates.map(date => {
-            const val = data.bad[date];
-            return typeof val === 'object' && val !== null && val.hasOwnProperty('other') ? val.other : (val || 0);
-        });
+        const labels = dates.map(date => moment(date).format('MM/DD'));
+        const correctData = dates.map(date => dailyData[date].correct);
+        const badData = dates.map(date => dailyData[date].bad);
 
-        // トータルを計算 (修正後の数値データで計算)
+        // トータルを計算
         const totalData = correctData.map((correct, index) => correct + badData[index]);
 
         // 既存のチャートがある場合は破棄
@@ -704,9 +716,10 @@ async function drawMainChart() {
                         backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     },
                     {
                         label: '正解数',
@@ -715,9 +728,10 @@ async function drawMainChart() {
                         backgroundColor: 'rgba(76, 175, 80, 0.1)',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     },
                     {
                         label: '不正解数',
@@ -726,9 +740,10 @@ async function drawMainChart() {
                         backgroundColor: 'rgba(244, 67, 54, 0.1)',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        spanGaps: true
                     }
                 ]
             },
@@ -747,7 +762,7 @@ async function drawMainChart() {
                             usePointStyle: true,
                             padding: 20,
                             font: {
-                                size: 12,
+                                size: 13,
                                 weight: 'bold'
                             }
                         }
@@ -755,7 +770,11 @@ async function drawMainChart() {
                     tooltip: {
                         mode: 'index',
                         intersect: false,
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#333',
+                        bodyColor: '#333',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
                         padding: 12,
                         titleFont: {
                             size: 14,
@@ -765,6 +784,9 @@ async function drawMainChart() {
                             size: 13
                         },
                         callbacks: {
+                            title: function(context) {
+                                return moment(context[0].label, 'MM/DD').format('YYYY/MM/DD');
+                            },
                             label: function(context) {
                                 return `${context.dataset.label}: ${context.raw}問`;
                             }
@@ -773,20 +795,14 @@ async function drawMainChart() {
                 },
                 scales: {
                     x: {
-                        type: 'time',
-                        time: {
-                            unit: 'day',
-                            tooltipFormat: 'YYYY/MM/DD',
-                            displayFormats: {
-                                day: 'MM/DD'
-                            }
-                        },
+                        type: 'category',
                         grid: {
-                            display: false
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
                         },
                         ticks: {
-                            maxRotation: 45,
-                            minRotation: 45,
+                            maxRotation: 60,
+                            minRotation: 0,
                             font: {
                                 size: 11
                             }
@@ -807,7 +823,7 @@ async function drawMainChart() {
                         },
                         ticks: {
                             font: {
-                                size: 11
+                                size: 12
                             }
                         }
                     }
@@ -1043,3 +1059,44 @@ function setupRankingEventListeners() {
 
 // グローバルに必要な関数を公開
 window.iconmodal = iconmodal;
+
+// 書籍折りたたみ機能
+function toggleDeruz1k() {
+    const categoryBook = document.querySelector('.category-book');
+    categoryBook.classList.toggle('expanded');
+    const button = event.target;
+    button.textContent = categoryBook.classList.contains('expanded') ? '隠す' : 'もっと見る';
+}
+
+// リサイズイベントで折りたたみ状態を管理
+window.addEventListener('resize', function() {
+    const categoryBook = document.querySelector('.category-book');
+    if (window.innerWidth > 1000) {
+        categoryBook.classList.remove('expanded');
+        const toggleBtn = document.querySelector('.toggle-book');
+        if (toggleBtn) {
+            toggleBtn.style.display = 'none';
+        }
+    } else {
+        const toggleBtn = document.querySelector('.toggle-book');
+        if (toggleBtn) {
+            toggleBtn.style.display = 'block';
+        }
+    }
+});
+
+// 初期ロード時にチェック
+document.addEventListener('DOMContentLoaded', function() {
+    // 既存のDOMContentLoadedコード...
+    // (上記のコードは変更なし)
+    
+    // 折りたたみ初期化
+    const categoryBook = document.querySelector('.category-book');
+    const toggleBtn = document.querySelector('.toggle-book');
+    if (window.innerWidth <= 1000 && toggleBtn) {
+        toggleBtn.style.display = 'block';
+        categoryBook.classList.remove('expanded');
+    } else if (toggleBtn) {
+        toggleBtn.style.display = 'none';
+    }
+});
