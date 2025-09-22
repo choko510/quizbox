@@ -971,7 +971,7 @@
                         // 問題文を書き換え
                         // グローバルな正規表現を使用して、すべての | を <br> に置換
                         title.innerHTML = processedSentence.replace(/\|/g, "<br>").replace(new RegExp(
-                            escapeRegExp(correctAnswer), "g"), "(     )");
+                            escapeRegExp(correctAnswer), "gi"), "(     )");
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
                         if (screenWidth < 600 || screenHeight < 600) {

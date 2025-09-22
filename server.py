@@ -1824,9 +1824,7 @@ async def get_sentences(request: Request):
 
         results = {}
 
-        words_map = {word.lower(): word for word in words}
-        
-        # 静的キャッシュ変数を定義
+        # 静的キャッシュ変数にデータがなければ読み込む
         if not sentences_cache:
             
             # ファイルが大きい場合のパフォーマンス改善策
@@ -1855,8 +1853,17 @@ async def get_sentences(request: Request):
             
         all_sentences = sentences_cache
 
-        for word_lower, original_word in words_map.items():
+        # リクエストされた単語リストをループ
+        for original_word in words:
+            processed_word = re.sub(r"\s*\([^)]*\)", "", original_word).strip()
+            word_lower = processed_word.lower()
+
             matching_sentences = []
+            
+            # 前処理の結果、検索語が空になった場合はスキップ
+            if not word_lower:
+                results[original_word] = matching_sentences
+                continue
 
             # 文字列長に制限を設けて、ReDoS脆弱性を軽減
             if len(word_lower) > 100:  # 合理的な単語の長さ制限
@@ -2570,21 +2577,37 @@ def make_ranges(start, end, step, label_offset=0):
     label_offset: ラベルの開始番号調整（必要な場合のみ）
     """
     ranges = []
-    s_list = list(range(start, end + 1, step))
+    s_list = list(range(start, end, step))
     e_list = s_list[1:] + [end]
     for s, e in zip(s_list, e_list):
         ranges.append({"start": s, "end": e, "label": f"{s}-{e}"})
     return ranges
 
+def load_book_data():
+    """
+    data/books.json から書籍データを読み込む
+    """
+    try:
+        with open("data/books.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    except json.JSONDecodeError:
+        return {}
+
+BOOKS_DATA = load_book_data()
+
 BOOK_RANGES = {
-    "leap": make_ranges(1, 2300, 50),
-    "systemeitango": make_ranges(1, 2027, 100),
-    "target1000": make_ranges(1, 1000, 50),
-    "target1200": make_ranges(1, 1700, 50),
-    "target1400": make_ranges(1, 1400, 50),
-    "target1900": make_ranges(1, 1900, 100),
-    "deruz1k": make_ranges(1, 1900, 50),
+    book_id: make_ranges(1, data["max_range"], data["step"])
+    for book_id, data in BOOKS_DATA.items()
 }
+
+@app.get("/api/books")
+async def get_books():
+    """
+    data/books.json から書籍データを返す
+    """
+    return BOOKS_DATA
 
 @app.get("/api/get/ranges/{book_id}")
 async def get_ranges(book_id: str):

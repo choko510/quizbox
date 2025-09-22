@@ -145,22 +145,36 @@
             }
         }
 
-        // 教材IDと名前のマッピング
-        const bookTitles = {
-            'leap': 'LEAP',
-            'systemeitango': 'システム英単語',
-            'target1000': 'ターゲット1000',
-            'target1200': 'ターゲット1200',
-            'target1400': 'ターゲット1400',
-            'target1900': 'ターゲット1900',
-            'deruz1k': '英検準１級 でる順パス単'
-        };
+        let bookTitles = {};
+        let allBookData = {};
+
+        async function fetchBookData() {
+            try {
+                const response = await fetch('/api/books');
+                if (!response.ok) {
+                    throw new Error('書籍データの取得に失敗しました');
+                }
+                const data = await response.json();
+                // bookTitlesを更新
+                for (const bookId in data) {
+                    bookTitles[bookId] = data[bookId].title;
+                }
+                return data;
+            } catch (error) {
+                console.error(error);
+                showError('書籍データの読み込みに失敗しました。');
+                return null;
+            }
+        }
         
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            allBookData = await fetchBookData();
+            if (!allBookData) return;
+
             // URLから教材IDを取得
             const urlParams = new URLSearchParams(window.location.search);
             const bookId = urlParams.get('id');
-           const isMultiSelect = urlParams.get('multiselect') === 'true';
+            const isMultiSelect = urlParams.get('multiselect') === 'true';
 
             if (!bookId) {
                 showError('教材IDが指定されていません。');
@@ -170,7 +184,7 @@
            if (isMultiSelect) {
                document.body.classList.add('multiselect-mode');
            }
-            
+             
             // 教材名を設定
             updateBookTitle(bookId);
             
@@ -339,17 +353,8 @@
         
         // 教材ごとの最大範囲を取得
         function getMaxRangeForBook(bookId) {
-            const maxRanges = {
-                'leap': 2300,
-                'systemeitango': 2027,
-                'target1000': 1000,
-                'target1200': 1700,
-                'target1400': 1400,
-                'target1900': 1900,
-                'deruz1k': 1900
-            };
-            
-            return maxRanges[bookId] || 100;
+            const bookData = allBookData[bookId];
+            return bookData ? bookData.max_range : 100;
         }
         
         // 範囲リストを表示
