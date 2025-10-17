@@ -742,18 +742,6 @@
                 buildSearchIndex();
 
             }, 1000);
-
-            // AI出題モードの場合、初期化メッセージを表示
-            if (problemSettings.questionMode === 'ai') {
-                setTimeout(() => {
-                    const systemType = mlSystemInitialized ? '高度なML' : '標準AI';
-                    notie.alert({
-                        type: 'info',
-                        text: `${systemType}出題モードが有効です。あなたの学習パターンに最適化された問題を出題します`,
-                        time: 3
-                    });
-                }, 2000);
-            }
         });
 
         // 英単語かどうかを判断する関数
@@ -2055,12 +2043,30 @@
             }
 
             // UIに設定を反映
-            document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
-            document.getElementById('hardmode').checked = globalSettings.hardMode;
-            document.getElementById('pronunciation').checked = globalSettings.pronunciation;
-            document.getElementById('adaptive-answer-mode').checked = problemSettings.adaptiveAnswerMode;
-            document.getElementById(problemSettings.questionMode + '-mode').checked = true;
-            document.getElementById(globalSettings.answerMode + '-mode').checked = true;
+            const applyCheckedState = (id, checked) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.checked = checked;
+                    return true;
+                }
+                console.warn(`Element with id "${id}" was not found when applying settings.`);
+                return false;
+            };
+
+            applyCheckedState('replace-mondai', globalSettings.replaceMondai);
+            applyCheckedState('hardmode', globalSettings.hardMode);
+            applyCheckedState('pronunciation', globalSettings.pronunciation);
+            applyCheckedState('adaptive-answer-mode', problemSettings.adaptiveAnswerMode);
+
+            if (!applyCheckedState(`${problemSettings.questionMode}-mode`, true)) {
+                problemSettings.questionMode = 'random';
+                applyCheckedState('random-mode', true);
+            }
+
+            if (!applyCheckedState(`${globalSettings.answerMode}-mode`, true)) {
+                globalSettings.answerMode = 'choice';
+                applyCheckedState('choice-mode', true);
+            }
         }
 
         // 設定を保存する関数（強化版）
