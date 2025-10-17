@@ -25,70 +25,171 @@
     <div class="swiper-container">
         <div class="swiper-wrapper">
             <div class="swiper-slide slide1">
-                <div class="resultbox">
-                    <div class="resultbox1">
-                        <div class="progress-title">
-                            <i class="fas fa-book-open"></i>学習進捗
-                        </div>
-                        <div id="progress-stats">
-                            <div>
-                                <i class="fas fa-tasks"></i>総問題数:
-                                <span id="total-questions">0</span>
+                <div class="ml-stats-container">
+                    <!-- ML学習状態概要 -->
+                    <div class="ml-stats-overview">
+                        <h2 class="ml-stats-title">
+                            学習状態
+                        </h2>
+                        <div class="ml-stats-cards">
+                            <div class="ml-stat-card mastered">
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">習得済み</div>
+                                    <div class="stat-value" id="ml-mastered-count">0</div>
+                                    <div class="stat-detail">習熟度 80%以上</div>
+                                </div>
                             </div>
-                            <div>
-                                <i class="fas fa-check-circle"></i>学習済み:
-                                <span id="answered-questions">0</span>
+                            
+                            <div class="ml-stat-card learning">
+                                <div class="stat-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">学習中</div>
+                                    <div class="stat-value" id="ml-learning-count">0</div>
+                                    <div class="stat-detail">習熟度 30-80%</div>
+                                </div>
                             </div>
-                            <div>
-                                <i class="fas fa-smile"></i>正解:
-                                <span id="correct-answers">0</span>
+                            
+                            <div class="ml-stat-card review-needed">
+                                <div class="stat-icon">
+                                    <i class="fas fa-redo"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">要復習</div>
+                                    <div class="stat-value" id="ml-review-count">0</div>
+                                    <div class="stat-detail">習熟度 0-30%</div>
+                                </div>
                             </div>
-                            <div>
-                                <i class="fas fa-times-circle"></i>不正解:
-                                <span id="wrong-answers">0</span>
-                            </div>
-                            <div>
-                                <i class="fas fa-chart-pie"></i>進捗率:
-                                <span id="progress-percentage">0</span>%
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" id="progress-bar" style="width: 0%">
+                            
+                            <div class="ml-stat-card training-data">
+                                <div class="stat-icon">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">進捗</div>
+                                    <div class="stat-value">
+                                        <span id="ml-training-count">0</span> / <span id="total-questions">0</span>
                                     </div>
+                                    <div class="stat-detail">回答済み / 総問題数</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="resultbox2">
-                        <div class="stats-title">
-                            <i class="fas fa-chart-bar"></i>統計情報
+                    
+                    <!-- パフォーマンスグラフ -->
+                    <div class="ml-performance-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-line"></i>学習パフォーマンス推移
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="performance-chart"></canvas>
                         </div>
-                        <div id="performance-stats">
-                            <div>
-                                <i class="fas fa-percentage"></i>平均正解率:
+                    </div>
+                    
+                    <!-- 習熟度分布 -->
+                    <div class="ml-proficiency-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-layer-group"></i>習熟度分布
+                        </h3>
+                        <div class="proficiency-bars">
+                            <div class="proficiency-item">
+                                <div class="proficiency-label">
+                                    <span class="label-text">習得済み</span>
+                                    <span class="label-percentage" id="mastered-percentage">0%</span>
+                                </div>
+                                <div class="proficiency-bar-container">
+                                    <div class="proficiency-bar mastered" id="mastered-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="proficiency-item">
+                                <div class="proficiency-label">
+                                    <span class="label-text">学習中</span>
+                                    <span class="label-percentage" id="learning-percentage">0%</span>
+                                </div>
+                                <div class="proficiency-bar-container">
+                                    <div class="proficiency-bar learning" id="learning-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="proficiency-item">
+                                <div class="proficiency-label">
+                                    <span class="label-text">要復習</span>
+                                    <span class="label-percentage" id="review-percentage">0%</span>
+                                </div>
+                                <div class="proficiency-bar-container">
+                                    <div class="proficiency-bar review" id="review-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 推奨アクション -->
+                    <div class="ml-recommendations-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-lightbulb"></i>推奨アクション
+                        </h3>
+                        <div class="recommendations-list" id="ml-recommendations">
+                            <div class="recommendation-item">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>学習データを分析中...</span>
+                            </div>
+                        </div>
+                        <button id="start-review-btn" class="ml-action-btn">
+                            <i class="fas fa-play-circle"></i>復習を開始する
+                        </button>
+                    </div>
+
+                    <!-- Detailed Stats -->
+                    <div class="detailed-stats-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-pie"></i>詳細な統計
+                        </h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">回答済みの質問</span>
+                                <span id="answered-questions">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">正解</span>
+                                <span id="correct-answers">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">不正解</span>
+                                <span id="wrong-answers">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">平均正解率</span>
                                 <span id="avg-accuracy">0</span>%
                             </div>
-                            <div>
-                                <i class="fas fa-trophy"></i>最高連続正解:
+                            <div class="stat-item">
+                                <span class="stat-label">最大連続正解</span>
                                 <span id="max-streak">0</span>
                             </div>
-                            <div>
-                                <i class="fas fa-fire"></i>現在の連続正解:
+                            <div class="stat-item">
+                                <span class="stat-label">現在連続正解</span>
                                 <span id="current-streak">0</span>
                             </div>
-                            <div>
-                                <i class="fas fa-stopwatch"></i>平均解答時間:
-                                <span id="avg-time">0</span>秒
+                            <div class="stat-item">
+                                <span class="stat-label">平均解答時間</span>
+                                <span id="avg-time">0</span>s
                             </div>
                         </div>
-                    </div>
-                    <div class="resultbox3">
-                        <div class="study-title">
-                            <i class="fas fa-exclamation-circle"></i>学習中の問題
+                        <div class="progress-section">
+                            <span class="stat-label">進捗率</span>
+                            <div class="progress-bar-container">
+                                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="progress-percentage">0.0%</span>
                         </div>
-                        <ul id="study-list"></ul>
-                        <button id="start-review-btn" class="review-btn">間違えた問題を復習する</button>
-                    </div>
-                    <div class="resultbox4">
-                        <canvas id="performance-chart"></canvas>
+                        <h3 class="section-title" style="margin-top: 20px;">
+                            <i class="fas fa-list-ul"></i>要復習リスト
+                        </h3>
+                        <ul id="study-list" class="custom-list"></ul>
                     </div>
                 </div>
             </div>
@@ -170,6 +271,10 @@
                             <option value="correct">正解した問題</option>
                             <option value="incorrect">間違えた問題</option>
                         </select>
+                        <div class="settings-option" id="example-sentence-option" style="display: none;">
+                            <input type="checkbox" id="show-examples-checkbox" onchange="populateWordList()">
+                            <label for="show-examples-checkbox">例文を表示</label>
+                        </div>
                     </div>
                 </div>
                 <ul id="wordList" class="custom-list"></ul>
@@ -218,8 +323,15 @@
                             <label for="random-mode">ランダムに出題</label>
                         </div>
                         <div class="settings-option">
-                            <input type="radio" id="sequential-mode" name="question-mode" value="sequential">
-                            <label for="sequential-mode">1問目から順に出題</label>
+                            <input type="radio" id="ai-mode" name="question-mode" value="ai">
+                            <label for="ai-mode">AI出題</label>
+                        </div>
+                        <div class="settings-option">
+                            <input type="checkbox" name="adaptive-answer-mode" id="adaptive-answer-mode">
+                            <label for="adaptive-answer-mode">適応的回答モード選択（AI出題時のみ有効）</label>
+                            <small style="display: block; color: #666; margin-top: 4px;">
+                                AIが問題の習熟度に応じて最適な回答モードを自動選択します
+                            </small>
                         </div>
                         <h3>回答モード</h3>
                         <div class="settings-option">
@@ -263,6 +375,19 @@
     <script src="./write.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script>
+        // --- Caching Logic ---
+        
+
+        /**
+         * Fetches a resource from the network, caching the response for POST requests.
+         * If the resource is in the cache, it returns the cached response.
+         * @param {string} url The URL to fetch.
+         * @param {RequestInit} options The options for the fetch request.
+         * @returns {Promise<Response>}
+         */
+        
+        // --- End Caching Logic ---
+        
         // Swiperの初期化
         const swiper = new Swiper(".swiper-container", {
             direction: "horizontal",
@@ -278,19 +403,33 @@
         });
 
         let start;
+        let pausedTime = 0;
 
-        swiper.on('slideChangeTransitionEnd', function () {
+        swiper.on('slideChange', function () {
             if (swiper.activeIndex === 1) {
                 start = performance.now();
             }
-            document.querySelector('.swiper-button-next').style.display = 'block';
-            document.querySelector('.swiper-button-prev').style.display = 'block';
+            document.querySelector('.swiper-button-prev').style.display = swiper.isBeginning ? 'none' : 'block';
+            document.querySelector('.swiper-button-next').style.display = swiper.isEnd ? 'none' : 'block';
         });
 
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (start) {
+                    pausedTime = performance.now() - start;
+                    start = null;
+                }
+            } else {
+                if (pausedTime) {
+                    start = performance.now() - pausedTime;
+                    pausedTime = 0;
+                }
+            }
+        });
 
         function getParam(name, url) {
             if (!url) url = window.location.href;
-            name = name.replace(/\\/g, "\\\\").replace(/[\[\]]/g, "\\$&");
+            name = name.replace(/\\/g, "\\\\").replace(/[\[\]]/g, "\\$& ");
             var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
                 results = regex.exec(url);
             if (!results) return null;
@@ -326,8 +465,33 @@
 
         // 問題セット固有の設定
         const problemSettings = {
-            questionMode: 'sequential', // 出題モード（'random'または'sequential'）
-            currentQuestionIndex: 0 // 順番モードでの現在の問題インデックス
+            questionMode: 'random', // 出題モード（'random'または'ai'）
+            currentQuestionIndex: 0, // AIモードでの現在の問題インデックス
+            adaptiveAnswerMode: false // 適応的回答モード選択の有効/無効
+        };
+
+        // 適応的回答モード選択のルール
+        const answerModeRules = {
+            // 新規問題や習熟度が低い問題
+            beginner: 'choice',
+            // 一度正解したが定着が不十分な問題
+            intermediate: 'input',
+            // 英文問題での文法・語順確認
+            grammarCheck: 'word-arrange',
+            // 概念理解の確認
+            conceptCheck: 'true-false'
+        };
+
+        const srsIntervals = [1, 2, 5, 10, 30, 60, 120]; // SRSの間隔（日）
+        
+        // 個人化されたSRS間隔（動的に調整される）
+        let personalizedSrsIntervals = [...srsIntervals];
+        
+        // 苦手分野の自動検出
+        let weaknessDetection = {
+            categories: new Map(), // カテゴリ別の正解率
+            detectedWeaknesses: new Set(), // 検出された苦手分野
+            lastAnalysis: null // 最後の分析時刻
         };
 
         let answeredQuestions = new Set();
@@ -341,6 +505,20 @@
         let isInReviewMode = false;
         let reviewQuestions = [];
         let reviewStreaks = {}; // { questionIndex: streakCount }
+
+        // 改善案1: 短期的な出題履歴管理（連続出題防止の強化）
+        let recentQuestionHistory = []; // 直近5問の履歴
+        const MAX_RECENT_HISTORY = 5;
+
+        // 改善案2: 学習セッション管理
+        let sessionStartTime = new Date();
+        let sessionQuestionCount = 0;
+        let sessionPhase = 'warmup'; // 'warmup', 'main', 'cooldown'
+
+        // 機械学習モデル統合用のグローバル変数
+        let mlQuizSystem = null;
+        let mlPredictionCache = new Map();
+        let mlSystemInitialized = false;
 
 
         function pageback() {
@@ -510,7 +688,10 @@
         }
 
         loadQuestions().then(async () => {
-            document.getElementById('total-questions').textContent = questions.length;
+            const totalQuestionsEl = document.getElementById('total-questions');
+            if (totalQuestionsEl) {
+                totalQuestionsEl.textContent = questions.length;
+            }
 
             // 設定を読み込む
             loadSettings();
@@ -524,6 +705,21 @@
             // もしログインしていれば、サーバーから学習進捗データを読み込む
             if (accid && password) {
                 await loadProgressFromServer();
+            }
+
+            // セッション管理を初期化
+            initializeSessionManagement();
+
+            // 機械学習システムの初期化（AIモードの場合のみ）
+            if (problemSettings.questionMode === 'ai' && accid && password) {
+                mlQuizSystem = new MLEnhancedQuizSystem();
+                mlSystemInitialized = await mlQuizSystem.initializeMLSystem();
+                
+                if (mlSystemInitialized) {
+                    console.log('高度なML出題システムを利用します');
+                } else {
+                    console.log('標準のAI出題システムを利用します');
+                }
             }
 
             // 最初の問題表示と進捗更新
@@ -553,7 +749,7 @@
             if (!text || typeof text !== 'string') return false;
             // 英語の文字、数字、基本的な句読点のみを含む場合に英単語と判断
             // 日本語文字（ひらがな、カタカナ、漢字）が含まれていない場合に英語と判定
-            return /^[a-zA-Z0-9\s.,'\-!?;:()]+$/.test(text.trim()) &&
+            return /^[a-zA-Z0-9\s.,'!?;:()\-]+$/.test(text.trim()) &&
                    !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
         }
 
@@ -608,7 +804,7 @@
                 if (pronunciationOption) {
                     pronunciationOption.parentElement.style.display = 'none';
                 }
-                
+
                 // 発音機能セクション全体を非表示にする
                 const pronunciationHeaders = document.querySelectorAll('h3');
                 pronunciationHeaders.forEach(header => {
@@ -652,6 +848,11 @@
                     saveSettings();
                 }
             } else {
+                // 英単語問題の場合、例文表示オプションを表示
+                const exampleSentenceOption = document.getElementById('example-sentence-option');
+                if (exampleSentenceOption) {
+                    exampleSentenceOption.style.display = 'block';
+                }
             }
         }
 
@@ -689,41 +890,49 @@
         async function populateWordList() {
             let listHTML = ''; // HTML文字列を構築
             const englishWords = []; // 英単語を格納する配列
-            
+            const showExamples = document.getElementById('show-examples-checkbox').checked;
+
             // 英単語を抽出
             questions.forEach(question => {
-                const isEnglishWord = /^[a-zA-Z0-9\s.,'\-]+$/.test(question.word.trim()) &&
+                const isEnglishWord = /^[a-zA-Z0-9\s.,'!?;:()\-]+$/.test(question.word.trim()) &&
                                     !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(question.word);
                 if (isEnglishWord) {
                     englishWords.push(question.word);
                 }
             });
 
-            // 英単語の辞書情報を一括取得
+            // 英単語の辞書情報と例文を一括取得
             let dictResults = {};
+            let exampleResults = {};
+
             if (englishWords.length > 0) {
+                const dictOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: '', batch_words: englishWords })
+                };
+                const fetchDict = fetch('/api/dict/search', dictOptions).then(res => res.ok ? res.json() : Promise.reject('dict search failed'));
+
+                const examplesOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ words: englishWords })
+                };
+                const fetchExamples = showExamples ? fetch('/api/get/sentences', examplesOptions).then(res => res.ok ? res.json() : Promise.reject('example search failed')) : Promise.resolve(null);
+
                 try {
-                    const response = await fetch('/api/dict/search', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            word: '',
-                            batch_words: englishWords
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success && data.results) {
-                            dictResults = data.results;
-                        }
+                    const [dictData, exampleData] = await Promise.all([fetchDict, fetchExamples]);
+                    if (dictData.success && dictData.results) {
+                        dictResults = dictData.results;
+                    }
+                    if (exampleData && exampleData.results) {
+                        exampleResults = exampleData.results;
                     }
                 } catch (error) {
-                    console.error('辞書検索エラー:', error);
+                    console.error('辞書または例文の検索エラー:', error);
                 }
             }
+
 
             questions.forEach(question => {
                 let titleHTML, contentHTML;
@@ -733,44 +942,56 @@
                 titleHTML = question.word;
                 contentHTML = question.description;
 
-                const isEnglishWord = /^[a-zA-Z0-9\s.,'\-]+$/.test(titleHTML.trim()) &&
+                const isEnglishWord = /^[a-zA-Z0-9\s.,'!?;:()\-]+$/.test(titleHTML.trim()) &&
                                     !/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(titleHTML);
                 const speakerIcon = isEnglishWord ?
                     `  <i class="fas fa-volume-up speak-icon" onclick="playWord('${titleHTML}')"></i>` :
                     '';
 
-                // 英単語の場合、辞書情報を追加
+                // 英単語の場合、辞書情報と例文を追加
                 let wordInfo = titleHTML;
                 let additionalInfo = '';
                 
-                if (isEnglishWord && dictResults[titleHTML]) {
+                if (isEnglishWord) {
                     const dictInfo = dictResults[titleHTML];
-                    if (dictInfo.found) {
-                        // 品詞を表示
+                    if (dictInfo && dictInfo.found) {
                         if (dictInfo.pos) {
                             wordInfo += ` <span class="pos-tag">${dictInfo.pos}</span>`;
                         }
-                        
-                        additionalInfo = '<div class="word-details">';
-                        
-                        // 過去形・過去分詞を表示（動詞の場合）
+
+                        let additionalContent = '';
                         if (dictInfo.past_tense && dictInfo.past_participle) {
                             if (dictInfo.past_tense === dictInfo.past_participle) {
-                                additionalInfo += `<div class="past-forms">${dictInfo.past_tense}</div>`;
+                                additionalContent += `<div class="past-forms">${dictInfo.past_tense}</div>`;
                             } else {
-                                additionalInfo += `<div class="past-forms">${dictInfo.past_tense} / ${dictInfo.past_participle}</div>`;
+                                additionalContent += `<div class="past-forms">${dictInfo.past_tense} / ${dictInfo.past_participle}</div>`;
                             }
                         }
-                        
-                        // 他の意味を表示
+
                         if (dictInfo.meanings && dictInfo.meanings.length > 0) {
                             const otherMeanings = dictInfo.meanings.filter(meaning => meaning !== contentHTML);
                             if (otherMeanings.length > 0) {
-                                additionalInfo += `<div class="other-meanings">${otherMeanings.join(', ')}</div>`;
+                                additionalContent += `<div class="other-meanings">${otherMeanings.join(', ')}</div>`;
                             }
                         }
-                        
-                        additionalInfo += '</div>';
+                        if (additionalContent) {
+                            additionalInfo += `<div class="word-details">${additionalContent}</div>`;
+                        }
+                    }
+
+                    if (showExamples && exampleResults[titleHTML] && exampleResults[titleHTML].length > 0) {
+                        let exampleContent = '<div class="example-sentences">';
+                        exampleResults[titleHTML].slice(0, 3).forEach(ex => {
+                            const parts = ex.split('|');
+                            const enSentence = parts[1] ? parts[1] : parts[0];
+                            const jaSentence = parts[1] ? parts[0] : '';
+                            exampleContent += `<div class="example-sentence">
+                                <p class="en-sentence">${enSentence.replace(new RegExp(titleHTML, 'gi'), `<strong>${titleHTML}</strong>`)}</p>
+                                <p class="ja-sentence">${jaSentence}</p>
+                            </div>`;
+                        });
+                        exampleContent += '</div>';
+                        additionalInfo += exampleContent;
                     }
                 }
 
@@ -794,8 +1015,7 @@
         let renzokuseikai = 0;
 
         async function showNextQuestion() {
-            if (currentIndex === undefined || currentIndex < 0 || currentIndex >=
-                questions.length) {
+            if (currentIndex === undefined || currentIndex < 0 || currentIndex >= questions.length) {
 
                 if (questions.length > 0) {
                     currentIndex = 0;
@@ -832,8 +1052,7 @@
             if (isReversed) {
                 // 反転モード: 他の問題の説明文を候補に
                 questions.forEach((q, index) => {
-                    if (index !== currentIndex && q.description !== correctAnswer && !
-                        incorrectOptions.includes(q.description)) {
+                    if (index !== currentIndex && q.description !== correctAnswer && !incorrectOptions.includes(q.description)) {
                         incorrectOptions.push(q.description);
                     }
                 });
@@ -853,8 +1072,7 @@
 
                 // 他の問題の単語も候補に追加 (mondaiの選択肢と区別するため別の配列に)
                 questions.forEach((q, index) => {
-                    if (index !== currentIndex && q.word !== correctAnswer && !
-                        incorrectOptions.includes(q.word)) {
+                    if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
                         otherOptions.push(q.word);
                     }
                 });
@@ -864,28 +1082,42 @@
             if (isHardMode && !isReversed) {
                 // ハードモード時は /api/get/sentences から文章を取得して問題にする
                 try {
-                    const response = await fetch('/api/get/sentences', {
+                    // タイムアウト付きフェッチリクエスト
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2秒タイムアウト
+
+                    const sentenceOptions = {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             words: [correctAnswer]
-                        }) // 正解の単語を送信
-                    });
+                        }),
+                        signal: controller.signal
+                    };
+                    const response = await fetch('/api/get/sentences', sentenceOptions);
+
+                    clearTimeout(timeoutId);
+
                     if (!response.ok) {
                         throw new Error(`API request failed with status ${response.status}`);
                     }
+
                     const sentenceData = await response.json();
-                    if (sentenceData.results && sentenceData.results[correctAnswer] &&
-                        sentenceData.results[correctAnswer].length > 0) {
+                    
+                    // レスポンスの妥当性チェック
+                    if (!sentenceData || !sentenceData.results) {
+                        throw new Error('Invalid response format from sentences API');
+                    }
+
+                    if (sentenceData.results && sentenceData.results[correctAnswer] && sentenceData.results[correctAnswer].length > 0) {
                         const sentences = sentenceData.results[correctAnswer];
-                        const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences
-                            .length)]; // ランダムに1文選択
+                        const sentenceForQuestion = sentences[Math.floor(Math.random() * sentences.length)]; // ランダムに1文選択
 
                         // 正規表現のエスケープ関数
                         function escapeRegExp(string) {
-                            return string.replace(/[.*+?^${}()|[]\]/g, '\\$&');
+                            return string.replace(/[.*+?^${}()|[\]]/g, '\$&');
                         }
 
                         // 文章を日本語と英語に分割
@@ -898,7 +1130,7 @@
                             
                             // 辞書検索APIで英単語の意味を取得してアンダーラインを追加
                             try {
-                                const dictResponse = await fetch('/api/dict/search', {
+                                const dictOptions = {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json'
@@ -906,161 +1138,59 @@
                                     body: JSON.stringify({
                                         word: correctAnswer
                                     })
-                                });
+                                };
+                                const dictResponse = await fetch('/api/dict/search', dictOptions);
                                 
                                 if (dictResponse.ok) {
                                     const dictData = await dictResponse.json();
                                     if (dictData.success && dictData.found && dictData.meanings && dictData.meanings.length > 0) {
                                         let modifiedJapanesePart = japanesePart;
                                         
-                                        // 各意味に対してアンダーラインを適用（語幹マッチング対応）
-                                        dictData.meanings.forEach(meaning => {
-                                            if (meaning && meaning.trim()) {
+                                        // 各意味に対してアンダーラインを適用（語幹マッチング対応）- 改善版
+                                        const allMeanings = dictData.meanings.filter(m => m && m.trim());
+                                        if (allMeanings.length > 0) {
+                                            const patternsToUnderline = new Set();
+
+                                            allMeanings.forEach(meaning => {
                                                 const cleanMeaning = meaning.trim();
-                                                
-                                                // 1. 完全一致をチェック
-                                                const exactRegex = new RegExp(escapeRegExp(cleanMeaning), 'g');
-                                                modifiedJapanesePart = modifiedJapanesePart.replace(exactRegex, `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${cleanMeaning}</u>`);
-                                                
-                                                // 2. 語幹ベースのマッチング（動詞・形容詞の活用形に対応）
-                                                if (cleanMeaning.length >= 3) {
+                                                patternsToUnderline.add(cleanMeaning); // 完全一致
+
+                                                // 語幹ベースのマッチング
+                                                if (cleanMeaning.length >= 2) {
                                                     let stem = '';
-                                                    
-                                                    // 動詞の語幹抽出
-                                                    if (cleanMeaning.endsWith('む')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 楽しむ → 楽し
-                                                    } else if (cleanMeaning.endsWith('る')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 見る → 見
-                                                    } else if (cleanMeaning.endsWith('す')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 話す → 話
-                                                    } else if (cleanMeaning.endsWith('く')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 歩く → 歩
-                                                    } else if (cleanMeaning.endsWith('ぐ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 泳ぐ → 泳
-                                                    } else if (cleanMeaning.endsWith('つ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 待つ → 待
-                                                    } else if (cleanMeaning.endsWith('ぬ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 死ぬ → 死
-                                                    } else if (cleanMeaning.endsWith('ぶ')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 遊ぶ → 遊
-                                                    } else if (cleanMeaning.endsWith('う')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 買う → 買
-                                                    } else if (cleanMeaning.endsWith('い')) {
-                                                        stem = cleanMeaning.slice(0, -1); // 楽しい → 楽し
+                                                    const lastChar = cleanMeaning.slice(-1);
+                                                    const secondLastChar = cleanMeaning.length > 1 ? cleanMeaning.slice(-2, -1) : '';
+
+                                                    // 語幹抽出ロジック（よりシンプルに）
+                                                    if ('むるすくぐつぬぶうい'.includes(lastChar)) {
+                                                        stem = cleanMeaning.slice(0, -1);
                                                     }
-                                                    
-                                                    // 語幹が抽出できた場合、関連する表現をマッチング
-                                                    if (stem.length >= 2) {
-                                                        // よくある活用パターンを直接指定
-                                                        let commonPatterns = [
-                                                            stem + 'める', // 楽しめる
-                                                            stem + 'んだ',  // 楽しんだ
-                                                            stem + 'んで',  // 楽しんで
-                                                            stem + 'みます', // 楽しみます
-                                                            stem + 'まない', // 楽しまない
-                                                            stem + 'ませんでした', // 楽しませんでした
-                                                            stem + 'もう',   // 楽しもう
-                                                            stem + 'そう',   // 楽しそう
-                                                            stem + 'く',     // 楽しく
-                                                            stem + 'かった', // 楽しかった
-                                                            stem + 'くない', // 楽しくない
-                                                            stem + 'さ',     // 楽しさ
-                                                            stem + 'み',     // 楽しみ
-                                                        ];
-                                                        
-                                                        // 特殊な音変化パターンを追加
-                                                        if (cleanMeaning.endsWith('つ')) {
-                                                            // つ動詞の音変化: 待つ → 待ち、待って
-                                                            commonPatterns.push(
-                                                                stem + 'ち',     // 待ち
-                                                                stem + 'ちます',  // 待ちます
-                                                                stem + 'ちません', // 待ちません
-                                                                stem + 'ちたい',  // 待ちたい
-                                                                stem + 'ちきれない', // 待ちきれない
-                                                                stem + 'ちわびる', // 待ちわびる
-                                                                stem + 'って',    // 待って
-                                                                stem + 'った',    // 待った
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('く')) {
-                                                            // く動詞の音変化: 歩く → 歩き、歩いて
-                                                            commonPatterns.push(
-                                                                stem + 'き',     // 歩き
-                                                                stem + 'きます',  // 歩きます
-                                                                stem + 'きません', // 歩きません
-                                                                stem + 'きたい',  // 歩きたい
-                                                                stem + 'いて',    // 歩いて
-                                                                stem + 'いた',    // 歩いた
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぐ')) {
-                                                            // ぐ動詞の音変化: 泳ぐ → 泳ぎ、泳いで
-                                                            commonPatterns.push(
-                                                                stem + 'ぎ',     // 泳ぎ
-                                                                stem + 'ぎます',  // 泳ぎます
-                                                                stem + 'ぎません', // 泳ぎません
-                                                                stem + 'ぎたい',  // 泳ぎたい
-                                                                stem + 'いで',    // 泳いで
-                                                                stem + 'いだ',    // 泳いだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぶ')) {
-                                                            // ぶ動詞の音変化: 遊ぶ → 遊び、遊んで
-                                                            commonPatterns.push(
-                                                                stem + 'び',     // 遊び
-                                                                stem + 'びます',  // 遊びます
-                                                                stem + 'びません', // 遊びません
-                                                                stem + 'びたい',  // 遊びたい
-                                                                stem + 'んで',    // 遊んで
-                                                                stem + 'んだ',    // 遊んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('む')) {
-                                                            // む動詞の音変化: 読む → 読み、読んで
-                                                            commonPatterns.push(
-                                                                stem + 'み',     // 読み
-                                                                stem + 'みます',  // 読みます
-                                                                stem + 'みません', // 読みません
-                                                                stem + 'みたい',  // 読みたい
-                                                                stem + 'んで',    // 読んで
-                                                                stem + 'んだ',    // 読んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('ぬ')) {
-                                                            // ぬ動詞の音変化: 死ぬ → 死に、死んで
-                                                            commonPatterns.push(
-                                                                stem + 'に',     // 死に
-                                                                stem + 'にます',  // 死にます
-                                                                stem + 'にません', // 死にません
-                                                                stem + 'にたい',  // 死にたい
-                                                                stem + 'んで',    // 死んで
-                                                                stem + 'んだ',    // 死んだ
-                                                            );
-                                                        } else if (cleanMeaning.endsWith('す')) {
-                                                            // す動詞の音変化: 話す → 話し、話して
-                                                            commonPatterns.push(
-                                                                stem + 'し',     // 話し
-                                                                stem + 'します',  // 話します
-                                                                stem + 'しません', // 話しません
-                                                                stem + 'したい',  // 話したい
-                                                                stem + 'して',    // 話して
-                                                                stem + 'した',    // 話した
-                                                            );
+
+                                                    if (stem) {
+                                                        const conjugations = {
+                                                            'む': ['み', 'んで', 'んだ'], 'る': ['り', 'って', 'った'], 'す': ['し', 'して', 'した'],
+                                                            'く': ['き', 'いて', 'いた'], 'ぐ': ['ぎ', 'いで', 'いだ'], 'つ': ['ち', 'って', 'った'],
+                                                            'ぬ': ['に', 'んで', 'んだ'], 'ぶ': ['び', 'んで', 'んだ'], 'う': ['い', 'って', 'った'],
+                                                            'い': ['く', 'かった', 'さ', 'み']
+                                                        };
+                                                        if (conjugations[lastChar]) {
+                                                            conjugations[lastChar].forEach(conj => patternsToUnderline.add(stem + conj));
                                                         }
-                                                        
-                                                        commonPatterns.forEach(pattern => {
-                                                            try {
-                                                                const patternRegex = new RegExp(escapeRegExp(pattern), 'g');
-                                                                modifiedJapanesePart = modifiedJapanesePart.replace(patternRegex, (match) => {
-                                                                    // 既にアンダーラインが引かれていないかチェック
-                                                                    if (!modifiedJapanesePart.includes(`<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`)) {
-                                                                        return `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${match}</u>`;
-                                                                    }
-                                                                    return match;
-                                                                });
-                                                            } catch (regexError) {
-                                                                // 正規表現エラーは無視
-                                                            }
-                                                        });
                                                     }
                                                 }
+                                            });
+
+                                            // 正規表現を一度だけ構築
+                                            const sortedPatterns = Array.from(patternsToUnderline).sort((a, b) => b.length - a.length);
+                                            if (sortedPatterns.length > 0) {
+                                                const regex = new RegExp(`(?<!<[^>]*?)(${sortedPatterns.map(p => escapeRegExp(p)).join('|')})(?![^<]*?>)`, 'g');
+                                                
+                                                modifiedJapanesePart = modifiedJapanesePart.replace(regex, (match, p1) => {
+                                                    // p1 がキャプチャグループの内容
+                                                    return `<u style="text-decoration-color: #007bff; text-decoration-thickness: 2px;">${p1}</u>`;
+                                                });
                                             }
-                                        });
+                                        }
                                         
                                         processedSentence = modifiedJapanesePart + '|' + englishPart;
                                     }
@@ -1074,7 +1204,7 @@
                         // 問題文を書き換え
                         // グローバルな正規表現を使用して、すべての | を <br> に置換
                         title.innerHTML = processedSentence.replace(/\|/g, "<br>").replace(new RegExp(
-                            escapeRegExp(correctAnswer), "g"), "(     )");
+                            escapeRegExp(correctAnswer), "gi"), "(     )");
                         // フォントサイズ調整 (新しい問題文の長さに合わせて)
                         textlength = sentenceForQuestion.length;
                         if (screenWidth < 600 || screenHeight < 600) {
@@ -1097,19 +1227,84 @@
 
                         // 他の問題の単語を不正解の候補として集める
                         questions.forEach((q, index) => {
-                            if (index !== currentIndex && q.word !== correctAnswer && !
-                                incorrectOptions.includes(q.word)) {
+                            if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
                                 incorrectOptions.push(q.word);
                             }
                         });
 
+                    } else {
+                        // 文章データが空または見つからない場合
+                        throw new Error('No sentences found for the word');
                     }
                 } catch (error) {
-                    // エラーが発生した場合は通常の選択肢生成に戻る
+                    console.error('ハードモードエラー:', error);
+                    
+                    // エラータイプに応じた処理
+                    let errorMessage = '';
+                    let shouldFallback = false;
+                    
+                    if (error.name === 'AbortError') {
+                        errorMessage = 'ハードモードの問題生成がタイムアウトしました。通常モードで続行します。';
+                        shouldFallback = true;
+                    } else if (error.message.includes('No sentences found')) {
+                        errorMessage = 'この単語の例文が見つかりませんでした。通常モードで続行します。';
+                        shouldFallback = true;
+                    } else if (error.message.includes('Invalid response format')) {
+                        errorMessage = 'サーバーからの応答が不正です。通常モードで続行します。';
+                        shouldFallback = true;
+                    } else if (error.message.includes('failed with status')) {
+                        errorMessage = 'サーバーエラーが発生しました。通常モードで続行します。';
+                        shouldFallback = true;
+                    } else {
+                        errorMessage = 'ハードモードでエラーが発生しました。通常モードで続行します。';
+                        shouldFallback = true;
+                    }
+                    
+                    // ユーザーに通知
+                    notie.alert({
+                        type: 'warning',
+                        text: errorMessage,
+                        time: 3
+                    });
+                    
+                    if (shouldFallback) {
+                        // 一時的にハードモードを無効にして通常モードで表示
+                        const originalHardMode = globalSettings.hardMode;
+                        globalSettings.hardMode = false;
+                        
+                        // 通常モードでの問題文表示
+                        let textContent;
+                        if (isReversed) {
+                            title.innerHTML = question.word;
+                            textContent = question.word;
+                        } else {
+                            title.innerHTML = question.description;
+                            textContent = question.description;
+                        }
+
+                        let textLength = textContent.length;
+                        if (screenWidth < 600 || screenHeight < 600) {
+                            if (textLength >= 150) title.style.fontSize = "0.8em";
+                            else if (textLength >= 100) title.style.fontSize = "1em";
+                            else title.style.fontSize = "1.3em";
+                        } else if (screenWidth < 1200 || screenHeight < 800) {
+                            if (textLength >= 150) title.style.fontSize = "1em";
+                            else if (textLength >= 100) title.style.fontSize = "1.2em";
+                            else title.style.fontSize = "1.4em";
+                        } else {
+                            if (textLength >= 150) title.style.fontSize = "1.2em";
+                            else if (textLength >= 100) title.style.fontSize = "1.3em";
+                            else title.style.fontSize = "1.4em";
+                        }
+                        
+                        // ハードモード設定を元に戻す（一時的な無効化）
+                        globalSettings.hardMode = originalHardMode;
+                    }
+                    
+                    // 通常の選択肢生成処理（エラー時のフォールバック）
                     incorrectOptions = [];
                     questions.forEach((q, index) => {
-                        if (index !== currentIndex && q.word !== correctAnswer && !
-                            incorrectOptions.includes(q.word)) {
+                        if (index !== currentIndex && q.word !== correctAnswer && !incorrectOptions.includes(q.word)) {
                             incorrectOptions.push(q.word);
                         }
                     });
@@ -1178,8 +1373,8 @@
                 });
             }
 
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
+            var screenWidth = window.innerWidth;
+            var screenHeight = window.innerHeight;
 
             // 問題文表示
             if (!isHardMode) {
@@ -1223,7 +1418,7 @@
                     document.getElementsByClassName('main')[0].style.height = '75vh';
                 }
 
-                if (alltextLength >= 400 && screenWidth < 1400) {
+                if (alltextLength >= 400 && screenWidth <  1400) {
                     Array.from(document.getElementsByClassName('answer-btn')).forEach(btn => {
                         btn.style.fontSize = '0.6em';
                     });
@@ -1240,8 +1435,31 @@
             }
             // --- 選択肢生成ここまで ---
 
-            // 各モードに応じてUIをセットアップ
-            setupAnswerModeUI(correctAnswer);
+            // 適応的回答モード選択（AIモード時のみ）
+            let effectiveAnswerMode = globalSettings.answerMode;
+            if (problemSettings.questionMode === 'ai' && problemSettings.adaptiveAnswerMode) {
+                effectiveAnswerMode = selectOptimalAnswerMode(currentIndex);
+                if (effectiveAnswerMode !== globalSettings.answerMode) {
+                    // モードが変更された場合、ユーザーに通知
+                    const modeNames = {
+                        'choice': '4択モード',
+                        'input': '入力モード',
+                        'handwriting': '手書きモード',
+                        'word-arrange': '英単語並び替えモード',
+                        'true-false': '○×問題モード'
+                    };
+                    setTimeout(() => {
+                        notie.alert({
+                            type: 'info',
+                            text: `AIが最適と判断した${modeNames[effectiveAnswerMode]}で出題します`,
+                            time: 2
+                        });
+                    }, 500);
+                }
+            }
+
+            // 各モードに応じてUIをセットアップ（適応的モードを考慮）
+            setupAnswerModeUI(correctAnswer, effectiveAnswerMode);
 
 
             // --- タイマー制御: ここでのタイマー開始を削除 ---
@@ -1296,9 +1514,7 @@
                 const accuracy = calculateAccuracy();
                 performanceHistory.push(accuracy);
 
-                performanceChart.data.labels = Array.from({
-                    length: performanceHistory.length
-                }, (_, i) => i + 1);
+                performanceChart.data.labels = Array.from({ length: performanceHistory.length }, (_, i) => i + 1);
                 performanceChart.data.datasets[0].data = performanceHistory;
                 performanceChart.update();
             }
@@ -1331,31 +1547,166 @@
                 studyList.appendChild(li);
             }
             // 復習ボタンの表示/非表示
-            document.getElementById('start-review-btn').style.display = studyingQuestions
-                .size > 0 ? 'block' : 'none';
+            document.getElementById('start-review-btn').style.display = studyingQuestions.size > 0 ? 'block' : 'none';
         }
 
 
         function updateStats() {
-            document.getElementById('answered-questions').textContent = answeredQuestions
-                .size;
+            document.getElementById('answered-questions').textContent = answeredQuestions.size;
             document.getElementById('correct-answers').textContent = correctCount;
             document.getElementById('wrong-answers').textContent = wrongCount;
-            const progressPercentage = questions.length > 0 ? (answeredQuestions.size /
-                questions.length) * 100 : 0; // Avoid division by zero
+            const progressPercentage = questions.length > 0 ? (answeredQuestions.size / questions.length) * 100 : 0; // Avoid division by zero
             document.getElementById('progress-percentage').textContent =
                 progressPercentage.toFixed(1);
             document.getElementById('progress-bar').style.width = progressPercentage +
                 '%';
 
-            document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(
-                1);
+            document.getElementById('avg-accuracy').textContent = calculateAccuracy().toFixed(1);
             document.getElementById('max-streak').textContent = maxStreak;
             document.getElementById('current-streak').textContent = renzokuseikai;
             document.getElementById('avg-time').textContent = calculateAverageTime();
 
             updateChart();
             updateStudyList();
+            updateMLStats(); // ML統計情報を更新
+        }
+
+        // ML統計情報を更新する関数
+        async function updateMLStats() {
+            if (!accid || !password) return; // ログインしていない場合は処理しない
+
+            // 習熟度に基づく分類
+            let masteredCount = 0;
+            let learningCount = 0;
+            let reviewCount = 0;
+
+            questionStats.forEach((stats, index) => {
+                if (!answeredQuestions.has(index)) {
+                    reviewCount++;
+                    return;
+                }
+
+                // 習熟度の計算
+                const accuracy = stats.attempts > 0 ? (stats.correctAnswers / stats.attempts) * 100 : 0;
+                
+                if (accuracy >= 80 && stats.correctAnswers >= 2 && !stats.isLongTime) {
+                    masteredCount++;
+                } else if (accuracy >= 30) {
+                    learningCount++;
+                } else {
+                    reviewCount++;
+                }
+            });
+
+            // 未回答の問題を要復習に追加
+            const unlearnedCount = questions.length - answeredQuestions.size;
+            reviewCount += unlearnedCount;
+
+            // カード表示を更新
+            const masteredEl = document.getElementById('ml-mastered-count');
+            const learningEl = document.getElementById('ml-learning-count');
+            const reviewEl = document.getElementById('ml-review-count');
+            const trainingEl = document.getElementById('ml-training-count');
+
+            if (masteredEl) masteredEl.textContent = masteredCount;
+            if (learningEl) learningEl.textContent = learningCount;
+            if (reviewEl) reviewEl.textContent = reviewCount;
+            if (trainingEl) trainingEl.textContent = answeredQuestions.size;
+
+            // 習熟度分布バーを更新
+            const total = questions.length;
+            const masteredPercentage = total > 0 ? (masteredCount / total) * 100 : 0;
+            const learningPercentage = total > 0 ? (learningCount / total) * 100 : 0;
+            const reviewPercentage = total > 0 ? (reviewCount / total) * 100 : 0;
+
+            const masteredPercentEl = document.getElementById('mastered-percentage');
+            const learningPercentEl = document.getElementById('learning-percentage');
+            const reviewPercentEl = document.getElementById('review-percentage');
+
+            const masteredBarEl = document.getElementById('mastered-bar');
+            const learningBarEl = document.getElementById('learning-bar');
+            const reviewBarEl = document.getElementById('review-bar');
+
+            if (masteredPercentEl) masteredPercentEl.textContent = masteredPercentage.toFixed(1) + '%';
+            if (learningPercentEl) learningPercentEl.textContent = learningPercentage.toFixed(1) + '%';
+            if (reviewPercentEl) reviewPercentEl.textContent = reviewPercentage.toFixed(1) + '%';
+
+            if (masteredBarEl) masteredBarEl.style.width = masteredPercentage + '%';
+            if (learningBarEl) learningBarEl.style.width = learningPercentage + '%';
+            if (reviewBarEl) reviewBarEl.style.width = reviewPercentage + '%';
+
+            // 推奨アクションを更新
+            updateMLRecommendations(masteredCount, learningCount, reviewCount);
+        }
+
+        // 推奨アクションを生成する関数
+        function updateMLRecommendations(masteredCount, learningCount, reviewCount) {
+            const recommendationsEl = document.getElementById('ml-recommendations');
+            if (!recommendationsEl) return;
+
+            const recommendations = [];
+
+            // 要復習の問題が多い場合
+            if (reviewCount > 10) {
+                recommendations.push({
+                    icon: 'fa-redo',
+                    text: `要復習の問題が${reviewCount}問あります。復習を優先しましょう`
+                });
+            }
+
+            // 学習中の問題が多い場合
+            if (learningCount > 5) {
+                recommendations.push({
+                    icon: 'fa-graduation-cap',
+                    text: `学習中の問題が${learningCount}問あります。定着させるために反復学習しましょう`
+                });
+            }
+
+            // 習得済みの問題が多い場合
+            if (masteredCount > questions.length * 0.5) {
+                recommendations.push({
+                    icon: 'fa-trophy',
+                    text: `習得済み${masteredCount}問！順調です。定期的な復習で記憶を保持しましょう`
+                });
+            }
+
+            // AIモードを推奨
+            if (problemSettings.questionMode !== 'ai' && answeredQuestions.size > 10) {
+                recommendations.push({
+                    icon: 'fa-brain',
+                    text: 'AI出題モードで、より効率的な学習が可能です'
+                });
+            }
+
+            // セッション情報に基づく推奨
+            const sessionStats = getSessionStats();
+            if (sessionStats.duration > 30) {
+                recommendations.push({
+                    icon: 'fa-clock',
+                    text: `${sessionStats.duration}分間学習中です。休憩を取ることをお勧めします`
+                });
+            }
+
+            // 推奨がない場合のデフォルトメッセージ
+            if (recommendations.length === 0) {
+                recommendations.push({
+                    icon: 'fa-check-circle',
+                    text: '学習を開始して、個別最適化された推奨を受け取りましょう'
+                });
+            }
+
+            // HTMLを生成
+            let html = '';
+            recommendations.forEach(rec => {
+                html += `
+                    <div class="recommendation-item">
+                        <i class="fas ${rec.icon}"></i>
+                        <span>${rec.text}</span>
+                    </div>
+                `;
+            });
+
+            recommendationsEl.innerHTML = html;
         }
 
         async function onAnswerClick(e) {
@@ -1375,17 +1726,17 @@
             start = null; // 次の問題が表示されるまでタイマー開始時刻をリセット
 
             const avgTime = calculateAverageTime();
-            // 時間がかかったかの判定: 平均の1.5倍以上、かつ最低でも5秒以上かかった場合など調整可能
             const isLongTime = timeTaken / 1000 > Math.max(5, avgTime * 1.5);
-
-
+            // 時間がかかったかの判定: 平均の1.5倍以上、かつ最低でも5秒以上かかった場合など調整可能
             if (!questionStats.has(currentIndex)) {
                 questionStats.set(currentIndex, {
                     attempts: 0,
                     correctAnswers: 0,
                     averageTime: 0,
                     isLongTime: false,
-                    isWrong: false
+                    isWrong: false,
+                    srsLevel: 0,
+                    nextReviewDate: new Date().toISOString().slice(0, 10)
                 });
             }
 
@@ -1405,6 +1756,7 @@
 
             if (e.target.textContent === correctAnswer) { // 正解の場合
                 stats.isWrong = false; // 正解したので不正解フラグはリセット
+                stats.srsLevel = (stats.srsLevel || 0) + 1;
                 if (isInReviewMode) {
                     // --- 復習モードの正解処理 ---
                     reviewStreaks[currentIndex] = (reviewStreaks[currentIndex] || 0) + 1; // reviewStreaks[currentIndex]が存在しない場合も考慮
@@ -1483,6 +1835,16 @@
                     // 発音機能：正解の英単語を発音
                     playCorrectAnswerPronunciation(correctAnswer);
                     
+                    // 苦手分野分析を実行
+                    analyzeWeaknesses();
+                    
+                    // 難易度フィードバックを表示（10問に1回、AIモード時のみ）
+                    if (problemSettings.questionMode === 'ai' && totalCount > 0 && totalCount % 10 === 0) {
+                        setTimeout(() => {
+                            difficultyFeedback.showFeedbackModal(currentIndex);
+                        }, 1500);
+                    }
+                    
                     updateProgressDisplay();
                     updateStats();
                     nextIndex();
@@ -1493,6 +1855,7 @@
                 }
             } else { // 不正解の場合
                 stats.isWrong = true; // 不正解フラグを立てる
+                stats.srsLevel = 0; // SRSレベルをリセット
                 studyingQuestions.add(currentIndex); // 不正解なら必ず学習中リストへ
                 if (isInReviewMode) {
                     // --- 復習モードの不正解処理 ---
@@ -1522,7 +1885,7 @@
                         text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' +
                             answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
-                        callback: async function () {
+                        callback: async function () { // Make callback async
                             updateProgressDisplay();
                             updateStats();
                             nextIndex(); // 復習モードでも次の問題へ
@@ -1556,7 +1919,10 @@
                         text: '<div class="popup">問題：' + questionText + '<br><br>正しい回答:' +
                             answerText + "<br>あなたの回答:" + e.target.textContent + '</div>',
                         buttonText: '私は間違えたことを深くお詫び、反省することを誓います。',
-                        callback: async function () {
+                        callback: async function () { // Make callback async
+                            // 苦手分野分析を実行
+                            analyzeWeaknesses();
+                            
                             updateProgressDisplay();
                             updateStats();
                             // 通常モードの不正解時は同じ問題を表示（nextIndexを呼ばない）
@@ -1568,6 +1934,36 @@
                     });
                 }
             }
+
+            // SRS: 次の復習日を計算（個人化された間隔を使用）
+            let intervalDays;
+            if (stats.srsLevel === 0) {
+                intervalDays = 0; // 間違えた問題は即日復習
+            } else {
+                // 個人化されたSRS間隔を使用し、問題の難易度も考慮
+                const baseInterval = personalizedSrsIntervals[Math.min(stats.srsLevel - 1, personalizedSrsIntervals.length - 1)];
+                
+                // 問題の難易度による調整
+                let difficultyMultiplier = 1.0;
+                if (stats.attempts >= 3) {
+                    const wrongRatio = (stats.attempts - stats.correctAnswers) / stats.attempts;
+                    if (wrongRatio > 0.6) {
+                        difficultyMultiplier = 0.5; // 苦手問題は間隔を短く
+                    } else if (wrongRatio < 0.2) {
+                        difficultyMultiplier = 1.5; // 得意問題は間隔を長く
+                    }
+                }
+                
+                intervalDays = Math.max(1, Math.round(baseInterval * difficultyMultiplier));
+            }
+            const nextReviewDate = new Date();
+            if (intervalDays > 0) {
+                nextReviewDate.setDate(nextReviewDate.getDate() + intervalDays);
+            }
+            stats.nextReviewDate = nextReviewDate.toISOString().slice(0, 10);
+
+            // SRS間隔の個人化調整
+            updatePersonalizedSrsIntervals(stats, timeTaken);
 
             // 時間がかかった場合も学習中にする（正解・不正解共通）
             if (isLongTime) {
@@ -1623,6 +2019,20 @@
                     if (parsedSettings.currentQuestionIndex !== undefined) {
                         problemSettings.currentQuestionIndex = parsedSettings.currentQuestionIndex;
                     }
+                    if (parsedSettings.adaptiveAnswerMode !== undefined) {
+                        problemSettings.adaptiveAnswerMode = parsedSettings.adaptiveAnswerMode;
+                    }
+                }
+
+                // 個人化されたSRS間隔を読み込む
+                const srsKey = `quizbox_personalized_srs_${problemSetKey}`;
+                const savedSrsIntervals = localStorage.getItem(srsKey);
+                if (savedSrsIntervals) {
+                    try {
+                        personalizedSrsIntervals = JSON.parse(savedSrsIntervals);
+                    } catch (e) {
+                        personalizedSrsIntervals = [...srsIntervals];
+                    }
                 }
             } catch (e) {
                 // 個別設定から読み込み（後方互換性）
@@ -1633,15 +2043,33 @@
             }
 
             // UIに設定を反映
-            document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
-            document.getElementById('hardmode').checked = globalSettings.hardMode;
-            document.getElementById('pronunciation').checked = globalSettings.pronunciation;
-            document.getElementById(problemSettings.questionMode + '-mode').checked =
-                true;
-            document.getElementById(globalSettings.answerMode + '-mode').checked = true;
+            const applyCheckedState = (id, checked) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.checked = checked;
+                    return true;
+                }
+                console.warn(`Element with id "${id}" was not found when applying settings.`);
+                return false;
+            };
+
+            applyCheckedState('replace-mondai', globalSettings.replaceMondai);
+            applyCheckedState('hardmode', globalSettings.hardMode);
+            applyCheckedState('pronunciation', globalSettings.pronunciation);
+            applyCheckedState('adaptive-answer-mode', problemSettings.adaptiveAnswerMode);
+
+            if (!applyCheckedState(`${problemSettings.questionMode}-mode`, true)) {
+                problemSettings.questionMode = 'random';
+                applyCheckedState('random-mode', true);
+            }
+
+            if (!applyCheckedState(`${globalSettings.answerMode}-mode`, true)) {
+                globalSettings.answerMode = 'choice';
+                applyCheckedState('choice-mode', true);
+            }
         }
 
-        // 設定を保存する関数
+        // 設定を保存する関数（強化版）
         function saveSettings() {
             // グローバル設定を一括で保存
             localStorage.setItem('quizbox_global_settings', JSON.stringify(globalSettings));
@@ -1658,6 +2086,19 @@
 
             const key = `quizbox_problem_settings_${problemSetKey}`;
             localStorage.setItem(key, JSON.stringify(problemSettings));
+            
+            // 個人化されたSRS間隔を保存
+            const srsKey = `quizbox_personalized_srs_${problemSetKey}`;
+            localStorage.setItem(srsKey, JSON.stringify(personalizedSrsIntervals));
+            
+            // 苦手分野検出データを保存
+            const weaknessKey = `quizbox_weakness_detection_${problemSetKey}`;
+            const weaknessData = {
+                categories: Object.fromEntries(weaknessDetection.categories),
+                detectedWeaknesses: Array.from(weaknessDetection.detectedWeaknesses),
+                lastAnalysis: weaknessDetection.lastAnalysis
+            };
+            localStorage.setItem(weaknessKey, JSON.stringify(weaknessData));
         }
 
         function selectQuestionMode() {
@@ -1665,21 +2106,11 @@
             const savedMode = problemSettings.questionMode;
             document.getElementById(savedMode + '-mode').checked = true; // UIに反映
 
-            if (savedMode === 'sequential') {
-                // 保存されている進捗があれば復元、なければ0から開始
-                currentIndex = problemSettings.currentQuestionIndex;
-                if (currentIndex >= questions.length || currentIndex < 0) {
-                    currentIndex = 0; // インデックスが範囲外なら最初から
-                    problemSettings.currentQuestionIndex = 0; // 設定も更新
-                    saveSettings(); // 保存
-                }
+            // 'ai'モードでも'random'モードでも、最初の問題はランダムに選択する
+            if (questions.length > 0) {
+                currentIndex = Math.floor(Math.random() * questions.length);
             } else {
-                // ランダムモード
-                if (questions.length > 0) {
-                    currentIndex = Math.floor(Math.random() * questions.length);
-                } else {
-                    currentIndex = undefined; // 問題がない場合
-                }
+                currentIndex = undefined; // 問題がない場合
             }
         }
 
@@ -1687,22 +2118,8 @@
             if (questions.length === 0) return; // 問題がない場合は何もしない
 
             if (isInReviewMode) {
-                if (reviewQuestions.length === 0) {
-                    // 復習完了時の処理 (念のため)
-                    isInReviewMode = false;
-                    document.getElementById('review-mode-indicator').style.display = 'none';
-                    document.getElementById('exit-review-btn').style.display = 'none';
-                    notie.alert({
-                        type: 'success',
-                        text: '復習完了！',
-                        time: 2
-                    });
-                    swiper.slideTo(0);
-                    saveProgressToServer(); // 最後に保存
-                    return; // 通常のモード選択に進まない
-                }
+                // 「間違えた問題を復習する」モード。AIモードとは独立して動作。
                 let lastReviewIndex = currentIndex;
-                // reviewQuestionsが空でないことを確認
                 if (reviewQuestions.length > 0) {
                     do {
                         currentIndex = reviewQuestions[Math.floor(Math.random() * reviewQuestions.length)];
@@ -1726,49 +2143,340 @@
                 return; // 通常のモード選択に進まない
             }
 
-            const isSequential = problemSettings.questionMode === 'sequential';
-
+            const questionMode = problemSettings.questionMode;
             let lastIndex = currentIndex;
 
-            if (isSequential) {
-                // 順番モードでは次の問題へ
-                currentIndex = (currentIndex + 1) % questions.length;
-                // 進捗を保存
-                problemSettings.currentQuestionIndex = currentIndex;
-                saveSettings();
+            // セッション問題数を増加
+            sessionQuestionCount++;
+            
+            // セッションフェーズを決定
+            sessionPhase = determineSessionPhase();
 
-                // 最後の問題に達して0に戻ったらランダムモードに切り替えるか、通知を出す
-                if (currentIndex === 0 && lastIndex === questions.length - 1) { // 厳密に一周したかチェック
-                    // ランダムモードに自動で切り替える場合
-                    // localStorage.setItem('question_mode_' + mondai, 'random');
-                    // document.getElementById('random-mode').checked = true;
-                    // document.getElementById('sequential-mode').checked = false;
-                    notie.alert({
-                        type: 'success',
-                        text: 'すべての問題を終了しました。引き続き順番に表示します。', // または 'ランダムモードに切り替えます'
-                        time: 3
-                    });
-                    // selectQuestionMode(); // モードが変わった場合、再選択ロジックを呼ぶ
-                }
+            if (questionMode === 'ai') {
+                // --- 強化されたハイブリッドAI出題ロジック ---
+                currentIndex = selectNextQuestionAI(lastIndex);
+            } else { // 'random' モード
+                // 改善されたランダムモード（短期履歴を考慮）
+                currentIndex = selectNextQuestionRandom(lastIndex);
+            }
+
+            // 短期履歴を更新
+            updateRecentHistory(currentIndex);
+            updateProgressDisplay();
+        }
+
+        // 学習セッションのフェーズを決定
+        function determineSessionPhase() {
+            if (sessionQuestionCount <= 5) {
+                return 'warmup'; // ウォームアップ（最初の5問）
+            } else if (sessionQuestionCount <= sessionQuestionCount * 0.8) {
+                return 'main'; // メイン学習
             } else {
-                // ランダムモード（現状の動作）
-                if (questions.length > 1) { // 問題が2つ以上ある場合のみループ
-                    do {
-                        currentIndex = Math.floor(Math.random() * questions.length);
-                    } while (currentIndex === lastIndex);
-                } else {
-                    // 問題が1つしかない場合はインデックスは変わらない
-                    currentIndex = 0;
+                return 'cooldown'; // クールダウン（終盤）
+            }
+        }
+
+        // AI出題ロジック（強化版 - ML統合対応）
+        function selectNextQuestionAI(lastIndex) {
+            // MLシステムが利用可能で有効な予測がある場合はそれを使用
+            if (mlSystemInitialized && mlQuizSystem && mlQuizSystem.isPredictionValid()) {
+                const mlSelectedIndex = mlQuizSystem.getNextQuestionML();
+                if (mlSelectedIndex !== null && mlSelectedIndex !== undefined &&
+                    mlSelectedIndex >= 0 && mlSelectedIndex < questions.length) {
+                    console.log('ML system: 問題を選択しました（ID:', mlSelectedIndex, '）');
+                    return mlSelectedIndex;
+                }
+            }
+            
+            // MLシステムが利用できない場合は従来のAIロジックを使用
+            const today = new Date().toISOString().slice(0, 10);
+
+            // 1. その日に復習すべき問題（新規または期限切れ）をリストアップ
+            let dueOrNewIndices = [];
+            for (let i = 0; i < questions.length; i++) {
+                const stats = questionStats.get(i);
+                // 未解答（statsなし）か、復習日が今日以前の問題を対象とする
+                if (!stats || !stats.nextReviewDate || stats.nextReviewDate <= today) {
+                    dueOrNewIndices.push(i);
                 }
             }
 
-            updateProgressDisplay();
+            // セッションフェーズに応じて候補を調整
+            dueOrNewIndices = filterBySessionPhase(dueOrNewIndices);
+
+            if (dueOrNewIndices.length === 0) {
+                notie.alert({ type: 'success', text: '今日の復習は完了です！お疲れ様でした。明日また挑戦しましょう。', time: 3 });
+                swiper.slideTo(0); // 進捗画面に戻る
+                return undefined; // これ以上問題を出さない
+            }
+
+            // 短期履歴に含まれる問題を除外または重みを下げる
+            const candidatesWithWeights = calculateEnhancedWeights(dueOrNewIndices);
+            
+            return weightedRandomSelection(candidatesWithWeights);
+        }
+
+        // セッションフェーズに応じて問題候補を調整
+        function filterBySessionPhase(indices) {
+            switch (sessionPhase) {
+                case 'warmup':
+                    // ウォームアップ: 比較的簡単な問題を優先
+                    return indices.filter(index => {
+                        const stats = questionStats.get(index);
+                        return !stats || stats.srsLevel >= 2 || (stats.correctAnswers || 0) > 0;
+                    }).concat(indices).slice(0, Math.max(indices.length, 10));
+
+                case 'main':
+                    // メイン学習: すべての問題が候補
+                    return indices;
+
+                case 'cooldown':
+                    // クールダウン: セッション中に間違えた問題を優先、最後に簡単な問題
+                    const sessionWrongQuestions = Array.from(studyingQuestions).filter(index =>
+                        indices.includes(index));
+                    if (sessionWrongQuestions.length > 0 && sessionQuestionCount % 3 !== 0) {
+                        return sessionWrongQuestions;
+                    } else {
+                        // 簡単な問題で締めくくり
+                        return indices.filter(index => {
+                            const stats = questionStats.get(index);
+                            return stats && stats.srsLevel >= 3;
+                        }).concat(indices).slice(0, 10);
+                    }
+
+                default:
+                    return indices;
+            }
+        }
+
+        // 強化された重み計算
+        function calculateEnhancedWeights(indices) {
+            // 全体の平均解答時間を計算（ミリ秒）
+            let totalAvgTime = 0;
+            let timeCount = 0;
+            questionStats.forEach(stats => {
+                if (stats.averageTime && stats.averageTime > 0) {
+                    totalAvgTime += stats.averageTime;
+                    timeCount++;
+                }
+            });
+            const globalAvgTime = timeCount > 0 ? totalAvgTime / timeCount : 5000; // デフォルト5秒
+
+            return indices.map(index => {
+                const stats = questionStats.get(index);
+                let weight = 1.0; // 基本の重み
+
+                if (stats) {
+                    // SRSレベルが低いほど重みを高くする
+                    weight += 10 / (stats.srsLevel + 1);
+
+                    // 過去の不正解率が高いほど重みを高くする
+                    const wrongRatio = stats.attempts > 0 ? (stats.attempts - stats.correctAnswers) / stats.attempts : 0;
+                    weight += 5 * wrongRatio;
+
+                    // 復習期限を過ぎているほど重みを高くする
+                    const today = new Date().toISOString().slice(0, 10);
+                    if (stats.nextReviewDate < today) {
+                        const overdueDays = (new Date(today) - new Date(stats.nextReviewDate)) / (1000 * 60 * 60 * 24);
+                        weight += overdueDays; // 1日ごとに重み+1
+                    }
+                    
+                    // 解答時間が平均より著しく長い問題に重みを加える
+                    if (stats.averageTime && stats.averageTime > globalAvgTime * 1.5) {
+                        weight += 3.0;
+                    }
+                    
+                    // isLongTime フラグが立っている問題に重みを加える
+                    if (stats.isLongTime) {
+                        weight += 2.0;
+                    }
+
+                    // 苦手問題の自動検出強化
+                    if (stats.attempts >= 3 && wrongRatio > 0.6) { // 3回以上解いて60%以上間違えている場合
+                        weight += 8.0;
+                    }
+
+                } else {
+                    // 新規問題には高い重みを与える（セッションフェーズに応じて調整）
+                    weight = sessionPhase === 'warmup' ? 5.0 : 15.0;
+                }
+
+                // 短期履歴に含まれる問題の重みを大幅に下げる
+                const recentCount = recentQuestionHistory.filter(h => h === index).length;
+                if (recentCount > 0) {
+                    weight *= Math.pow(0.1, recentCount); // 履歴にある回数分だけ重みを大幅減少
+                }
+
+                return { index, weight };
+            });
+        }
+
+        // 重み付きランダム選択
+        function weightedRandomSelection(candidatesWithWeights) {
+            const totalWeight = candidatesWithWeights.reduce((sum, item) => sum + item.weight, 0);
+            const randomValue = Math.random() * totalWeight;
+            let cumulativeWeight = 0;
+
+            for (const item of candidatesWithWeights) {
+                cumulativeWeight += item.weight;
+                if (randomValue <= cumulativeWeight) {
+                    return item.index;
+                }
+            }
+
+            // フォールバック
+            return candidatesWithWeights[candidatesWithWeights.length - 1].index;
+        }
+
+        // ランダムモード（改良版）
+        function selectNextQuestionRandom(lastIndex) {
+            if (questions.length <= 1) return 0;
+
+            let candidates = [];
+            for (let i = 0; i < questions.length; i++) {
+                candidates.push(i);
+            }
+
+            // 短期履歴に含まれる問題を除外
+            candidates = candidates.filter(index => !recentQuestionHistory.includes(index));
+            
+            // 候補がない場合は履歴をクリア
+            if (candidates.length === 0) {
+                recentQuestionHistory = [];
+                candidates = Array.from({ length: questions.length }, (_, i) => i);
+                candidates = candidates.filter(i => i !== lastIndex);
+            }
+
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        // 短期履歴を更新
+        function updateRecentHistory(questionIndex) {
+            recentQuestionHistory.unshift(questionIndex);
+            if (recentQuestionHistory.length > MAX_RECENT_HISTORY) {
+                recentQuestionHistory.pop();
+            }
+        }
+
+        // SRS間隔の個人化調整
+        function updatePersonalizedSrsIntervals(stats, timeTaken) {
+            // ユーザーの学習パターンに基づいてSRS間隔を動的に調整
+            if (!stats || stats.attempts < 3) return; // 十分なデータがない場合はスキップ
+            
+            const wrongRatio = (stats.attempts - stats.correctAnswers) / stats.attempts;
+            const avgTimeSeconds = timeTaken / 1000;
+            
+            // 全体的な傾向を分析
+            let adjustmentFactor = 1.0;
+            
+            // 苦手分野の場合：間隔を短くする
+            if (wrongRatio > 0.5 || avgTimeSeconds > 10) {
+                adjustmentFactor = 0.7; // 30%短縮
+            }
+            // 得意分野の場合：間隔を長くする
+            else if (wrongRatio < 0.2 && avgTimeSeconds < 3) {
+                adjustmentFactor = 1.3; // 30%延長
+            }
+            
+            // 個人化された間隔を更新（緩やかに調整）
+            for (let i = 0; i < personalizedSrsIntervals.length; i++) {
+                const targetInterval = Math.round(srsIntervals[i] * adjustmentFactor);
+                // 急激な変化を避けるため、現在の値との平均を取る
+                personalizedSrsIntervals[i] = Math.round(
+                    (personalizedSrsIntervals[i] + targetInterval) / 2
+                );
+                
+                // 最小・最大値の制限
+                personalizedSrsIntervals[i] = Math.max(1, Math.min(365, personalizedSrsIntervals[i]));
+            }
+        }
+
+        // 苦手分野の自動検出と分析
+        function analyzeWeaknesses() {
+            const currentTime = new Date();
+            
+            // 1時間以内に分析済みの場合はスキップ（パフォーマンス向上）
+            if (weaknessDetection.lastAnalysis &&
+                currentTime - weaknessDetection.lastAnalysis < 3600000) {
+                return;
+            }
+            
+            // カテゴリ別の統計を更新
+            updateCategoryStats();
+            
+            // 苦手分野を検出
+            const newWeaknesses = new Set();
+            
+            weaknessDetection.categories.forEach((stats, category) => {
+                if (stats.total >= 5) { // 最低5問は解いているカテゴリを対象
+                    const accuracy = (stats.correct / stats.total) * 100;
+                    if (accuracy < 60) { // 正答率60%未満を苦手と判定
+                        newWeaknesses.add(category);
+                    }
+                }
+            });
+            
+            // 新しく検出された苦手分野があれば通知
+            const newlyDetected = [...newWeaknesses].filter(w => !weaknessDetection.detectedWeaknesses.has(w));
+            if (newlyDetected.length > 0) {
+                setTimeout(() => {
+                    notie.alert({
+                        type: 'warning',
+                        text: `苦手分野を検出しました: ${newlyDetected.join(', ')}。重点的に復習しましょう`,
+                        time: 4
+                    });
+                }, 1000);
+            }
+            
+            weaknessDetection.detectedWeaknesses = newWeaknesses;
+            weaknessDetection.lastAnalysis = currentTime;
+        }
+
+        // カテゴリ別統計の更新（シンプルな例）
+        function updateCategoryStats() {
+            // 問題セット名やファイル名からカテゴリを推定
+            const category = extractCategoryFromProblemSet(mondai);
+            
+            if (!weaknessDetection.categories.has(category)) {
+                weaknessDetection.categories.set(category, {
+                    correct: 0,
+                    total: 0,
+                    lastUpdated: new Date()
+                });
+            }
+            
+            const stats = weaknessDetection.categories.get(category);
+            stats.total = totalCount;
+            stats.correct = correctCount;
+            stats.lastUpdated = new Date();
+        }
+
+        // 問題セットからカテゴリを抽出
+        function extractCategoryFromProblemSet(problemSetName) {
+            if (!problemSetName) return 'その他';
+            
+            const categoryMap = {
+                'target': '英単語',
+                'bizinesu': 'ビジネス',
+                'system': 'システム',
+                'prog': 'プログラミング',
+                'excel': 'Excel',
+                'deruz': '語学',
+                'hard': '上級',
+                'leap': '英語'
+            };
+            
+            for (const [key, category] of Object.entries(categoryMap)) {
+                if (problemSetName.toLowerCase().includes(key)) {
+                    return category;
+                }
+            }
+            
+            return 'その他';
         }
 
         // 進捗表示を更新する関数
         function updateProgressDisplay() {
-            const isSequential = problemSettings.questionMode === 'sequential';
-
             let scoreText =
                 `
                 回答数: ${totalCount}
@@ -1778,13 +2486,6 @@
                 正答率: ${calculateAccuracy().toFixed(1)}%
             `;
 
-            if (isSequential && questions.length > 0) {
-                // 順番モードでは問題番号も表示 (currentIndexが有効な場合のみ)
-                if (currentIndex !== undefined && currentIndex >= 0 && currentIndex <
-                    questions.length) {
-                    scoreText = `問題 ${currentIndex + 1}/${questions.length}<br>` + scoreText;
-                }
-            }
             // 復習モードの表示
             if (isInReviewMode) {
                 scoreText = `復習中 残り ${reviewQuestions.length} 問<br>` + scoreText;
@@ -1826,7 +2527,238 @@
             });
         }
 
-        // サーバーに学習進捗データを保存する関数
+        // セッション管理を初期化
+        function initializeSessionManagement() {
+            sessionStartTime = new Date();
+            sessionQuestionCount = 0;
+            sessionPhase = 'warmup';
+            recentQuestionHistory = [];
+            
+            console.log('セッション管理を初期化しました:', {
+                startTime: sessionStartTime,
+                phase: sessionPhase
+            });
+        }
+
+        // セッション統計の取得
+        function getSessionStats() {
+            const sessionDuration = new Date() - sessionStartTime;
+            const sessionMinutes = Math.round(sessionDuration / 60000);
+            
+            return {
+                duration: sessionMinutes,
+                questionCount: sessionQuestionCount,
+                phase: sessionPhase,
+                averageTimePerQuestion: sessionQuestionCount > 0 ? sessionMinutes / sessionQuestionCount : 0
+            };
+        }
+
+        // 機械学習統合システムのクラス
+        class MLEnhancedQuizSystem {
+            constructor() {
+                this.predictionCache = new Map();
+                this.lastPredictionTime = null;
+                this.predictionValidDuration = 300000; // 5分間有効
+            }
+            
+            async initializeMLSystem() {
+                if (!accid || !password) {
+                    console.log('ML system: ログイン情報が不足しています');
+                    return false;
+                }
+                
+                try {
+                    console.log('ML system: 初期化を開始します');
+                    const response = await fetch('/api/ml/predict_next_question', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userid: accid,
+                            password: password,
+                            problem_set: mondai,
+                            current_session: {
+                                phase: sessionPhase,
+                                questionCount: sessionQuestionCount,
+                                startTime: sessionStartTime.toISOString()
+                            },
+                            available_questions: questions.map((q, index) => index.toString())
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        console.log('ML system: APIが利用できません（通常のAIモードで動作します）');
+                        return false;
+                    }
+                    
+                    const predictions = await response.json();
+                    this.updatePredictionCache(predictions);
+                    
+                    console.log('ML system: 初期化が完了しました');
+                    return true;
+                } catch (error) {
+                    console.log('ML system: 初期化に失敗しました（通常のAIモードで動作します）:', error.message);
+                    return false;
+                }
+            }
+            
+            updatePredictionCache(predictions) {
+                if (!predictions || !predictions.predictions) {
+                    return;
+                }
+                
+                this.predictionCache.clear();
+                predictions.predictions.forEach(pred => {
+                    this.predictionCache.set(pred.question_id, {
+                        forgetProbability: pred.forget_probability,
+                        recommendedReviewTime: pred.recommended_review_time
+                    });
+                });
+                
+                this.lastPredictionTime = new Date();
+                console.log('ML system: 予測キャッシュを更新しました（', this.predictionCache.size, '問）');
+            }
+            
+            getNextQuestionML() {
+                // キャッシュの有効期限をチェック
+                if (this.lastPredictionTime &&
+                    (new Date() - this.lastPredictionTime) > this.predictionValidDuration) {
+                    console.log('ML system: 予測キャッシュの有効期限が切れました');
+                    this.predictionCache.clear();
+                    return null;
+                }
+                
+                if (this.predictionCache.size === 0) {
+                    return null;
+                }
+                
+                // 忘却確率が高い順にソートして選択
+                const predictions = Array.from(this.predictionCache.entries())
+                    .map(([questionId, data]) => ({ questionId, ...data }))
+                    .sort((a, b) => b.forgetProbability - a.forgetProbability);
+                
+                // 短期履歴を考慮してフィルタリング
+                const filteredPredictions = predictions.filter(p =>
+                    !recentQuestionHistory.includes(p.questionId)
+                );
+                
+                return filteredPredictions.length > 0 ?
+                    filteredPredictions[0].questionId :
+                    predictions[0]?.questionId;
+            }
+            
+            isPredictionValid() {
+                return this.predictionCache.size > 0 &&
+                       this.lastPredictionTime &&
+                       (new Date() - this.lastPredictionTime) <= this.predictionValidDuration;
+            }
+        }
+
+        // 難易度フィードバック機能
+        const difficultyFeedback = {
+            showFeedbackModal: function(questionId) {
+                // 既存のフィードバックモーダルがあれば削除
+                const existingModal = document.getElementById('difficulty-feedback-modal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                const modalHTML = `
+                    <div id="difficulty-feedback-modal" class="difficulty-feedback-overlay">
+                        <div class="difficulty-feedback-content">
+                            <h3>この問題の難易度は？</h3>
+                            <p>あなたにとってこの問題はどうでしたか？</p>
+                            <div class="difficulty-buttons">
+                                <button class="difficulty-btn too-easy" onclick="submitDifficultyFeedback(${questionId}, 'too_easy')">
+                                    <i class="fas fa-smile"></i> 簡単すぎる
+                                </button>
+                                <button class="difficulty-btn just-right" onclick="submitDifficultyFeedback(${questionId}, 'just_right')">
+                                    <i class="fas fa-check-circle"></i> ちょうど良い
+                                </button>
+                                <button class="difficulty-btn too-hard" onclick="submitDifficultyFeedback(${questionId}, 'too_hard')">
+                                    <i class="fas fa-frown"></i> 難しすぎる
+                                </button>
+                            </div>
+                            <button class="difficulty-btn skip" onclick="closeDifficultyFeedback()">
+                                スキップ
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // アニメーション用に少し遅延
+                setTimeout(() => {
+                    document.getElementById('difficulty-feedback-modal').classList.add('visible');
+                }, 10);
+            },
+            
+            processFeedback: function(questionId, difficulty) {
+                const stats = questionStats.get(questionId);
+                if (!stats) return;
+                
+                const adjustment = {
+                    'too_easy': 2.0,    // 間隔を2倍に
+                    'just_right': 1.0,  // 変更なし
+                    'too_hard': 0.5     // 間隔を半分に
+                };
+                
+                // SRS間隔を即座に調整
+                const currentLevel = stats.srsLevel || 0;
+                const baseInterval = personalizedSrsIntervals[Math.min(currentLevel, personalizedSrsIntervals.length - 1)];
+                const adjustedInterval = Math.max(1, Math.round(baseInterval * adjustment[difficulty]));
+                
+                // 次回復習日を再計算
+                const nextReviewDate = new Date();
+                nextReviewDate.setDate(nextReviewDate.getDate() + adjustedInterval);
+                stats.nextReviewDate = nextReviewDate.toISOString().slice(0, 10);
+                
+                // 難易度フィードバックを記録
+                if (!stats.difficultyFeedbacks) {
+                    stats.difficultyFeedbacks = [];
+                }
+                stats.difficultyFeedbacks.push({
+                    difficulty: difficulty,
+                    timestamp: new Date().toISOString()
+                });
+                
+                console.log(`問題 ${questionId} の難易度フィードバック: ${difficulty}, 調整後の間隔: ${adjustedInterval}日`);
+                
+                // 進捗を保存
+                saveProgressToServer();
+            }
+        };
+
+        // 難易度フィードバックを送信する関数（グローバル）
+        window.submitDifficultyFeedback = function(questionId, difficulty) {
+            difficultyFeedback.processFeedback(questionId, difficulty);
+            closeDifficultyFeedback();
+            
+            const feedbackText = {
+                'too_easy': '簡単すぎる',
+                'just_right': 'ちょうど良い',
+                'too_hard': '難しすぎる'
+            };
+            
+            notie.alert({
+                type: 'success',
+                text: `フィードバックありがとうございます！（${feedbackText[difficulty]}）`,
+                time: 2
+            });
+        };
+
+        // 難易度フィードバックモーダルを閉じる関数（グローバル）
+        window.closeDifficultyFeedback = function() {
+            const modal = document.getElementById('difficulty-feedback-modal');
+            if (modal) {
+                modal.classList.remove('visible');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        };
+
+        // サーバーに学習進捗データを保存する関数（強化版）
         async function saveProgressToServer() { // Make async
             const userId = Cookies.get('id');
             const password = Cookies.get('password');
@@ -1842,7 +2774,7 @@
             }
             const totalQuestions = questions.length;
 
-            // 1. 詳細データ (details) を作成
+            // 1. 詳細データ (details) を作成（セッション情報も含める）
             const detailsData = {
                 answeredQuestions: Array.from(answeredQuestions), // Convert Set to Array
                 questionStats: Object.fromEntries(questionStats), // Convert Map to Object
@@ -1850,6 +2782,29 @@
                 performanceHistory: performanceHistory,
                 answerTimes: answerTimes,
                 studyingQuestions: Array.from(studyingQuestions), // Convert Set to Array
+                
+                // 強化されたセッション管理情報
+                sessionInfo: getSessionStats(),
+                recentQuestionHistory: recentQuestionHistory,
+                sessionStartTime: sessionStartTime.toISOString(),
+                
+                // 学習パターン分析用データ
+                currentSessionPhase: sessionPhase,
+                adaptiveSettings: {
+                    questionMode: problemSettings.questionMode,
+                    answerMode: globalSettings.answerMode,
+                    adaptiveAnswerMode: problemSettings.adaptiveAnswerMode
+                },
+                
+                // 苦手分野検出データ
+                weaknessDetection: {
+                    categories: Object.fromEntries(weaknessDetection.categories),
+                    detectedWeaknesses: Array.from(weaknessDetection.detectedWeaknesses),
+                    lastAnalysis: weaknessDetection.lastAnalysis
+                },
+                
+                // 個人化されたSRS間隔
+                personalizedSrsIntervals: personalizedSrsIntervals
             };
 
             // learned, learning, unlearned の計算ロジックはそのまま
@@ -1928,7 +2883,6 @@
             const detailsUrl = "/api/get_progress"; // Endpoint for detailed progress
             const summaryUrl = "/api/get"; // Endpoint for summary data (used for dashboard slide)
 
-            try {
                 const detailsResponse = await fetch(detailsUrl, {
                     method: 'POST',
                     headers: {
@@ -2010,18 +2964,10 @@
                 selectQuestionMode(); // ローカルストレージ/サーバーからのモードとインデックスを反映してcurrentIndexを設定
                 updateProgressDisplay(); // Updates score display
 
-            } catch (error) {
 
-                // Consider showing a user-friendly error message
-                notie.alert({
-                    type: 'error',
-                    text: '進捗の読み込みに失敗しました。',
-                    time: 2
-                });
-            }
         }
 
-        // サーバーから取得した学習進捗データを適用する関数
+        // サーバーから取得した学習進捗データを適用する関数（強化版）
         function applyProgressData(progressData) {
 
             answeredQuestions = new Set(progressData.answeredQuestions || []);
@@ -2030,14 +2976,41 @@
             answerTimes = progressData.answerTimes || [];
             studyingQuestions = new Set(progressData.studyingQuestions || []); // studyingQuestionsも復元
 
+            // セッション情報の復元（新機能）
+            if (progressData.sessionInfo) {
+                sessionQuestionCount = progressData.sessionInfo.questionCount || 0;
+                sessionPhase = progressData.sessionInfo.phase || 'warmup';
+                console.log('セッション情報を復元しました:', progressData.sessionInfo);
+            }
+
+            // 短期履歴の復元（新機能）
+            if (progressData.recentQuestionHistory) {
+                recentQuestionHistory = progressData.recentQuestionHistory.slice(0, MAX_RECENT_HISTORY);
+            }
+
+            // セッション開始時刻の復元
+            if (progressData.sessionStartTime) {
+                sessionStartTime = new Date(progressData.sessionStartTime);
+            } else {
+                // セッション開始時刻がない場合は現在時刻で初期化
+                initializeSessionManagement();
+            }
+
             if (progressData.questionStats && typeof progressData.questionStats ===
                 'object') {
                 // questionStats の各エントリを数値キーの Map に変換
                 questionStats = new Map();
                 for (const key in progressData.questionStats) {
                     if (Object.hasOwnProperty.call(progressData.questionStats, key)) {
-                        // キーを数値に変換、statsオブジェクトをそのまま値としてセット
-                        questionStats.set(parseInt(key), progressData.questionStats[key]);
+                        const stats = progressData.questionStats[key];
+                        // 昔のデータ形式との互換性のため、SRSフィールドを初期化
+                        if (stats.srsLevel === undefined) {
+                            stats.srsLevel = 0;
+                        }
+                        if (stats.nextReviewDate === undefined) {
+                            stats.nextReviewDate = new Date().toISOString().slice(0, 10);
+                        }
+                        questionStats.set(parseInt(key), stats);
                     }
                 }
             } else {
@@ -2060,6 +3033,11 @@
                 }
             }
 
+            // 新機能: 適応的回答モード設定の復元
+            if (progressData.adaptiveSettings && progressData.adaptiveSettings.adaptiveAnswerMode !== undefined) {
+                problemSettings.adaptiveAnswerMode = progressData.adaptiveSettings.adaptiveAnswerMode;
+            }
+
             // グローバル設定も復元
             if (progressData.replaceMondai !== undefined) {
                 globalSettings.replaceMondai = progressData.replaceMondai;
@@ -2077,9 +3055,27 @@
                 globalSettings.pronunciation = progressData.pronunciation;
             }
 
+            // 新機能: 個人化されたSRS間隔の復元
+            if (progressData.personalizedSrsIntervals && Array.isArray(progressData.personalizedSrsIntervals)) {
+                personalizedSrsIntervals = progressData.personalizedSrsIntervals;
+            }
+
+            // 新機能: 苦手分野検出データの復元
+            if (progressData.weaknessDetection) {
+                const wd = progressData.weaknessDetection;
+                if (wd.categories) {
+                    weaknessDetection.categories = new Map(Object.entries(wd.categories));
+                }
+                if (wd.detectedWeaknesses) {
+                    weaknessDetection.detectedWeaknesses = new Set(wd.detectedWeaknesses);
+                }
+                if (wd.lastAnalysis) {
+                    weaknessDetection.lastAnalysis = new Date(wd.lastAnalysis);
+                }
+            }
+
             // UIに設定を反映
-            document.getElementById(problemSettings.questionMode + '-mode').checked =
-                true;
+            document.getElementById(problemSettings.questionMode + '-mode').checked = true;
             document.getElementById('replace-mondai').checked = globalSettings.replaceMondai;
             document.getElementById('hardmode').checked = globalSettings.hardMode;
             document.getElementById('pronunciation').checked = globalSettings.pronunciation;
@@ -2267,6 +3263,55 @@
             });
         });
 
+        // 適応的回答モード選択チェックボックスの変更イベント
+        const adaptiveAnswerModeCheckbox = document.getElementById('adaptive-answer-mode');
+        adaptiveAnswerModeCheckbox.addEventListener('change', async function () {
+            problemSettings.adaptiveAnswerMode = this.checked;
+            
+            saveSettings();
+            
+            if (this.checked) {
+                notie.alert({
+                    type: 'info',
+                    text: 'AIが習熟度に応じて最適な回答モードを自動選択します',
+                    time: 3
+                });
+                
+                // AI出題モードでない場合は警告
+                if (problemSettings.questionMode !== 'ai') {
+                    setTimeout(() => {
+                        notie.alert({
+                            type: 'warning',
+                            text: '適応的回答モードはAI出題モード時のみ有効です',
+                            time: 2
+                        });
+                    }, 3500);
+                }
+                
+                // 現在問題画面が表示されている場合は問題を再表示
+                if (swiper.activeIndex === 1) {
+                    await showNextQuestion();
+                }
+            } else {
+                notie.alert({
+                    type: 'info',
+                    text: '適応的回答モード選択を無効にしました',
+                    time: 1.5
+                });
+                
+                // 元の回答モードに戻す
+                if (window.originalAnswerMode) {
+                    globalSettings.answerMode = window.originalAnswerMode;
+                    delete window.originalAnswerMode;
+                    
+                    // 現在問題画面が表示されている場合は問題を再表示
+                    if (swiper.activeIndex === 1) {
+                        await showNextQuestion();
+                    }
+                }
+            }
+        });
+
         // 出題モード選択のイベントリスナー
         document.getElementById('random-mode').addEventListener('change', async function () {
             if (this.checked) {
@@ -2283,20 +3328,33 @@
             }
         });
 
-        document.getElementById('sequential-mode').addEventListener('change', async function () {
+        document.getElementById('ai-mode').addEventListener('change', async function () {
             if (this.checked) {
-                problemSettings.questionMode = 'sequential';
+                problemSettings.questionMode = 'ai';
+                
+                // セッション管理を初期化
+                initializeSessionManagement();
+                
+                // MLシステムの初期化を試みる
+                if (accid && password && !mlSystemInitialized) {
+                    mlQuizSystem = new MLEnhancedQuizSystem();
+                    mlSystemInitialized = await mlQuizSystem.initializeMLSystem();
+                }
+                
                 saveSettings();
-                selectQuestionMode(); // モード選択ロジックを呼び出してcurrentIndexを更新
+                selectQuestionMode();
                 await showNextQuestion();
                 updateProgressDisplay();
+                
+                const systemType = mlSystemInitialized ? '高度なML' : '標準AI';
                 notie.alert({
                     type: 'info',
-                    text: '順番出題モードに切り替えました',
-                    time: 1.5
+                    text: `${systemType}出題モードに切り替えました。個別最適化された学習を開始します`,
+                    time: 2
                 });
             }
         });
+
 
         document.querySelectorAll('input[name="answer-mode"]').forEach(radio => {
             radio.addEventListener('change', async function () {
@@ -2571,41 +3629,79 @@
             
             // ハードモードの処理を参考に、英単語から文章を取得
             try {
-                const response = await fetch('/api/get/sentences', {
+                // タイムアウト付きフェッチリクエスト
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒タイムアウト
+
+                const sentenceOptions = {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         words: [correctAnswer]
-                    })
-                });
+                    }),
+                    signal: controller.signal
+                };
+                const response = await fetch('/api/get/sentences', sentenceOptions);
 
-                if (response.ok) {
-                    const sentenceData = await response.json();
-                    
-                    if (sentenceData.results && sentenceData.results[correctAnswer] &&
-                        sentenceData.results[correctAnswer].length > 0) {
-                        const sentences = sentenceData.results[correctAnswer];
-                        const selectedSentence = sentences[Math.floor(Math.random() * sentences.length)];
-                        const parts = selectedSentence.split("|");
-                        window.correctSentence = parts[1] || selectedSentence;
-                        window.japaneseText = parts[0] || null;
+                clearTimeout(timeoutId);
 
-                    } else {
-                        // 文章が見つからない場合は、正解の単語を使った簡単な文を作成
-                        window.correctSentence = `This is a ${correctAnswer}.`;
-                    }
-                } else {
+                if (!response.ok) {
                     throw new Error(`API request failed with status ${response.status}`);
                 }
+
+                const sentenceData = await response.json();
+                
+                // レスポンスの妥当性チェック
+                if (!sentenceData || !sentenceData.results) {
+                    throw new Error('Invalid response format from sentences API');
+                }
+                
+                if (sentenceData.results && sentenceData.results[correctAnswer] &&
+                    sentenceData.results[correctAnswer].length > 0) {
+                    const sentences = sentenceData.results[correctAnswer];
+                    const selectedSentence = sentences[Math.floor(Math.random() * sentences.length)];
+                    const parts = selectedSentence.split("|");
+                    window.correctSentence = parts[1] || selectedSentence;
+                    window.japaneseText = parts[0] || null;
+
+                } else {
+                    // 文章が見つからない場合
+                    throw new Error('No sentences found for the word');
+                }
             } catch (error) {
-                // エラーの場合は単語そのものまたは簡単な文を使用
+                console.error('英単語並び替えモード - 文章取得エラー:', error);
+                
+                // エラーの種類に応じた処理
+                let errorMessage = '';
+                
+                if (error.name === 'AbortError') {
+                    errorMessage = '文章の取得がタイムアウトしました。';
+                } else if (error.message.includes('No sentences found')) {
+                    errorMessage = 'この単語の例文が見つかりませんでした。';
+                } else if (error.message.includes('Invalid response format')) {
+                    errorMessage = 'サーバーからの応答が不正です。';
+                } else if (error.message.includes('failed with status')) {
+                    errorMessage = 'サーバーエラーが発生しました。';
+                } else {
+                    errorMessage = '文章の取得でエラーが発生しました。';
+                }
+                
+                // ユーザーに通知（短時間表示）
+                notie.alert({
+                    type: 'warning',
+                    text: errorMessage + '単語を使った簡単な文で続行します。',
+                    time: 2
+                });
+                
+                // フォールバック処理：単語そのものまたは簡単な文を使用
                 if (correctAnswer.includes(' ')) {
                     window.correctSentence = correctAnswer;
                 } else {
                     window.correctSentence = `This is a ${correctAnswer}.`;
                 }
+                window.japaneseText = null; // エラー時は日本語テキストをクリア
             }
             
             // 文章を単語に分割（句読点は除外）
@@ -2697,8 +3793,7 @@
 
             // プレースホルダーを表示するかチェック
             if (window.arrangedWords.length === 0) {
-                arrangedContainer.innerHTML =
-                    '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
+                arrangedContainer.innerHTML = '<div class="arranged-placeholder">ここに単語をタップして配置</div>';
             }
         }
 
@@ -3042,8 +4137,51 @@
             clearDragFeedback();
         }
 
-        // 回答モードに応じてUIをセットアップする関数
-        function setupAnswerModeUI(correctAnswer) {
+        // 最適な回答モードを選択する関数（適応的回答モード選択）
+        function selectOptimalAnswerMode(questionIndex) {
+            const stats = questionStats.get(questionIndex);
+            const question = questions[questionIndex];
+            
+            // 英語問題かどうかを判定
+            const isEnglishQuestion = question && question.word && isEnglishWord(question.word);
+            
+            if (!stats) {
+                // 新規問題: まずは4択モードで取っ掛かりを作る
+                return answerModeRules.beginner;
+            }
+            
+            const wrongRatio = stats.attempts > 0 ? (stats.attempts - stats.correctAnswers) / stats.attempts : 0;
+            const correctCount = stats.correctAnswers || 0;
+            
+            // 習熟度に基づいた回答モード選択
+            if (correctCount === 0 || wrongRatio > 0.7) {
+                // 未回答または正答率30%未満: 4択モードで基礎を固める
+                return answerModeRules.beginner;
+            } else if (correctCount === 1 || (correctCount >= 2 && stats.isLongTime)) {
+                // 1回正解または時間がかかる問題: より記憶想起が必要な入力モード
+                return answerModeRules.intermediate;
+            } else if (isEnglishQuestion && correctCount >= 2 && wrongRatio < 0.3) {
+                // 英語問題で2回以上正解、正答率70%以上: 語順理解確認
+                if (Math.random() < 0.3) { // 30%の確率で並び替えモード
+                    return answerModeRules.grammarCheck;
+                } else {
+                    return answerModeRules.intermediate;
+                }
+            } else if (correctCount >= 3 && wrongRatio < 0.2) {
+                // 3回以上正解、正答率80%以上: 概念理解確認
+                if (Math.random() < 0.2) { // 20%の確率で○×モード
+                    return answerModeRules.conceptCheck;
+                } else {
+                    return answerModeRules.intermediate;
+                }
+            }
+            
+            // デフォルトは入力モード
+            return answerModeRules.intermediate;
+        }
+
+        // 回答モードに応じてUIをセットアップする関数（適応的モード対応）
+        function setupAnswerModeUI(correctAnswer, effectiveMode = null) {
             const choiceArea = document.getElementById('choice-answers');
             const inputArea = document.getElementById('input-area');
             const handwritingArea = document.getElementById('handwriting-area');
@@ -3057,8 +4195,11 @@
             wordArrangeArea.style.display = 'none';
             trueFalseArea.style.display = 'none';
 
+            // 有効なモードを決定（適応的モードが指定されていればそれを使用）
+            const activeMode = effectiveMode || globalSettings.answerMode;
+            
             // 現在のモードに応じて該当エリアを表示し、必要な初期化を行う
-            switch (globalSettings.answerMode) {
+            switch (activeMode) {
                 case 'choice':
                     choiceArea.style.display = 'block';
                     break;
@@ -3093,6 +4234,17 @@
                     // デフォルトは4択モード
                     choiceArea.style.display = 'block';
                     break;
+            }
+            
+            // 適応的モードを使用した場合、一時的にグローバル設定を保存
+            if (effectiveMode && effectiveMode !== globalSettings.answerMode) {
+                // 元のモードを保存（次の問題で戻すため）
+                if (!window.originalAnswerMode) {
+                    window.originalAnswerMode = globalSettings.answerMode;
+                }
+            } else if (window.originalAnswerMode) {
+                // 通常モードに戻った場合、保存していた元のモードを削除
+                delete window.originalAnswerMode;
             }
         }
 
@@ -3235,21 +4387,17 @@
         //        }
         //        return;
         //    }
-
         //    const driver_css = document.createElement('link');
         //    driver_css.rel = 'stylesheet';
         //    driver_css.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';
         //    document.head.appendChild(driver_css);
-
         //    const driver_script = document.createElement('script');
         //    driver_script.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';
         //    document.body.appendChild(driver_script);
-
         //    driver_script.onload = () => {
         //        const tutorial_script = document.createElement('script');
         //        tutorial_script.src = '/play/tutorial.js';
         //        document.body.appendChild(tutorial_script);
-
         //        tutorial_script.onload = () => {
         //            if (typeof startTutorial === 'function') {
         //                startTutorial();
