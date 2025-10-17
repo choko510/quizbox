@@ -34,13 +34,14 @@ const wordExtractRegex = /([A-Za-z][0-9A-Za-z_]*(?:\/[A-Za-z][0-9A-Za-z_]*)+|(?!
 // 辞書APIからデータを取得する関数
 async function fetchDictionaryData(word,mondaibun) {
     try {
-        const response = await fetch(`/api/search/word/`, {
+        const options = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ word: word, mondai: mondaibun})
-        });
+        };
+        const response = await fetch(`/api/search/word/`, options);
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }

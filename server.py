@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as date_cls
 import io
 import json
 import os
 from pathlib import Path
 import re
 from contextlib import asynccontextmanager
-from typing import List, Union, Dict, Any, Optional
+from typing import List, Union, Dict, Any, Optional, Tuple
 import base64
 import urllib.parse
 import sys
@@ -22,7 +22,6 @@ from PIL import Image
 import aiofiles
 import xxhash
 from google import genai
-from google.genai import types
 from google.genai.errors import APIError
 from gtts import gTTS
 from io import BytesIO
@@ -31,10 +30,11 @@ import asyncio
 import glob
 import time
 
-from sqlalchemy import Column, Integer, String, Float, func, desc
+from sqlalchemy import Column, Integer, String, Float, func, desc, Text, Index, text, UniqueConstraint, Date
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.future import select as sa_select
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 # 辞書検索システム
 class SearchDictionary:
@@ -59,8 +59,8 @@ class SearchDictionary:
                     self.word_list = cache_data['word_list']
                     self.rank_index = cache_data['rank_index']
                 return
-            except:
-                pass
+            except Exception as e:
+                print(f"警告: キャッシュファイル '{self.cache_file}' の読み込みに失敗しました。JSONから再構築します。エラー: {e}")
         
         # JSONから読み込み
         with open(json_file, 'r', encoding='utf-8') as f:
@@ -95,8 +95,8 @@ class SearchDictionary:
         try:
             with open(self.cache_file, 'wb') as f:
                 pickle.dump(cache_data, f, protocol=pickle.HIGHEST_PROTOCOL)
-        except:
-            pass
+        except Exception as e:
+            print(f"警告: キャッシュファイル '{self.cache_file}' の保存に失敗しました。エラー: {e}")
     
     def precompile_frequent_searches(self) -> None:
         """頻繁に検索される単語を事前キャッシュ"""
@@ -172,7 +172,15 @@ elif re.match(r'^[a-zA-Z0-9_-]+$', admin_password) is None:
 genai_client = genai.Client(api_key=gemini_api_key)
 
 DATABASE_URL = "sqlite+aiosqlite:///data.db"
-engine = create_async_engine(DATABASE_URL)
+# データベースエンジンの最適化設定
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,  # SQLログを無効化（本番環境）
+    pool_size=20,  # 接続プールサイズを増加
+    max_overflow=40,  # 最大オーバーフロー接続数
+    pool_pre_ping=True,  # 接続の健全性チェック
+    pool_recycle=3600,  # 1時間ごとに接続をリサイクル
+)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
@@ -207,6 +215,57 @@ class MondaiStats(Base):
     correct_count = Column(Integer, default=0)  # 正解回数
     incorrect_count = Column(Integer, default=0)  # 不正解回数
     last_updated = Column(String, default=lambda: datetime.now().isoformat())
+
+class UserLearningHistory(Base):
+    """ユーザーの学習履歴を保存するテーブル（ML学習用）"""
+    __tablename__ = 'user_learning_history'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    userid = Column(String, index=True)
+    problem_set = Column(String, index=True)
+    question_id = Column(String, index=True)
+    is_correct = Column(Integer)  # 1=正解, 0=不正解
+    response_time = Column(Float)  # 応答時間（秒）
+    difficulty_rating = Column(Integer, nullable=True)  # ユーザーによる難易度評価（1-5）
+    timestamp = Column(String, default=lambda: datetime.now().isoformat(), index=True)
+    session_id = Column(String, nullable=True, index=True)  # セッションID
+    
+    # 複合インデックスの定義（よく使われるクエリパターンに最適化）
+    __table_args__ = (
+        Index('idx_user_problem', 'userid', 'problem_set'),
+        Index('idx_user_timestamp', 'userid', 'timestamp'),
+        Index('idx_problem_question', 'problem_set', 'question_id'),
+    )
+    
+class UserDailyPerformance(Base):
+    """ユーザーの科目別日次成績を保持する正規化テーブル"""
+    __tablename__ = 'user_daily_performance'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    userid = Column(String, nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    subject = Column(String, nullable=False, default='other')
+    correct_count = Column(Integer, default=0)
+    incorrect_count = Column(Integer, default=0)
+    updated_at = Column(String, default=lambda: datetime.now().isoformat())
+
+    __table_args__ = (
+        UniqueConstraint('userid', 'date', 'subject', name='uq_user_daily_performance'),
+        Index('idx_daily_performance_user_subject', 'userid', 'subject'),
+    )
+    
+class MLModelState(Base):
+    """機械学習モデルの状態を保存するテーブル"""
+    __tablename__ = 'ml_model_state'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    userid = Column(String, index=True, unique=True)
+    problem_set = Column(String, index=True)
+    model_params = Column(Text)  # JSON形式でモデルパラメータを保存
+    last_trained = Column(String, default=lambda: datetime.now().isoformat())
+    training_samples = Column(Integer, default=0)
+    
+    # 複合インデックスの定義
+    __table_args__ = (
+        Index('idx_user_problem_model', 'userid', 'problem_set'),
+    )
     
 
 templates = Jinja2Templates(directory="templates")
@@ -258,7 +317,16 @@ async def lifespan(app: FastAPI):
     # アプリ起動時の処理（startup）
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+        # SQLiteの最適化設定
+        await conn.execute(text("PRAGMA journal_mode=WAL"))  # Write-Ahead Logging
+        await conn.execute(text("PRAGMA synchronous=NORMAL"))  # 同期モード最適化
+        await conn.execute(text("PRAGMA cache_size=10000"))  # キャッシュサイズ増加
+        await conn.execute(text("PRAGMA temp_store=MEMORY"))  # 一時データをメモリに
+        await conn.execute(text("PRAGMA mmap_size=268435456"))  # メモリマップドI/O有効化（256MB）
     
+    await DB.migrate_daily_stats()
+
     # 高速辞書システムを初期化
     try:
         fast_dict = SearchDictionary()
@@ -329,29 +397,149 @@ class DB:
             return d if isinstance(d, dict) else {}
         except json.JSONDecodeError:
             return {}
+
+    @staticmethod
+    async def _apply_daily_upsert(
+        session: AsyncSession,
+        userid: str,
+        target_date: date_cls,
+        subject: str,
+        correct_increment: int,
+        incorrect_increment: int
+    ) -> None:
+        """user_daily_performanceテーブルに対するUPSERT処理"""
+        if correct_increment <= 0 and incorrect_increment <= 0:
+            return
+
+        now_iso = datetime.now().isoformat()
+        stmt = sqlite_insert(UserDailyPerformance).values(
+            userid=userid,
+            date=target_date,
+            subject=subject,
+            correct_count=correct_increment,
+            incorrect_count=incorrect_increment,
+            updated_at=now_iso
+        )
+
+        update_values: Dict[str, Any] = {"updated_at": now_iso}
+        if correct_increment > 0:
+            update_values["correct_count"] = UserDailyPerformance.correct_count + correct_increment
+        if incorrect_increment > 0:
+            update_values["incorrect_count"] = UserDailyPerformance.incorrect_count + incorrect_increment
+
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["userid", "date", "subject"],
+            set_=update_values
+        )
+        await session.execute(stmt)
             
     @staticmethod
-    async def _update_data(user, subject: Optional[str], is_correct: bool):
+    async def _update_data(session: AsyncSession, user: Account, subject: Optional[str], is_correct: bool):
         """ユーザーの正解・不正解データを更新する共通処理"""
         nowtime = DB.get_today()
         correctdata = DB.safe_load_json(user.correctdata)  # type: ignore
         baddata = DB.safe_load_json(user.baddata)  # type: ignore
+        subject_key = subject if subject else 'other'
+        today_date = datetime.now().date()
         
         if nowtime not in correctdata:
             correctdata[nowtime] = {}
         if nowtime not in baddata:
             baddata[nowtime] = {}
             
-        subject_key = subject if subject else 'other'
         if is_correct:
             user.correct += 1
             correctdata[nowtime][subject_key] = correctdata[nowtime].get(subject_key, 0) + 1
+            await DB._apply_daily_upsert(
+                session,
+                user.userid,
+                today_date,
+                subject_key,
+                correct_increment=1,
+                incorrect_increment=0
+            )
         else:
             user.bad += 1
             baddata[nowtime][subject_key] = baddata[nowtime].get(subject_key, 0) + 1
+            await DB._apply_daily_upsert(
+                session,
+                user.userid,
+                today_date,
+                subject_key,
+                correct_increment=0,
+                incorrect_increment=1
+            )
             
         user.correctdata = json.dumps(correctdata)  # type: ignore
         user.baddata = json.dumps(baddata)  # type: ignore
+
+    @staticmethod
+    async def _migrate_stats_from_json(
+        session: AsyncSession,
+        userid: str,
+        source: Dict[str, Any],
+        is_correct: bool
+    ) -> int:
+        """legacy JSONカラムから正規化テーブルへデータを移行"""
+        migrated = 0
+        for date_str, subjects in source.items():
+            if not isinstance(subjects, dict):
+                continue
+            try:
+                date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+            except ValueError:
+                continue
+
+            for subject, count in subjects.items():
+                if not isinstance(count, int) or count <= 0:
+                    continue
+                subject_key = subject if subject else 'other'
+                await DB._apply_daily_upsert(
+                    session,
+                    userid,
+                    date_obj,
+                    subject_key,
+                    correct_increment=count if is_correct else 0,
+                    incorrect_increment=count if not is_correct else 0
+                )
+                migrated += 1
+        return migrated
+
+    @staticmethod
+    async def migrate_daily_stats():
+        """correctdata/baddataからuser_daily_performanceへ初期データを移行"""
+        try:
+            async with async_session() as session:
+                count_stmt = sa_select(func.count()).select_from(UserDailyPerformance)
+                count_result = await session.execute(count_stmt)
+                existing_rows = count_result.scalar_one() or 0
+                if existing_rows > 0:
+                    return  # 既に移行済み
+
+                users_stmt = sa_select(Account)
+                users_result = await session.execute(users_stmt)
+                accounts = users_result.scalars().all()
+
+                total_migrated = 0
+                for account in accounts:
+                    total_migrated += await DB._migrate_stats_from_json(
+                        session,
+                        account.userid,
+                        DB.safe_load_json(account.correctdata),  # type: ignore
+                        True
+                    )
+                    total_migrated += await DB._migrate_stats_from_json(
+                        session,
+                        account.userid,
+                        DB.safe_load_json(account.baddata),  # type: ignore
+                        False
+                    )
+
+                if total_migrated > 0:
+                    await session.commit()
+                    print(f"🗄️ 正規化済み日次成績データに {total_migrated} 件を移行しました。")
+        except Exception as e:
+            print(f"⚠️ 日次成績データ移行中にエラーが発生しました: {e}")
     
     @staticmethod
     async def password(id: str):
@@ -388,7 +576,7 @@ class DB:
             user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 # _update_dataメソッドを使用して共通処理を実行
-                await DB._update_data(user, subject, True)
+                await DB._update_data(session, user, subject, True)
                 await session.commit()
                 
                 # 問題の統計データも更新
@@ -402,7 +590,7 @@ class DB:
             user: Optional[Account] = result.scalar_one_or_none()
             if user:
                 # _update_dataメソッドを使用して共通処理を実行
-                await DB._update_data(user, subject, False)
+                await DB._update_data(session, user, subject, False)
                 await session.commit()
                 
                 # 問題の統計データも更新
@@ -420,12 +608,33 @@ class DB:
         async with async_session() as session:
             result = await session.execute(sa_select(Account).filter_by(userid=id))
             user: Optional[Account] = result.scalar_one_or_none()
-            if user:
-                return {
-                    "correct": DB.safe_load_json(user.correctdata),  # type: ignore
-                    "bad": DB.safe_load_json(user.baddata)  # type: ignore
-                }
-            return None
+            if not user:
+                return None
+
+            stats_stmt = sa_select(UserDailyPerformance).where(UserDailyPerformance.userid == id)
+            stats_result = await session.execute(stats_stmt)
+            daily_rows = stats_result.scalars().all()
+
+            if daily_rows:
+                correct_dict: Dict[str, Dict[str, int]] = {}
+                bad_dict: Dict[str, Dict[str, int]] = {}
+                for row in daily_rows:
+                    if isinstance(row.date, date_cls):
+                        date_key = row.date.strftime("%Y/%m/%d")
+                    else:
+                        date_key = str(row.date)
+                    subject = row.subject or 'other'
+                    if row.correct_count:
+                        correct_dict.setdefault(date_key, {})[subject] = row.correct_count
+                    if row.incorrect_count:
+                        bad_dict.setdefault(date_key, {})[subject] = row.incorrect_count
+                return {"correct": correct_dict, "bad": bad_dict}
+
+            # フォールバック: 従来のJSONカラムから取得
+            return {
+                "correct": DB.safe_load_json(user.correctdata),  # type: ignore
+                "bad": DB.safe_load_json(user.baddata)  # type: ignore
+            }
 
     @staticmethod
     async def get_all_answers(id: str):
@@ -439,33 +648,39 @@ class DB:
             if not user:
                 return []
 
-            try:
-                # 正解と不正解のデータを取得と検証
-                correct_data = DB.safe_load_json(user.correctdata) # type: ignore
-                bad_data = DB.safe_load_json(user.baddata) # type: ignore
+            stats_stmt = sa_select(UserDailyPerformance).where(UserDailyPerformance.userid == id)
+            stats_result = await session.execute(stats_stmt)
+            daily_rows = stats_result.scalars().all()
 
-                # 全ての日付のデータを集計
+            if daily_rows:
                 all_answers = []
-                
-                # 正解データの処理
-                for date, subjects in correct_data.items():
+                for row in daily_rows:
+                    subject = row.subject or 'other'
+                    if row.correct_count:
+                        all_answers.extend([{"subject": subject, "result": True}] * row.correct_count)
+                    if row.incorrect_count:
+                        all_answers.extend([{"subject": subject, "result": False}] * row.incorrect_count)
+                return all_answers
+
+            # 旧データ構造にフォールバック
+            try:
+                correct_data = DB.safe_load_json(user.correctdata)  # type: ignore
+                bad_data = DB.safe_load_json(user.baddata)  # type: ignore
+                all_answers = []
+                for subjects in correct_data.values():
                     if isinstance(subjects, dict):
                         for subject, count in subjects.items():
                             if isinstance(count, int) and count > 0:
                                 all_answers.extend([{"subject": subject, "result": True}] * count)
-                
-                # 不正解データの処理
-                for date, subjects in bad_data.items():
+                for subjects in bad_data.values():
                     if isinstance(subjects, dict):
                         for subject, count in subjects.items():
                             if isinstance(count, int) and count > 0:
                                 all_answers.extend([{"subject": subject, "result": False}] * count)
-
+                return all_answers
             except (json.JSONDecodeError, AttributeError, TypeError) as e:
                 print(f"Error processing user data: {e}")
                 return []
-
-            return all_answers
 
     @staticmethod
     async def get(id: str):
@@ -483,25 +698,25 @@ class DB:
     @staticmethod
     async def get_mondai(userid:str, name: str):
         async with async_session() as session:
-            
-            # 対象のレコード数を事前にカウント
-            count_query = sa_select(func.count()).select_from(Mondai).filter_by(userid=userid, name=name)
-            count_result = await session.execute(count_query)
-            record_count = count_result.scalar_one()
-
-            # 複数レコードに対応
-            query = sa_select(Mondai).filter_by(userid=userid, name=name)
-            if record_count > 1:
-                # 複数ある場合は最初のレコードを使用
-                query = query.limit(1)
-            
-            result = await session.execute(query)
+            stmt = (
+                sa_select(Mondai)
+                .filter_by(userid=userid, name=name)
+                .order_by(Mondai.id.desc())
+                .limit(1)
+            )
+            result = await session.execute(stmt)
             mondai: Optional[Mondai] = result.scalar_one_or_none()
-            
-            if mondai:
-                return json.loads(mondai.mondai)  # type: ignore
-            
-            return None
+
+            if not mondai or not mondai.mondai:
+                return None
+
+            try:
+                data = json.loads(mondai.mondai)  # type: ignore
+            except json.JSONDecodeError as exc:
+                print(f"Error decoding mondai data for user {userid}, name {name}: {exc}")
+                return None
+
+            return data if isinstance(data, list) else None
 
     @staticmethod
     async def get_mondai_userids(userid: str):
@@ -815,7 +1030,7 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(prompt: str, model: str = "gemini-2.5-flash", images=None, stream: bool = False) -> str:
+async def reqAI(prompt: str, model: str = "gemini-2.5-flash-latest", images=None, stream: bool = False) -> str:
     """
     Google GenAI SDK (google-genai) での統一的な生成関数
     - prompt: テキストプロンプト
@@ -869,11 +1084,11 @@ async def reqAI(prompt: str, model: str = "gemini-2.5-flash", images=None, strea
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {api_key}"}
             payload = {
-                "model": "deepseek/deepseek-chat-v3-0324:free",
+                "model": "deepseek/deepseek-chat-v3.1:free",
                 "messages": [{"role": "user", "content": prompt}],
             }
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=payload) as r:
+                async with session.post(url, headers=headers, json=payload, timeout=60) as r:
                     if r.status != 200:
                         error_text = await r.text()
                         print(f"[reqAI] OpenRouter HTTP error {r.status}: {error_text}")
@@ -950,63 +1165,77 @@ async def get_statistics():
             result = await session.execute(stmt)
             total_accounts = result.scalar_one()
 
-            # 週内の回答数を取得（過去7日間のデータ）
-            seven_days_ago = datetime.now() - timedelta(days=7)
-            weekly_answers = 0
+            # user_daily_performanceのレコード数を確認
+            stats_count_stmt = sa_select(func.count()).select_from(UserDailyPerformance)
+            stats_count = (await session.execute(stats_count_stmt)).scalar_one() or 0
 
-            # 正解データを取得
-            all_stmt = sa_select(Account)
-            result = await session.execute(all_stmt)
-            accounts = result.scalars().all()
-            for account in accounts:
-                correct_data = DB.safe_load_json(account.correctdata)
-                bad_data = DB.safe_load_json(account.baddata)
-
-                # 週内のデータだけを集計
-                for date_str, subjects in correct_data.items():
-                    try:
-                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
-                        if date_obj >= seven_days_ago.date():
-                            weekly_answers += sum(v for v in subjects.values() if isinstance(v, int))
-                    except ValueError:
-                        continue
-
-                for date_str, subjects in bad_data.items():
-                    try:
-                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
-                        if date_obj >= seven_days_ago.date():
-                            weekly_answers += sum(v for v in subjects.values() if isinstance(v, int))
-                    except ValueError:
-                        continue
-
-            # 時間別回答数（過去24時間）のデータ取得
+            seven_days_ago = datetime.now().date() - timedelta(days=7)
+            one_day_ago = datetime.now().date() - timedelta(days=1)
             hourly_answers = [0] * 24
-            now = datetime.now()
-            one_day_ago = now - timedelta(days=1)
 
-            # 処理を共通化
-            def process_hourly_data(data, start_time):
-                for date_str, subjects in data.items():
-                    try:
-                        # 日付が24時間以内かチェック
-                        date_obj = datetime.strptime(date_str, "%Y/%m/%d")
-                        if date_obj.date() >= start_time.date():
-                            # 簡易的に時間帯を割り振る（実際の解答時間がないため）
-                            # 1日の解答を24時間に均等に分散させる
-                            total_answers_per_day = sum(v for v in subjects.values() if isinstance(v, int))
-                            if total_answers_per_day > 0:
-                                for i in range(24):
-                                     hourly_answers[i] += total_answers_per_day / 24
+            if stats_count > 0:
+                # 正規化済みデータから統計を取得
+                weekly_stmt = sa_select(
+                    func.coalesce(func.sum(UserDailyPerformance.correct_count), 0),
+                    func.coalesce(func.sum(UserDailyPerformance.incorrect_count), 0)
+                ).where(UserDailyPerformance.date >= seven_days_ago)
+                weekly_result = await session.execute(weekly_stmt)
+                weekly_correct, weekly_incorrect = weekly_result.one()
+                weekly_answers = int((weekly_correct or 0) + (weekly_incorrect or 0))
 
-                    except (ValueError, TypeError):
+                hourly_stmt = sa_select(
+                    UserDailyPerformance.date,
+                    (func.coalesce(func.sum(UserDailyPerformance.correct_count), 0) +
+                     func.coalesce(func.sum(UserDailyPerformance.incorrect_count), 0)).label("total")
+                ).where(UserDailyPerformance.date >= one_day_ago).group_by(UserDailyPerformance.date)
+                hourly_result = await session.execute(hourly_stmt)
+                for row in hourly_result:
+                    total = float(row.total or 0)
+                    if total <= 0:
                         continue
-            
-            # 各アカウントのデータを処理
-            for account in accounts:
-                correct_data = DB.safe_load_json(account.correctdata)
-                bad_data = DB.safe_load_json(account.baddata)
-                process_hourly_data(correct_data, one_day_ago)
-                process_hourly_data(bad_data, one_day_ago)
+                    per_hour = total / 24.0
+                    for i in range(24):
+                        hourly_answers[i] += per_hour
+            else:
+                # フォールバック: 従来のJSONカラムから集計
+                weekly_answers = 0
+                accounts_stmt = sa_select(Account)
+                accounts_result = await session.execute(accounts_stmt)
+                accounts = accounts_result.scalars().all()
+
+                def process_json_buckets(data: Dict[str, Any]) -> Tuple[int, float]:
+                    total_week = 0
+                    total_recent = 0.0
+                    for date_str, subjects in data.items():
+                        try:
+                            date_obj = datetime.strptime(date_str, "%Y/%m/%d")
+                        except ValueError:
+                            continue
+
+                        counts = [v for v in subjects.values() if isinstance(v, int)]
+                        day_total = sum(counts)
+                        if day_total <= 0:
+                            continue
+
+                        if date_obj.date() >= seven_days_ago:
+                            total_week += day_total
+                        if date_obj.date() >= one_day_ago:
+                            total_recent += day_total
+                    return total_week, total_recent
+
+                for account in accounts:
+                    correct_data = DB.safe_load_json(account.correctdata)
+                    bad_data = DB.safe_load_json(account.baddata)
+
+                    week_correct, recent_correct = process_json_buckets(correct_data)
+                    week_bad, recent_bad = process_json_buckets(bad_data)
+                    weekly_answers += week_correct + week_bad
+
+                    daily_total = recent_correct + recent_bad
+                    if daily_total > 0:
+                        per_hour = daily_total / 24.0
+                        for i in range(24):
+                            hourly_answers[i] += per_hour
 
             # MondaiStatsから問題使用統計を取得
             problem_usage = []
@@ -1051,23 +1280,32 @@ async def get_user_statistics(userid: str):
             if not user:
                 return {"found": False}
 
-            # 正解・不正解データを取得
-            correct_data = DB.safe_load_json(user.correctdata)
-            bad_data = DB.safe_load_json(user.baddata)
+            stats_stmt = sa_select(
+                func.coalesce(func.sum(UserDailyPerformance.correct_count), 0),
+                func.coalesce(func.sum(UserDailyPerformance.incorrect_count), 0),
+                func.count(UserDailyPerformance.id)
+            ).where(UserDailyPerformance.userid == userid)
+            stats_result = await session.execute(stats_stmt)
+            correct_sum, incorrect_sum, row_count = stats_result.one()
 
-            total_correct = 0
-            total_incorrect = 0
+            total_correct = int(correct_sum or 0)
+            total_incorrect = int(incorrect_sum or 0)
 
-            # データ集計
-            for date_data in correct_data.values():
-                for subject_data in date_data.values():
-                    if isinstance(subject_data, dict):
-                        total_correct += sum(v for v in subject_data.values() if isinstance(v, int))
+            if row_count == 0:
+                # フォールバック: 従来のJSONデータから集計
+                correct_data = DB.safe_load_json(user.correctdata)
+                bad_data = DB.safe_load_json(user.baddata)
 
-            for date_data in bad_data.values():
-                for subject_data in date_data.values():
-                    if isinstance(subject_data, dict):
-                        total_incorrect += sum(v for v in subject_data.values() if isinstance(v, int))
+                total_correct = 0
+                total_incorrect = 0
+
+                for subjects in correct_data.values():
+                    if isinstance(subjects, dict):
+                        total_correct += sum(v for v in subjects.values() if isinstance(v, int))
+
+                for subjects in bad_data.values():
+                    if isinstance(subjects, dict):
+                        total_incorrect += sum(v for v in subjects.values() if isinstance(v, int))
 
             total_answers = total_correct + total_incorrect
             accuracy = (total_correct / total_answers * 100) if total_answers > 0 else 0
@@ -1169,48 +1407,68 @@ async def ranking(
         if period in ["7d", "30d"]:
             days = 7 if period == "7d" else 30
             from_date = (datetime.now() - timedelta(days=days)).date()
-            
-            user_stats = []
-            
-            # stream_scalarsを使用して、一度に全ユーザーをメモリにロードするのを防ぎ、メモリ効率を向上
-            result = await session.stream_scalars(sa_select(Account))
-            async for user in result:
-                correct_count_period = 0
-                bad_count_period = 0
-                
-                correct_data = DB.safe_load_json(user.correctdata)  # type: ignore
-                for date_str, subjects in correct_data.items():
-                    try:
-                        # 日付文字列をdatetimeオブジェクトに変換
-                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
-                        if date_obj >= from_date and isinstance(subjects, dict):
-                            # 値が数値でない場合を考慮して安全に合計
-                            correct_count_period += sum(v for v in subjects.values() if isinstance(v, int))
-                    except ValueError:
-                        # 日付フォーマットが不正な場合はスキップ
-                        continue
 
-                bad_data = DB.safe_load_json(user.baddata)  # type: ignore
-                for date_str, subjects in bad_data.items():
-                    try:
-                        # 日付文字列をdatetimeオブジェクトに変換
-                        date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+            stats_available_stmt = sa_select(func.count()).select_from(UserDailyPerformance)
+            stats_available = (await session.execute(stats_available_stmt)).scalar_one() or 0
+            user_stats = []
+
+            if stats_available > 0:
+                stats_stmt = sa_select(
+                    UserDailyPerformance.userid,
+                    func.coalesce(func.sum(UserDailyPerformance.correct_count), 0).label("correct"),
+                    func.coalesce(func.sum(UserDailyPerformance.incorrect_count), 0).label("bad")
+                ).where(
+                    UserDailyPerformance.date >= from_date
+                ).group_by(UserDailyPerformance.userid)
+
+                stats_result = await session.execute(stats_stmt)
+                for row in stats_result:
+                    correct_count_period = int(row.correct or 0)
+                    bad_count_period = int(row.bad or 0)
+                    total = correct_count_period + bad_count_period
+                    if total > 0:
+                        user_stats.append({
+                            "userid": row.userid,
+                            "correct": correct_count_period,
+                            "bad": bad_count_period,
+                            "total": total,
+                            "accuracy": (correct_count_period / total) * 100 if total > 0 else 0
+                        })
+            else:
+                # フォールバック: 従来のJSONデータから集計
+                result = await session.stream_scalars(sa_select(Account))
+                async for user in result:
+                    correct_count_period = 0
+                    bad_count_period = 0
+
+                    correct_data = DB.safe_load_json(user.correctdata)  # type: ignore
+                    for date_str, subjects in correct_data.items():
+                        try:
+                            date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        except ValueError:
+                            continue
+                        if date_obj >= from_date and isinstance(subjects, dict):
+                            correct_count_period += sum(v for v in subjects.values() if isinstance(v, int))
+
+                    bad_data = DB.safe_load_json(user.baddata)  # type: ignore
+                    for date_str, subjects in bad_data.items():
+                        try:
+                            date_obj = datetime.strptime(date_str, "%Y/%m/%d").date()
+                        except ValueError:
+                            continue
                         if date_obj >= from_date and isinstance(subjects, dict):
                             bad_count_period += sum(v for v in subjects.values() if isinstance(v, int))
-                    except ValueError:
-                        # 日付フォーマットが不正な場合はスキップ
-                        continue
-                
-                total = correct_count_period + bad_count_period
-                if total > 0:
-                    user_stats.append({
-                        "userid": user.userid,
-                        "correct": correct_count_period,
-                        "bad": bad_count_period,
-                        "total": total,
-                        "accuracy": (correct_count_period / total) * 100 if total > 0 else 0
-                    })
-            
+
+                    total = correct_count_period + bad_count_period
+                    if total > 0:
+                        user_stats.append({
+                            "userid": user.userid,
+                            "correct": correct_count_period,
+                            "bad": bad_count_period,
+                            "total": total,
+                            "accuracy": (correct_count_period / total) * 100 if total > 0 else 0
+                        })
+
             # ソート処理
             if sort_by == "accuracy":
                 user_stats.sort(key=lambda x: x["accuracy"], reverse=True)
@@ -1388,7 +1646,7 @@ async def upload_image(file: UploadFile = File(...), usage: str = Query("ai", en
                 return img
 
             img = await run_in_threadpool(process_image, contents)
-        except Exception as e:
+        except Exception as e: 
             raise HTTPException(status_code=400, detail=f"Invalid image format or corrupted image: {e}")
 
         # Create file ID using hash of content and original filename
@@ -1592,7 +1850,7 @@ async def process_image(data: Union[ImageData, TextData]):
         # reqAI関数を使用して画像処理を実行
         question_response_text = await reqAI(
             prompt=question_generation_prompt,
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-latest",
             images=image
         )
 
@@ -1753,15 +2011,15 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
     intended_dir = os.path.abspath("./data/mondaiset")
     if not abs_path.startswith(intended_dir) or not os.path.isfile(abs_path):
         raise HTTPException(status_code=404, detail="Not found")
-    # まずコメント行と空行を除いた全ての問題行を読み込む
-    lines = []
-    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-        async for raw in f:
-            line = raw.strip()
-            if line and not line.startswith('#'):
-                lines.append(line)
+    try:
+        lines = await _load_mondai_lines(abs_path)
+    except OSError:
+        raise HTTPException(status_code=404, detail="Not found")
 
-    results = []
+    if not lines:
+        raise HTTPException(status_code=404, detail="Not found or no matching lines")
+
+    results: List[str] = []
 
     # ranges パラメータが指定されている場合
     if ranges:
@@ -1793,7 +2051,7 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
             results = lines[start_index:end_index]
 
     else: # パラメータがない場合は全件返す
-        results = lines
+        results = list(lines)
 
     if not results:
         raise HTTPException(status_code=404, detail="Not found or no matching lines")
@@ -1801,6 +2059,41 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
     return results
 
 sentences_cache: List[str] = []
+
+# 問題セットファイルのキャッシュ（play画面読み込み最適化用）
+MONDAI_FILE_CACHE_LIMIT = 32
+mondai_file_cache: Dict[str, Dict[str, Any]] = {}
+
+
+async def _load_mondai_lines(abs_path: str) -> List[str]:
+    """
+    問題セットファイルを読み込み、コメント行と空行を除いた結果をキャッシュ付きで返す
+    """
+    try:
+        mtime = os.path.getmtime(abs_path)
+    except OSError:
+        raise
+
+    cache_entry = mondai_file_cache.get(abs_path)
+    if cache_entry and cache_entry.get("mtime") == mtime:
+        return cache_entry["lines"]  # type: ignore[return-value]
+
+    lines: List[str] = []
+    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+        async for raw in f:
+            line = raw.strip()
+            if line and not line.startswith('#'):
+                lines.append(line)
+
+    mondai_file_cache[abs_path] = {"mtime": mtime, "lines": lines}
+
+    # シンプルなFIFOでキャッシュサイズを制限
+    if len(mondai_file_cache) > MONDAI_FILE_CACHE_LIMIT:
+        oldest_key = next(iter(mondai_file_cache))
+        if oldest_key != abs_path:
+            mondai_file_cache.pop(oldest_key, None)
+
+    return lines
 
 @app.post("/api/get/sentences")
 async def get_sentences(request: Request):
@@ -2228,6 +2521,121 @@ class DictSearchData(BaseModel):
     word: str
     batch_words: Optional[List[str]] = None
 
+# ML関連のデータモデル
+class MLPredictionRequest(BaseModel):
+    """ML予測リクエスト"""
+    userid: str
+    password: str
+    problem_set: str
+    current_session: Optional[dict] = None
+    available_questions: Optional[List[str]] = None
+
+class MLTrainingData(BaseModel):
+    """ML学習データ送信"""
+    userid: str
+    password: str
+    problem_set: str
+    question_id: str
+    is_correct: bool
+    response_time: float
+    difficulty_rating: Optional[int] = None
+    session_id: Optional[str] = None
+
+class SimpleKnowledgeTracer:
+    """
+    シンプルなKnowledge Tracingモデル
+    ベイズ推定ベースの学習状態追跡
+    """
+    def __init__(self, userid: str, problem_set: str):
+        self.userid = userid
+        self.problem_set = problem_set
+        # 初期パラメータ
+        self.p_learn = 0.3  # 学習確率
+        self.p_guess = 0.2  # 推測で正解する確率
+        self.p_slip = 0.1   # ミスする確率
+        self.mastery = {}   # 問題ごとの習熟度
+        
+    def update_mastery(self, question_id: str, is_correct: bool, response_time: float):
+        """
+        問題への回答に基づいて習熟度を更新
+        """
+        if question_id not in self.mastery:
+            self.mastery[question_id] = 0.5  # 初期習熟度
+        
+        # 現在の習熟度
+        current_mastery = self.mastery[question_id]
+        
+        # ベイズ更新
+        if is_correct:
+            # 正解の場合、習熟度を上げる
+            # 応答時間も考慮（速いほど習熟度が高い）
+            time_factor = max(0.5, min(1.5, 10.0 / max(response_time, 1.0)))
+            update = self.p_learn * time_factor
+            new_mastery = current_mastery + (1 - current_mastery) * update
+        else:
+            # 不正解の場合、習熟度を下げる
+            new_mastery = current_mastery * (1 - self.p_learn)
+        
+        self.mastery[question_id] = max(0.0, min(1.0, new_mastery))
+        
+    def predict_performance(self, question_id: str) -> float:
+        """
+        特定の問題での正解確率を予測
+        """
+        if question_id not in self.mastery:
+            return 0.5  # 未知の問題は50%
+        
+        mastery = self.mastery[question_id]
+        # P(correct) = P(mastery) * (1 - P(slip)) + (1 - P(mastery)) * P(guess)
+        p_correct = mastery * (1 - self.p_slip) + (1 - mastery) * self.p_guess
+        return p_correct
+    
+    def get_optimal_question(self, available_questions: List[str],
+                           weak_areas: List[str] = None) -> Tuple[str, float]:
+        """
+        最適な次の問題を選択
+        - 習熟度が低い問題を優先
+        - 苦手分野を考慮
+        """
+        if not available_questions:
+            return None, 0.0
+        
+        scores = []
+        for q_id in available_questions:
+            mastery = self.mastery.get(q_id, 0.5)
+            
+            # スコア計算: 低習熟度を優先
+            score = 1.0 - mastery
+            
+            # 苦手分野ボーナス
+            if weak_areas and any(weak in q_id for weak in weak_areas):
+                score *= 1.5
+            
+            scores.append((q_id, score))
+        
+        # スコアが高い問題を選択
+        scores.sort(key=lambda x: x[1], reverse=True)
+        return scores[0][0], scores[0][1]
+    
+    def to_dict(self) -> dict:
+        """モデル状態を辞書に変換"""
+        return {
+            "p_learn": self.p_learn,
+            "p_guess": self.p_guess,
+            "p_slip": self.p_slip,
+            "mastery": self.mastery
+        }
+    
+    @classmethod
+    def from_dict(cls, userid: str, problem_set: str, data: dict):
+        """辞書からモデルを復元"""
+        model = cls(userid, problem_set)
+        model.p_learn = data.get("p_learn", 0.3)
+        model.p_guess = data.get("p_guess", 0.2)
+        model.p_slip = data.get("p_slip", 0.1)
+        model.mastery = data.get("mastery", {})
+        return model
+
 @app.post("/api/dict/search")
 async def fast_dict_search(data: DictSearchData):
     """
@@ -2394,7 +2802,7 @@ async def search_word(data: WordData):
         回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt, "gemini-2.5-flash")
+        response = await reqAI(prompt, "gemini-2.5-flash-latest")
         return {
             "word": word,
             "definition": response,
@@ -2560,7 +2968,7 @@ async def get_advice(data: Data):
             """
 
     try:
-        response = await reqAI(prompt, "gemini-2.5-flash")
+        response = await reqAI(prompt, "gemini-2.5-flash-latest")
         advice = response.replace("\n", "<br>")
         return {"advice": advice}
     except Exception as e:
@@ -2668,7 +3076,7 @@ async def get_ranges(book_id: str):
 
             # もし#区切りが一つもなければ、ファイル全体を一つの範囲として扱う
             if not ranges and total_problem_count > 0:
-                 ranges.append({
+                ranges.append({
                     "start": 1,
                     "end": total_problem_count,
                     "label": book_id # ラベルはbook_idにする
@@ -2726,6 +3134,204 @@ async def get_ranges_progress(request: Request, book_id: str, ranges: str = Quer
             "total": total_words
         }
     }
+
+# ML API エンドポイント
+
+@app.post("/api/ml/record_interaction")
+async def record_interaction(data: MLTrainingData):
+    """
+    学習インタラクションを記録するエンドポイント
+    """
+    # パスワード検証
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:
+        raise HTTPException(status_code=401, detail="認証に失敗しました")
+    
+    try:
+        async with async_session() as session:
+            # 学習履歴を保存
+            history = UserLearningHistory(
+                userid=data.userid,
+                problem_set=data.problem_set,
+                question_id=data.question_id,
+                is_correct=1 if data.is_correct else 0,
+                response_time=data.response_time,
+                difficulty_rating=data.difficulty_rating,
+                session_id=data.session_id,
+                timestamp=datetime.now().isoformat()
+            )
+            session.add(history)
+            await session.commit()
+            
+            return {
+                "status": "success",
+                "message": "学習データを記録しました"
+            }
+    except Exception as e:
+        print(f"Error recording interaction: {e}")
+        raise HTTPException(status_code=500, detail="学習データの記録に失敗しました")
+
+@app.post("/api/ml/predict_next_question")
+async def predict_next_question(data: MLPredictionRequest):
+    """
+    次の最適な問題を予測するエンドポイント
+    Knowledge Tracingモデルを使用
+    """
+    # パスワード検証
+    password = await DB.password(data.userid)
+    if password is None or password != data.password:
+        raise HTTPException(status_code=401, detail="認証に失敗しました")
+    
+    try:
+        async with async_session() as session:
+            # 既存のモデル状態を取得
+            result = await session.execute(
+                sa_select(MLModelState).filter_by(userid=data.userid)
+            )
+            model_state = result.scalar_one_or_none()
+            
+            # モデルの初期化または復元
+            if model_state and model_state.model_params:
+                try:
+                    params = json.loads(model_state.model_params)
+                    model = SimpleKnowledgeTracer.from_dict(
+                        data.userid, 
+                        data.problem_set, 
+                        params
+                    )
+                except:
+                    model = SimpleKnowledgeTracer(data.userid, data.problem_set)
+            else:
+                model = SimpleKnowledgeTracer(data.userid, data.problem_set)
+            
+            # 過去の学習履歴からモデルを更新（最適化されたクエリ）
+            history_result = await session.execute(
+                sa_select(UserLearningHistory)
+                .where(
+                    (UserLearningHistory.userid == data.userid) &
+                    (UserLearningHistory.problem_set == data.problem_set)
+                )
+                .order_by(UserLearningHistory.timestamp.desc())
+                .limit(100)
+            )
+            history_records = history_result.scalars().all()
+            
+            for record in reversed(list(history_records)):
+                model.update_mastery(
+                    record.question_id,
+                    bool(record.is_correct),
+                    record.response_time
+                )
+            
+            # 苦手分野の検出
+            weak_areas = []
+            if data.current_session and "weakAreas" in data.current_session:
+                weak_areas = data.current_session["weakAreas"]
+            
+            # 最適な問題を選択
+            if data.available_questions:
+                next_question_id, confidence = model.get_optimal_question(
+                    data.available_questions,
+                    weak_areas
+                )
+                
+                # 各問題の予測正解率を計算
+                predictions = {}
+                for q_id in data.available_questions[:20]:  # 最大20問
+                    predictions[q_id] = {
+                        "difficulty": 1.0 - model.predict_performance(q_id),
+                        "mastery": model.mastery.get(q_id, 0.5)
+                    }
+            else:
+                next_question_id = None
+                confidence = 0.0
+                predictions = {}
+            
+            # モデル状態を保存
+            model_params_json = json.dumps(model.to_dict())
+            if model_state:
+                model_state.model_params = model_params_json
+                model_state.last_trained = datetime.now().isoformat()
+                model_state.training_samples = len(history_records)
+            else:
+                new_state = MLModelState(
+                    userid=data.userid,
+                    problem_set=data.problem_set,
+                    model_params=model_params_json,
+                    training_samples=len(history_records)
+                )
+                session.add(new_state)
+            
+            await session.commit()
+            
+            return {
+                "status": "success",
+                "next_question_id": next_question_id,
+                "confidence": confidence,
+                "predictions": predictions,
+                "model_info": {
+                    "training_samples": len(history_records),
+                    "mastered_questions": sum(1 for m in model.mastery.values() if m > 0.8),
+                    "total_tracked": len(model.mastery)
+                }
+            }
+            
+    except Exception as e:
+        print(f"Error in ML prediction: {e}")
+        raise HTTPException(status_code=500, detail="予測の生成に失敗しました")
+
+@app.post("/api/ml/get_model_stats")
+async def get_model_stats(data: Data):
+    """
+    ユーザーのMLモデル統計を取得
+    """
+    password = await DB.password(data.id)
+    if password is None or password != data.password:
+        raise HTTPException(status_code=401, detail="認証に失敗しました")
+    
+    try:
+        async with async_session() as session:
+            # モデル状態を取得
+            result = await session.execute(
+                sa_select(MLModelState).filter_by(userid=data.id)
+            )
+            model_state = result.scalar_one_or_none()
+            
+            # 学習履歴の統計
+            history_result = await session.execute(
+                sa_select(UserLearningHistory).filter_by(userid=data.id)
+            )
+            history_count = len(history_result.scalars().all())
+            
+            if model_state:
+                try:
+                    params = json.loads(model_state.model_params)
+                    mastery = params.get("mastery", {})
+                    
+                    return {
+                        "status": "success",
+                        "model_active": True,
+                        "last_trained": model_state.last_trained,
+                        "training_samples": model_state.training_samples,
+                        "total_interactions": history_count,
+                        "mastered_questions": sum(1 for m in mastery.values() if m > 0.8),
+                        "learning_questions": sum(1 for m in mastery.values() if 0.3 < m <= 0.8),
+                        "weak_questions": sum(1 for m in mastery.values() if m <= 0.3),
+                        "total_tracked": len(mastery)
+                    }
+                except:
+                    pass
+            
+            return {
+                "status": "success",
+                "model_active": False,
+                "total_interactions": history_count,
+                "message": "モデルはまだトレーニングされていません"
+            }
+            
+    except Exception as e:
+        print(f"Error getting model stats: {e}")
+        raise HTTPException(status_code=500, detail="統計情報の取得に失敗しました")
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
