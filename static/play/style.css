@@ -1908,6 +1908,151 @@ ul.custom-list li .content {
     background: linear-gradient(90deg, #ffa726, #ff9800);
 }
 
+.ml-learning-focus {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.learning-focus-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.focus-stat {
+    background: #f5f7fb;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.focus-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+}
+
+.learning-focus-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.focus-panel {
+    background: #f8f9fc;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.focus-panel-title {
+    margin: 0;
+    font-size: 0.95em;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.compact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.compact-list li {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.compact-list li:last-child {
+    margin-bottom: 0;
+}
+
+.focus-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.focus-item-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+    font-size: 0.95em;
+}
+
+.focus-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.focus-item-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.focus-item-meta i {
+    color: #667eea;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75em;
+}
+
+.status-badge.warning {
+    background: #ffe0e0;
+    color: #c62828;
+}
+
+.status-badge.neutral {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-badge.positive {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.empty-state {
+    text-align: center;
+    color: #999;
+    background: transparent;
+    box-shadow: none;
+    padding: 12px 0;
+}
+
+@media (max-width: 768px) {
+    .learning-focus-panels {
+        grid-template-columns: 1fr;
+    }
+
+    .focus-stat {
+        padding: 10px;
+    }
+}
+
 .recommendations-list {
     display: flex;
     flex-direction: column;

@@ -127,7 +127,46 @@
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- 現在の学習フォーカス -->
+                    <div class="ml-learning-focus">
+                        <h3 class="section-title">
+                            <i class="fas fa-bullseye"></i>現在の学習フォーカス
+                        </h3>
+                        <div class="learning-focus-summary">
+                            <div class="focus-stat">
+                                <span class="stat-label">現在のカテゴリ</span>
+                                <span class="focus-value" id="current-learning-category">-</span>
+                            </div>
+                            <div class="focus-stat">
+                                <span class="stat-label">復習キュー</span>
+                                <span class="focus-value"><span id="current-learning-total">0</span>問</span>
+                            </div>
+                            <div class="focus-stat">
+                                <span class="stat-label">直近の定着率</span>
+                                <span class="focus-value" id="recent-focus-accuracy">--%</span>
+                            </div>
+                        </div>
+                        <div class="learning-focus-panels">
+                            <div class="focus-panel">
+                                <h4 class="focus-panel-title">
+                                    <i class="fas fa-highlighter"></i>学習中の問題
+                                </h4>
+                                <ul id="current-learning-list" class="custom-list compact-list">
+                                    <li class="empty-state">学習データを読み込み中...</li>
+                                </ul>
+                            </div>
+                            <div class="focus-panel">
+                                <h4 class="focus-panel-title">
+                                    <i class="fas fa-history"></i>最近取り組んだ問題
+                                </h4>
+                                <ul id="recent-activity-list" class="custom-list compact-list">
+                                    <li class="empty-state">まだ履歴がありません</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 推奨アクション -->
                     <div class="ml-recommendations-section">
                         <h3 class="section-title">
@@ -564,6 +603,40 @@
             if (isEnglishWord(answer)) {
                 playWord(answer);
             }
+        }
+
+        function formatRelativeTime(isoString) {
+            if (!isoString) {
+                return '未学習';
+            }
+
+            const date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) {
+                return '未学習';
+            }
+
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMinutes = Math.floor(diffMs / 60000);
+
+            if (diffMinutes < 1) {
+                return 'たった今';
+            }
+            if (diffMinutes < 60) {
+                return `${diffMinutes}分前`;
+            }
+
+            const diffHours = Math.floor(diffMinutes / 60);
+            if (diffHours < 24) {
+                return `${diffHours}時間前`;
+            }
+
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) {
+                return `${diffDays}日前`;
+            }
+
+            return date.toLocaleDateString('ja-JP');
         }
 
         function loadQuestions() {
@@ -1573,7 +1646,11 @@
 
         // ML統計情報を更新する関数
         async function updateMLStats() {
-            if (!accid || !password) return; // ログインしていない場合は処理しない
+            const totalQuestionsCount = questions ? questions.length : 0;
+            if (totalQuestionsCount === 0) {
+                updateLearningFocusSection(0, 0, 0);
+                return;
+            }
 
             // 習熟度に基づく分類
             let masteredCount = 0;
@@ -1614,10 +1691,9 @@
             if (trainingEl) trainingEl.textContent = answeredQuestions.size;
 
             // 習熟度分布バーを更新
-            const total = questions.length;
-            const masteredPercentage = total > 0 ? (masteredCount / total) * 100 : 0;
-            const learningPercentage = total > 0 ? (learningCount / total) * 100 : 0;
-            const reviewPercentage = total > 0 ? (reviewCount / total) * 100 : 0;
+            const masteredPercentage = totalQuestionsCount > 0 ? (masteredCount / totalQuestionsCount) * 100 : 0;
+            const learningPercentage = totalQuestionsCount > 0 ? (learningCount / totalQuestionsCount) * 100 : 0;
+            const reviewPercentage = totalQuestionsCount > 0 ? (reviewCount / totalQuestionsCount) * 100 : 0;
 
             const masteredPercentEl = document.getElementById('mastered-percentage');
             const learningPercentEl = document.getElementById('learning-percentage');
@@ -1635,8 +1711,214 @@
             if (learningBarEl) learningBarEl.style.width = learningPercentage + '%';
             if (reviewBarEl) reviewBarEl.style.width = reviewPercentage + '%';
 
+            updateLearningFocusSection(masteredCount, learningCount, reviewCount);
             // 推奨アクションを更新
             updateMLRecommendations(masteredCount, learningCount, reviewCount);
+        }
+
+        function updateLearningFocusSection(masteredCount, learningCount, reviewCount) {
+            const categoryEl = document.getElementById('current-learning-category');
+            if (categoryEl) {
+                categoryEl.textContent = extractCategoryFromProblemSet(mondai) || 'その他';
+            }
+
+            const queueEl = document.getElementById('current-learning-total');
+            if (queueEl) {
+                queueEl.textContent = studyingQuestions.size.toLocaleString('ja-JP');
+            }
+
+            const recencyMap = new Map();
+            recentQuestionHistory.forEach((index, position) => {
+                if (!recencyMap.has(index)) {
+                    recencyMap.set(index, position);
+                }
+            });
+
+            const focusListEl = document.getElementById('current-learning-list');
+            if (focusListEl) {
+                focusListEl.innerHTML = '';
+
+                const focusCandidates = Array.from(studyingQuestions).map(index => {
+                    const stats = questionStats.get(index) || {};
+                    let priority = 0;
+
+                    if (!stats.attempts) {
+                        priority += 3;
+                    }
+                    if (stats.isWrong) {
+                        priority += 4;
+                    }
+                    if (stats.isLongTime) {
+                        priority += 2;
+                    }
+
+                    const accuracy = stats.attempts > 0 ? (stats.correctAnswers || 0) / stats.attempts : 0;
+                    priority += (1 - accuracy) * 2;
+
+                    if (recencyMap.has(index)) {
+                        const recencyScore = recentQuestionHistory.length - recencyMap.get(index);
+                        priority += recencyScore * 0.3;
+                    }
+
+                    return { index, stats, priority };
+                }).sort((a, b) => b.priority - a.priority);
+
+                if (focusCandidates.length === 0) {
+                    const emptyItem = document.createElement('li');
+                    emptyItem.className = 'empty-state';
+                    emptyItem.textContent = '現在は復習が必要な問題はありません。';
+                    focusListEl.appendChild(emptyItem);
+                } else {
+                    focusCandidates.slice(0, 6).forEach(({ index, stats }) => {
+                        const question = questions[index] || {};
+                        const titleText = question.word || question.description || `問題 ${index + 1}`;
+
+                        const listItem = document.createElement('li');
+                        listItem.className = 'focus-item';
+
+                        const titleEl = document.createElement('div');
+                        titleEl.className = 'focus-item-title';
+                        titleEl.textContent = titleText;
+                        listItem.appendChild(titleEl);
+
+                        const metaEl = document.createElement('div');
+                        metaEl.className = 'focus-item-meta';
+
+                        const badgeEl = document.createElement('span');
+                        badgeEl.className = 'status-badge';
+
+                        if (!stats.attempts) {
+                            badgeEl.classList.add('neutral');
+                            badgeEl.textContent = '未挑戦';
+                        } else if (stats.isWrong) {
+                            badgeEl.classList.add('warning');
+                            badgeEl.textContent = '要復習';
+                        } else if ((stats.correctAnswers || 0) >= 2 && !stats.isLongTime) {
+                            badgeEl.classList.add('positive');
+                            badgeEl.textContent = '定着済み';
+                        } else {
+                            badgeEl.classList.add('neutral');
+                            badgeEl.textContent = '反復中';
+                        }
+
+                        metaEl.appendChild(badgeEl);
+
+                        const accuracyEl = document.createElement('span');
+                        const accuracyIcon = document.createElement('i');
+                        accuracyIcon.className = 'fas fa-bullseye';
+                        accuracyEl.appendChild(accuracyIcon);
+                        if (stats.attempts > 0) {
+                            const accuracyValue = Math.round(((stats.correctAnswers || 0) / stats.attempts) * 100);
+                            accuracyEl.appendChild(document.createTextNode(`正答率 ${accuracyValue}% (${stats.correctAnswers || 0}/${stats.attempts})`));
+                        } else {
+                            accuracyEl.appendChild(document.createTextNode('未解答'));
+                        }
+                        metaEl.appendChild(accuracyEl);
+
+                        const timeEl = document.createElement('span');
+                        const timeIcon = document.createElement('i');
+                        timeIcon.className = 'fas fa-clock';
+                        timeEl.appendChild(timeIcon);
+                        timeEl.appendChild(document.createTextNode(`最終学習 ${formatRelativeTime(stats.lastAnsweredAt)}`));
+                        metaEl.appendChild(timeEl);
+
+                        listItem.appendChild(metaEl);
+                        focusListEl.appendChild(listItem);
+                    });
+                }
+            }
+
+            const recentListEl = document.getElementById('recent-activity-list');
+            const recentAccuracyEl = document.getElementById('recent-focus-accuracy');
+            const recentUnique = [];
+            const seenRecent = new Set();
+
+            for (const index of recentQuestionHistory) {
+                if (recentUnique.length >= 6) {
+                    break;
+                }
+                if (seenRecent.has(index)) continue;
+                if (!questions[index]) continue;
+                seenRecent.add(index);
+                recentUnique.push(index);
+            }
+
+            if (recentAccuracyEl) {
+                const evaluatedRecent = recentUnique.filter(index => {
+                    const stats = questionStats.get(index);
+                    return stats && stats.attempts > 0;
+                });
+
+                if (evaluatedRecent.length === 0) {
+                    recentAccuracyEl.textContent = '--%';
+                } else {
+                    const masteredRecent = evaluatedRecent.filter(index => {
+                        const stats = questionStats.get(index);
+                        return stats && !stats.isWrong;
+                    }).length;
+                    const percentage = Math.round((masteredRecent / evaluatedRecent.length) * 100);
+                    recentAccuracyEl.textContent = `${percentage}%`;
+                }
+            }
+
+            if (recentListEl) {
+                recentListEl.innerHTML = '';
+
+                if (recentUnique.length === 0) {
+                    const emptyItem = document.createElement('li');
+                    emptyItem.className = 'empty-state';
+                    emptyItem.textContent = 'まだ履歴がありません';
+                    recentListEl.appendChild(emptyItem);
+                } else {
+                    recentUnique.slice(0, 6).forEach(index => {
+                        const stats = questionStats.get(index) || {};
+                        const question = questions[index] || {};
+                        const titleText = question.word || question.description || `問題 ${index + 1}`;
+
+                        const listItem = document.createElement('li');
+                        listItem.className = 'focus-item';
+
+                        const titleEl = document.createElement('div');
+                        titleEl.className = 'focus-item-title';
+                        titleEl.textContent = titleText;
+                        listItem.appendChild(titleEl);
+
+                        const metaEl = document.createElement('div');
+                        metaEl.className = 'focus-item-meta';
+
+                        const resultEl = document.createElement('span');
+                        const resultIcon = document.createElement('i');
+                        if (!stats.attempts) {
+                            resultIcon.className = 'fas fa-circle-question';
+                            resultEl.appendChild(resultIcon);
+                            resultEl.appendChild(document.createTextNode('未解答'));
+                        } else {
+                            const wasCorrect = stats.lastResult ? stats.lastResult === 'correct' : !stats.isWrong;
+                            resultIcon.className = wasCorrect ? 'fas fa-circle-check' : 'fas fa-circle-xmark';
+                            resultEl.appendChild(resultIcon);
+                            resultEl.appendChild(document.createTextNode(wasCorrect ? '正解' : '不正解'));
+                        }
+                        metaEl.appendChild(resultEl);
+
+                        const timeEl = document.createElement('span');
+                        const timeIcon = document.createElement('i');
+                        timeIcon.className = 'fas fa-clock';
+                        timeEl.appendChild(timeIcon);
+                        timeEl.appendChild(document.createTextNode(formatRelativeTime(stats.lastAnsweredAt)));
+                        metaEl.appendChild(timeEl);
+
+                        const attemptsEl = document.createElement('span');
+                        const attemptIcon = document.createElement('i');
+                        attemptIcon.className = 'fas fa-rotate-right';
+                        attemptsEl.appendChild(attemptIcon);
+                        attemptsEl.appendChild(document.createTextNode(`${stats.attempts || 0}回挑戦`));
+                        metaEl.appendChild(attemptsEl);
+
+                        listItem.appendChild(metaEl);
+                        recentListEl.appendChild(listItem);
+                    });
+                }
+            }
         }
 
         // 推奨アクションを生成する関数
@@ -1736,7 +2018,9 @@
                     isLongTime: false,
                     isWrong: false,
                     srsLevel: 0,
-                    nextReviewDate: new Date().toISOString().slice(0, 10)
+                    nextReviewDate: new Date().toISOString().slice(0, 10),
+                    lastAnsweredAt: null,
+                    lastResult: null
                 });
             }
 
@@ -1757,6 +2041,8 @@
             if (e.target.textContent === correctAnswer) { // 正解の場合
                 stats.isWrong = false; // 正解したので不正解フラグはリセット
                 stats.srsLevel = (stats.srsLevel || 0) + 1;
+                stats.lastAnsweredAt = new Date().toISOString();
+                stats.lastResult = 'correct';
                 if (isInReviewMode) {
                     // --- 復習モードの正解処理 ---
                     reviewStreaks[currentIndex] = (reviewStreaks[currentIndex] || 0) + 1; // reviewStreaks[currentIndex]が存在しない場合も考慮
@@ -1856,6 +2142,8 @@
             } else { // 不正解の場合
                 stats.isWrong = true; // 不正解フラグを立てる
                 stats.srsLevel = 0; // SRSレベルをリセット
+                stats.lastAnsweredAt = new Date().toISOString();
+                stats.lastResult = 'wrong';
                 studyingQuestions.add(currentIndex); // 不正解なら必ず学習中リストへ
                 if (isInReviewMode) {
                     // --- 復習モードの不正解処理 ---
@@ -3073,6 +3361,16 @@
                         if (stats.nextReviewDate === undefined) {
                             stats.nextReviewDate = new Date().toISOString().slice(0, 10);
                         }
+                        if (stats.lastResult === undefined) {
+                            if (stats.attempts > 0) {
+                                stats.lastResult = stats.isWrong ? 'wrong' : 'correct';
+                            } else {
+                                stats.lastResult = null;
+                            }
+                        }
+                        if (stats.lastAnsweredAt === undefined) {
+                            stats.lastAnsweredAt = null;
+                        }
                         questionStats.set(parseInt(key), stats);
                     }
                 }
@@ -3522,7 +3820,11 @@
                     correctAnswers: 0,
                     averageTime: 0,
                     isLongTime: false,
-                    isWrong: false
+                    isWrong: false,
+                    srsLevel: 0,
+                    nextReviewDate: new Date().toISOString().slice(0, 10),
+                    lastAnsweredAt: null,
+                    lastResult: null
                 });
             }
 
@@ -3530,7 +3832,7 @@
             stats.attempts++;
             stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) +
                 timeTaken) / stats.attempts;
-            stats.isWrong = false
+            stats.isWrong = false;
 
             answeredQuestions.add(currentIndex);
             totalCount++;
@@ -3542,9 +3844,12 @@
             }
 
             stats.correctAnswers = (stats.correctAnswers || 0) + 1;
+            stats.srsLevel = (stats.srsLevel || 0) + 1;
             const avgTime = calculateAverageTime();
             const isLongTime = timeTaken / 1000 > Math.max(5, avgTime * 1.5);
             stats.isLongTime = isLongTime || stats.isLongTime;
+            stats.lastAnsweredAt = new Date().toISOString();
+            stats.lastResult = 'correct';
 
             // 正解回数2回以上、かつ時間がかかっていない場合に学習中から外す
             if (stats.correctAnswers >= 2 && !stats.isLongTime) {
@@ -3597,7 +3902,11 @@
                     correctAnswers: 0,
                     averageTime: 0,
                     isLongTime: false,
-                    isWrong: false
+                    isWrong: false,
+                    srsLevel: 0,
+                    nextReviewDate: new Date().toISOString().slice(0, 10),
+                    lastAnsweredAt: null,
+                    lastResult: null
                 });
             }
 
@@ -3606,6 +3915,9 @@
             stats.averageTime = ((stats.averageTime || 0) * (stats.attempts - 1) +
                 timeTaken) / stats.attempts;
             stats.isWrong = true; // 不正解フラグ
+            stats.lastAnsweredAt = new Date().toISOString();
+            stats.lastResult = 'wrong';
+            stats.srsLevel = 0;
 
             answeredQuestions.add(currentIndex);
             totalCount++;
