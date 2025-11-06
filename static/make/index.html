@@ -20,13 +20,16 @@
 <body>
     <!-- ヘッダー部分 -->
     <div class="top" id="mainHeader">
-        <div class="top-left">
-            <a href="/" class="home-btn">ホーム</a>
-            <h1>問題作成</h1>
+        <div class="brand">
+            <a href="/" class="brand-logo">Quizbox</a>
+            <span class="brand-tag">AI Builder</span>
         </div>
-        <div class="top-right">
-            <a href="/dashboard" class="create-btn">問題管理</a>
-            <button id="start-tutorial-btn" class="create-btn">チュートリアル</button>
+        <div class="top-actions">
+            <button id="start-tutorial-btn" class="ghost-btn">
+                <i class="bi bi-question-circle"></i>
+                ガイドを見る
+            </button>
+            <a href="/dashboard" class="primary-btn">問題管理へ</a>
         </div>
     </div>
 
@@ -55,49 +58,243 @@
         <main class="dashboard-main">
             <!-- ウェルカムビュー（初期画面） -->
             <div class="editor-view active" id="welcome-view">
-                <div class="welcome-container">
-                    <h2>問題を作成</h2>
-                    <p class="welcome-description">作成方法を選択して下さい</p>
-                    
-                    <div class="welcome-options">
-                        <div class="welcome-option" id="option-create-new">
-                            <div class="option-icon">
-                                <i class="bi bi-plus-circle"></i>
+                <section class="builder-hero">
+                    <div class="hero-content">
+                        <span class="hero-badge">AIで最短構築</span>
+                        <h2>AI問題ビルダー</h2>
+                        <p class="hero-lead">
+                            学習者のレベルやゴールを伝えるだけで、AIが最適な問題セットを提案します。
+                            生成された問題は右のエディタで即座に調整・公開できます。
+                        </p>
+                        <div class="hero-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">現在のユーザー</span>
+                                <span class="meta-value" id="user-name">ユーザー</span>
                             </div>
-                            <h3>新規作成</h3>
-                            <p>0から問題を作成します</p>
-                            <button class="option-button">選択</button>
-                        </div>
-                        
-                        <div class="welcome-option" id="option-template">
-                            <div class="option-icon">
-                                <i class="bi bi-file-earmark-text"></i>
+                            <div class="meta-item">
+                                <span class="meta-label">おすすめフロー</span>
+                                <span class="meta-value">ニーズの共有 → AI生成 → 編集・公開</span>
                             </div>
-                            <h3>テンプレートから作成</h3>
-                            <p>既存のテンプレートを元に作成します</p>
-                            <button class="option-button">選択</button>
                         </div>
-                        
-                        <div class="welcome-option" id="option-import">
-                            <div class="option-icon">
-                                <i class="bi bi-upload"></i>
-                            </div>
-                            <h3>インポート</h3>
-                            <p>ファイルから問題を読み込みます</p>
-                            <button class="option-button">選択</button>
+                        <div class="hero-actions">
+                            <button class="primary-btn hero-primary" data-view="create">
+                                <i class="bi bi-table"></i>
+                                編集ビューを開く
+                            </button>
+                            <button class="ghost-btn hero-secondary" data-view="template">
+                                <i class="bi bi-collection"></i>
+                                テンプレート一覧
+                            </button>
                         </div>
-
-                        <div class="welcome-option" id="option-image-create">
-                            <div class="option-icon">
-                                <i class="bi bi-image"></i>
-                            </div>
-                            <h3>画像から作成</h3>
-                            <p>画像をアップロードして問題を生成します</p>
-                            <button class="option-button">選択</button>
-                        </div>
-                        
                     </div>
+                    <div class="hero-visual">
+                        <div class="visual-orb"></div>
+                        <div class="visual-card">
+                            <span class="visual-label">AIプレビュー</span>
+                            <p class="visual-text">生成された問題はそのまま保存可能。編集結果はリアルタイムで同期されます。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <ul class="progress-steps">
+                    <li class="active" data-view="welcome">
+                        <span class="step-index">1</span>
+                        <div class="step-body">
+                            <span class="step-title">ニーズをAIに共有</span>
+                            <span class="step-desc">対象・難易度・重点を伝えて問題を生成</span>
+                        </div>
+                    </li>
+                    <li data-view="create">
+                        <span class="step-index">2</span>
+                        <div class="step-body">
+                            <span class="step-title">問題を磨く</span>
+                            <span class="step-desc">テーブルエディタで並び替えや追記を実施</span>
+                        </div>
+                    </li>
+                    <li data-view="settings">
+                        <span class="step-index">3</span>
+                        <div class="step-body">
+                            <span class="step-title">公開準備</span>
+                            <span class="step-desc">保存・品質チェック・公開設定を完了</span>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="ai-workspace">
+                    <section class="ai-builder-card">
+                        <header class="card-header">
+                            <div>
+                                <span class="card-eyebrow">STEP 1</span>
+                                <h3>AIへの指示をまとめる</h3>
+                            </div>
+                            <button type="button" id="aiClearForm" class="icon-btn" title="入力内容をリセット">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </header>
+                        <form id="aiPromptForm" class="ai-form">
+                            <div class="form-grid">
+                                <div class="form-section">
+                                    <label class="field-label">学習領域</label>
+                                    <div class="chip-group" data-chip-group="subject">
+                                        <button type="button" class="chip selected" data-value="英語">英語</button>
+                                        <button type="button" class="chip" data-value="数学">数学</button>
+                                        <button type="button" class="chip" data-value="情報">情報</button>
+                                        <button type="button" class="chip" data-value="理科">理科</button>
+                                        <button type="button" class="chip" data-value="社会">社会</button>
+                                    </div>
+                                </div>
+                                <div class="form-section">
+                                    <label class="field-label">学習者のレベル</label>
+                                    <div class="chip-group" data-chip-group="difficulty">
+                                        <button type="button" class="chip" data-value="基礎固め">基礎固め</button>
+                                        <button type="button" class="chip selected" data-value="標準レベル">標準レベル</button>
+                                        <button type="button" class="chip" data-value="入試対策">入試対策</button>
+                                        <button type="button" class="chip" data-value="ハイレベル">ハイレベル</button>
+                                    </div>
+                                </div>
+                                <div class="form-section">
+                                    <label class="field-label">出題スタイル</label>
+                                    <div class="chip-group" data-chip-group="tone">
+                                        <button type="button" class="chip selected" data-value="要点整理">要点整理</button>
+                                        <button type="button" class="chip" data-value="応用演習">応用演習</button>
+                                        <button type="button" class="chip" data-value="思考力重視">思考力重視</button>
+                                        <button type="button" class="chip" data-value="スピードチェック">スピードチェック</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="focus-pill-group">
+                                <span class="field-label">重点にしたい観点</span>
+                                <label class="pill">
+                                    <input type="checkbox" name="aiFocus" value="重要語句の定着" checked>
+                                    <span>重要語句の定着</span>
+                                </label>
+                                <label class="pill">
+                                    <input type="checkbox" name="aiFocus" value="理解度チェック">
+                                    <span>理解度チェック</span>
+                                </label>
+                                <label class="pill">
+                                    <input type="checkbox" name="aiFocus" value="応用力">
+                                    <span>応用力</span>
+                                </label>
+                                <label class="pill">
+                                    <input type="checkbox" name="aiFocus" value="言い換え練習">
+                                    <span>言い換え練習</span>
+                                </label>
+                            </div>
+
+                            <div class="details-section">
+                                <label class="field-label" for="aiPromptDetails">具体的な要望</label>
+                                <textarea id="aiPromptDetails" rows="4" placeholder="例: Lesson5 の仮定法、選択肢付きでひっかけを入れたい。誤答の解説も簡潔に記載してほしい。"></textarea>
+                                <div class="suggestion-chips">
+                                    <button type="button" class="suggestion" data-suggestion="間違えやすい選択肢を含めて、誤答の理由も提示してください。">+ 誤答の理由も提示</button>
+                                    <button type="button" class="suggestion" data-suggestion="回答後に1行で確認用のヒントを添えてください。">+ 確認ヒントを追加</button>
+                                    <button type="button" class="suggestion" data-suggestion="長めの文章読解ではなく短文ベースで構成してください。">+ 短文中心で構成</button>
+                                </div>
+                            </div>
+
+                            <div class="form-footer">
+                                <div class="count-picker">
+                                    <label for="aiQuestionCount">生成する問題数</label>
+                                    <div class="slider-control">
+                                        <input type="range" id="aiQuestionCount" min="3" max="20" value="8">
+                                        <span id="aiQuestionCountValue">8問</span>
+                                    </div>
+                                </div>
+                                <div class="output-options">
+                                    <label class="switch">
+                                        <input type="checkbox" id="aiIncludeExplanations" checked>
+                                        <span class="switch-slider"></span>
+                                        <span class="switch-label">解説文を添付</span>
+                                    </label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="aiEnsureDifficultyCurve" checked>
+                                        <span class="switch-slider"></span>
+                                        <span class="switch-label">段階的な難易度</span>
+                                    </label>
+                                </div>
+                                <div class="builder-actions">
+                                    <button type="submit" id="aiGenerateBtn" class="primary-btn">
+                                        <i class="bi bi-stars"></i>
+                                        AIに生成を依頼
+                                    </button>
+                                    <button type="button" id="openTextModal" class="ghost-btn">
+                                        <i class="bi bi-journal-text"></i>
+                                        既存テキストを解析
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="ai-response-card">
+                        <header class="card-header">
+                            <div>
+                                <span class="card-eyebrow">STEP 2</span>
+                                <h3>AI提案とサマリー</h3>
+                            </div>
+                            <div class="response-actions">
+                                <span class="response-badge" id="aiStatusBadge">待機中</span>
+                                <button type="button" id="aiClearTimeline" class="icon-btn" title="履歴をクリア">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </header>
+                        <div class="ai-timeline" id="aiTimeline">
+                            <div class="ai-empty">
+                                <i class="bi bi-magic"></i>
+                                <p>AIへの指示を送信すると、ここに生成の流れとサマリーが表示されます。</p>
+                            </div>
+                        </div>
+                        <footer class="ai-summary" id="aiSummary">
+                            <div class="summary-item">
+                                <span class="summary-label">最新の生成</span>
+                                <span class="summary-value" id="aiLatestCount">0問</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">平均難易度</span>
+                                <span class="summary-value" id="aiDifficultyHint">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">推奨アクション</span>
+                                <span class="summary-value" id="aiNextAction">AIで生成してみましょう</span>
+                            </div>
+                        </footer>
+                    </section>
                 </div>
+
+                <section class="quick-actions">
+                    <div class="quick-header">
+                        <h3>他の作成方法</h3>
+                        <p>AI生成後も、既存のテンプレートやインポート機能を組み合わせて柔軟に構築できます。</p>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <article class="quick-card" id="option-create-new">
+                            <span class="quick-badge">編集</span>
+                            <h4>手動で調整する</h4>
+                            <p>AIの提案を基に、人間の視点で細部を磨き上げます。</p>
+                            <span class="quick-link">テーブルエディタを開く</span>
+                        </article>
+                        <article class="quick-card" id="option-template">
+                            <span class="quick-badge">テンプレート</span>
+                            <h4>ひな形から追加</h4>
+                            <p>過去に保存した構成や公式テンプレートを読み込んで再利用できます。</p>
+                            <span class="quick-link">テンプレート一覧へ</span>
+                        </article>
+                        <article class="quick-card" id="option-import">
+                            <span class="quick-badge">インポート</span>
+                            <h4>ファイルから連携</h4>
+                            <p>CSV・Excel・テキストをアップロードして問題を一括登録します。</p>
+                            <span class="quick-link">データを取り込む</span>
+                        </article>
+                        <article class="quick-card" id="option-image-create">
+                            <span class="quick-badge">画像解析</span>
+                            <h4>資料を読み込む</h4>
+                            <p>プリントやスライドの画像からAIがキーポイントを抽出します。</p>
+                            <span class="quick-link">画像から生成</span>
+                        </article>
+                    </div>
+                </section>
             </div>
             <!-- 作成ビュー（表形式エディタ） -->
             <div class="editor-view" id="create-view">
