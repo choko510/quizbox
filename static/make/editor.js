@@ -32,6 +32,13 @@ let currentProblemIndex = -1;
 let isEditing = false;
 let autoSaveTimer = null;
 let searchTimeout = null;
+const aiBuilderDefaults = {
+    chipSelections: {},
+    focusValues: [],
+    count: 8,
+    includeExplanations: true,
+    ensureDifficultyCurve: true
+};
 
 // DOM読み込み完了時の処理
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,10 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 設定の読み込み
     loadSettings();
-    
+
     // ウェルカム画面のボタン設定
     setupWelcomeOptions();
-    
+
+    // AIビルダー初期化
+    setupAiBuilder();
+
     // ソート可能リストの設定
     initializeSortable();
 });
@@ -63,28 +73,382 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function setupWelcomeOptions() {
     // 新規作成ボタン
-    document.getElementById('option-create-new').addEventListener('click', () => {
-        // 表形式エディタを初期化
-        if (window.tableEditor) {
-            window.tableEditor.loadProblemsFromStorage();
-            window.tableEditor.render();
-        }
-        switchView('create');
-    });
-    
+    const createCard = document.getElementById('option-create-new');
+    if (createCard) {
+        createCard.addEventListener('click', () => {
+            if (window.tableEditor) {
+                window.tableEditor.loadProblemsFromStorage();
+                window.tableEditor.render();
+            }
+            switchView('create');
+        });
+    }
+
     // テンプレートボタン
-    document.getElementById('option-template').addEventListener('click', () => {
-        switchView('template');
-    });
-    
+    const templateCard = document.getElementById('option-template');
+    if (templateCard) {
+        templateCard.addEventListener('click', () => {
+            switchView('template');
+        });
+    }
+
     // インポートボタン
-    document.getElementById('option-import').addEventListener('click', () => {
-        switchView('import');
+    const importCard = document.getElementById('option-import');
+    if (importCard) {
+        importCard.addEventListener('click', () => {
+            switchView('import');
+        });
+    }
+
+    const imageCard = document.getElementById('option-image-create');
+    if (imageCard) {
+        imageCard.addEventListener('click', () => {
+            switchView('image-create');
+        });
+    }
+}
+
+/**
+ * AIビルダーの初期化
+ */
+function setupAiBuilder() {
+    const form = document.getElementById('aiPromptForm');
+    if (!form) return;
+
+    // 初期選択状態を保存
+    document.querySelectorAll('.chip-group[data-chip-group]').forEach(group => {
+        const groupName = group.dataset.chipGroup;
+        const chips = Array.from(group.querySelectorAll('.chip'));
+        const preset = group.querySelector('.chip.selected') || chips[0];
+        if (preset) {
+            chips.forEach(chip => chip.classList.toggle('selected', chip === preset));
+            aiBuilderDefaults.chipSelections[groupName] = preset.dataset.value;
+        }
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(btn => btn.classList.toggle('selected', btn === chip));
+            });
+        });
     });
 
-    document.getElementById('option-image-create').addEventListener('click', () => {
-        switchView('image-create');
+    aiBuilderDefaults.focusValues = Array.from(form.querySelectorAll('input[name="aiFocus"]:checked')).map(input => input.value);
+
+    const countInput = document.getElementById('aiQuestionCount');
+    const countValue = document.getElementById('aiQuestionCountValue');
+    if (countInput) {
+        aiBuilderDefaults.count = parseInt(countInput.value, 10) || aiBuilderDefaults.count;
+        if (countValue) {
+            countValue.textContent = `${aiBuilderDefaults.count}問`;
+        }
+        countInput.addEventListener('input', () => {
+            const value = parseInt(countInput.value, 10) || aiBuilderDefaults.count;
+            if (countValue) {
+                countValue.textContent = `${value}問`;
+            }
+        });
+    }
+
+    const includeExp = document.getElementById('aiIncludeExplanations');
+    if (includeExp) {
+        aiBuilderDefaults.includeExplanations = includeExp.checked;
+    }
+    const ensureCurve = document.getElementById('aiEnsureDifficultyCurve');
+    if (ensureCurve) {
+        aiBuilderDefaults.ensureDifficultyCurve = ensureCurve.checked;
+    }
+
+    document.querySelectorAll('.suggestion').forEach(button => {
+        button.addEventListener('click', () => {
+            const detailsField = document.getElementById('aiPromptDetails');
+            if (!detailsField) return;
+            const suggestion = button.dataset.suggestion || button.textContent;
+            if (!detailsField.value.includes(suggestion)) {
+                const current = detailsField.value.trim();
+                detailsField.value = current ? `${current}\n${suggestion}` : suggestion;
+            }
+            detailsField.focus();
+            showToast('ヒントを追記しました', 'info');
+        });
     });
+
+    const clearButton = document.getElementById('aiClearForm');
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            resetAiBuilderForm();
+            showToast('AIへの指示をリセットしました', 'info');
+        });
+    }
+
+    const clearTimelineBtn = document.getElementById('aiClearTimeline');
+    if (clearTimelineBtn) {
+        clearTimelineBtn.addEventListener('click', () => {
+            clearAiTimeline();
+            showToast('AI履歴をクリアしました', 'info');
+        });
+    }
+
+    clearAiTimeline();
+
+    form.addEventListener('submit', handleAiPromptSubmit);
+}
+
+function resetAiBuilderForm() {
+    Object.entries(aiBuilderDefaults.chipSelections).forEach(([groupName, value]) => {
+        const group = document.querySelector(`.chip-group[data-chip-group="${groupName}"]`);
+        if (!group) return;
+        const chips = Array.from(group.querySelectorAll('.chip'));
+        const target = chips.find(chip => chip.dataset.value === value) || chips[0];
+        if (target) {
+            chips.forEach(chip => chip.classList.toggle('selected', chip === target));
+        }
+    });
+
+    document.querySelectorAll('input[name="aiFocus"]').forEach(input => {
+        input.checked = aiBuilderDefaults.focusValues.includes(input.value);
+    });
+
+    const details = document.getElementById('aiPromptDetails');
+    if (details) {
+        details.value = '';
+    }
+
+    const countInput = document.getElementById('aiQuestionCount');
+    const countValue = document.getElementById('aiQuestionCountValue');
+    if (countInput) {
+        countInput.value = aiBuilderDefaults.count;
+    }
+    if (countValue) {
+        countValue.textContent = `${aiBuilderDefaults.count}問`;
+    }
+
+    const includeExp = document.getElementById('aiIncludeExplanations');
+    if (includeExp) {
+        includeExp.checked = aiBuilderDefaults.includeExplanations;
+    }
+    const ensureCurve = document.getElementById('aiEnsureDifficultyCurve');
+    if (ensureCurve) {
+        ensureCurve.checked = aiBuilderDefaults.ensureDifficultyCurve;
+    }
+}
+
+function clearAiTimeline() {
+    const timeline = document.getElementById('aiTimeline');
+    if (!timeline) return;
+    timeline.innerHTML = `
+        <div class="ai-empty">
+            <i class="bi bi-magic"></i>
+            <p>AIへの指示を送信すると、ここに生成の流れとサマリーが表示されます。</p>
+        </div>
+    `;
+    const latest = document.getElementById('aiLatestCount');
+    if (latest) latest.textContent = '0問';
+    const difficultyHint = document.getElementById('aiDifficultyHint');
+    if (difficultyHint) difficultyHint.textContent = '-';
+    const nextAction = document.getElementById('aiNextAction');
+    if (nextAction) nextAction.textContent = 'AIで生成してみましょう';
+    setAiStatus('idle', '待機中');
+}
+
+function getSelectedChipValue(groupName) {
+    const group = document.querySelector(`.chip-group[data-chip-group="${groupName}"]`);
+    if (!group) return null;
+    const selected = group.querySelector('.chip.selected');
+    return selected ? selected.dataset.value : null;
+}
+
+function formatAiText(text) {
+    return sanitizeHTML(text).replace(/\n/g, '<br>');
+}
+
+function addAiMessage(role, content, meta) {
+    const timeline = document.getElementById('aiTimeline');
+    if (!timeline) return null;
+    const emptyState = timeline.querySelector('.ai-empty');
+    if (emptyState) {
+        emptyState.remove();
+    }
+
+    const message = document.createElement('div');
+    message.className = `ai-message ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'user' ? 'You' : 'AI';
+
+    const body = document.createElement('div');
+    body.className = 'message-body';
+
+    const textEl = document.createElement('p');
+    textEl.innerHTML = formatAiText(content);
+    body.appendChild(textEl);
+
+    if (meta) {
+        const metaEl = document.createElement('div');
+        metaEl.className = 'meta';
+        metaEl.textContent = meta;
+        body.appendChild(metaEl);
+    }
+
+    message.appendChild(avatar);
+    message.appendChild(body);
+    timeline.appendChild(message);
+    timeline.scrollTop = timeline.scrollHeight;
+    return message;
+}
+
+function updateAiMessage(message, content, meta) {
+    if (!message) return;
+    let textEl = message.querySelector('p');
+    if (!textEl) {
+        textEl = document.createElement('p');
+        message.querySelector('.message-body')?.appendChild(textEl);
+    }
+    textEl.innerHTML = formatAiText(content);
+
+    let metaEl = message.querySelector('.meta');
+    if (meta) {
+        if (!metaEl) {
+            metaEl = document.createElement('div');
+            metaEl.className = 'meta';
+            message.querySelector('.message-body')?.appendChild(metaEl);
+        }
+        metaEl.textContent = meta;
+    } else if (metaEl) {
+        metaEl.remove();
+    }
+}
+
+function setAiStatus(state, label) {
+    const badge = document.getElementById('aiStatusBadge');
+    if (!badge) return;
+    badge.textContent = label;
+    badge.classList.remove('is-running', 'is-success', 'is-error', 'is-idle');
+    if (state) {
+        badge.classList.add(`is-${state}`);
+    }
+}
+
+async function handleAiPromptSubmit(event) {
+    event.preventDefault();
+
+    const subject = getSelectedChipValue('subject') || '学習全般';
+    const difficulty = getSelectedChipValue('difficulty') || '標準レベル';
+    const tone = getSelectedChipValue('tone') || '要点整理';
+    const focusValues = Array.from(document.querySelectorAll('input[name="aiFocus"]:checked')).map(input => input.value);
+    const includeExplanations = document.getElementById('aiIncludeExplanations')?.checked ?? true;
+    const ensureDifficulty = document.getElementById('aiEnsureDifficultyCurve')?.checked ?? true;
+    const detailsField = document.getElementById('aiPromptDetails');
+    const detailText = detailsField ? detailsField.value.trim() : '';
+    const countInput = document.getElementById('aiQuestionCount');
+    const count = countInput ? Math.min(Math.max(parseInt(countInput.value, 10) || aiBuilderDefaults.count, 1), 30) : aiBuilderDefaults.count;
+
+    const focusText = focusValues.length ? focusValues.join('、') : '特になし';
+    const explanationInstruction = includeExplanations ? '各問題には簡潔な解説も含めてください。' : '解説は不要です。';
+    const difficultyInstruction = ensureDifficulty ? 'やさしい問題から徐々に難しくしてください。' : '難易度の順序は問いません。';
+
+    const promptSections = [
+        `対象教科: ${subject}`,
+        `学習者レベル: ${difficulty}`,
+        `出題スタイル: ${tone}`,
+        `重点ポイント: ${focusText}`,
+        explanationInstruction,
+        difficultyInstruction,
+        detailText ? `追加要望: ${detailText}` : '',
+        '各問題は {"question": "質問文", "answer": "模範解答", "explanation": "解説"} 形式のJSON配列で出力してください。',
+        `問題数: ${count}`
+    ];
+
+    const text = promptSections.filter(Boolean).join('\n');
+
+    const toneTypeMap = {
+        '応用演習': 'multiple-choice',
+        '思考力重視': 'short-answer',
+        'スピードチェック': 'true-false',
+        '要点整理': 'mixed'
+    };
+
+    const type = toneTypeMap[tone] || 'mixed';
+    const summaryMeta = `教科: ${subject} / レベル: ${difficulty} / 生成数: ${count}問`;
+
+    addAiMessage('user', `${subject}で${difficulty}向けに${tone}形式の問題を${count}問作成`, focusValues.length ? `重点: ${focusText}` : '');
+    setAiStatus('running', '生成中...');
+    const placeholder = addAiMessage('assistant', 'AIが問題を準備しています...', '数秒で結果が表示されます');
+
+    showToast('AIが問題を生成中です...', 'info');
+
+    try {
+        const response = await fetch('/api/generate/questions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text,
+                type,
+                count
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success' && Array.isArray(data.questions) && data.questions.length > 0) {
+            const preview = data.questions.slice(0, 3).map((q, index) => `${index + 1}. ${q.question}`).join('\n');
+            updateAiMessage(placeholder, `AIが${data.questions.length}問を生成しました。\n\n${preview}`, summaryMeta);
+            setAiStatus('success', '生成完了');
+
+            const latestCount = document.getElementById('aiLatestCount');
+            if (latestCount) latestCount.textContent = `${data.questions.length}問`;
+            const difficultyHint = document.getElementById('aiDifficultyHint');
+            if (difficultyHint) difficultyHint.textContent = difficulty;
+            const nextAction = document.getElementById('aiNextAction');
+            if (nextAction) nextAction.textContent = 'エディタで内容を調整しましょう';
+
+            if (window.tableEditor) {
+                const convertedProblems = data.questions.map(q => ({
+                    id: Date.now() + Math.random(),
+                    question: q.question,
+                    answer: q.answer,
+                    explanation: q.explanation || '',
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    quality: null
+                }));
+
+                window.tableEditor.problems = [...window.tableEditor.problems, ...convertedProblems];
+                window.tableEditor.render();
+                window.tableEditor.saveToStorage();
+            } else {
+                const newProblems = data.questions.map(q => ({
+                    answer: q.answer,
+                    question: q.question,
+                    answerHtml: q.answer,
+                    questionHtml: q.question,
+                    created: new Date().toISOString()
+                }));
+
+                problems = [...problems, ...newProblems];
+                updateProblemList();
+            }
+
+            showToast(`${data.questions.length}問の問題を生成しました`, 'success');
+            switchView('create');
+        } else {
+            const errorMessage = data.message || 'AIが問題を生成できませんでした。条件を見直してください。';
+            updateAiMessage(placeholder, errorMessage, '生成に失敗しました');
+            setAiStatus('error', '生成失敗');
+            const nextAction = document.getElementById('aiNextAction');
+            if (nextAction) nextAction.textContent = '指示内容を調整して再試行してください';
+            showToast('問題の生成に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('AI生成エラー:', error);
+        updateAiMessage(placeholder, 'サーバーとの通信に失敗しました。ネットワーク環境を確認してください。', '通信エラー');
+        setAiStatus('error', '通信エラー');
+        const nextAction = document.getElementById('aiNextAction');
+        if (nextAction) nextAction.textContent = '時間をおいて再度お試しください';
+        showToast('サーバーとの通信に失敗しました', 'error');
+    }
 }
 
 /**
@@ -110,14 +474,14 @@ function initializeEditor() {
  * イベントリスナーの設定
  */
 function setupEventListeners() {
-    // タブ切り替え（サイドバーとモバイルフッター）
-    document.querySelectorAll('.sidebar-nav li, .mobile-footer-nav .nav-item').forEach(item => {
+    // タブ切り替え（データ属性を持つ全要素）
+    document.querySelectorAll('[data-view]').forEach(item => {
         item.addEventListener('click', (e) => {
-            e.preventDefault();
             const viewId = item.dataset.view;
+            if (!viewId) return;
+            e.preventDefault();
             switchView(viewId);
 
-            // createビューに切り替える際の表形式エディタ初期化
             if (viewId === 'create') {
                 if (window.tableEditor) {
                     window.tableEditor.loadProblemsFromStorage();
@@ -280,7 +644,12 @@ function setupEventListeners() {
     const generateQuestionsBtn = document.getElementById('generateQuestions');
     if (generateQuestionsBtn) {
         generateQuestionsBtn.addEventListener('click', () => {
-            // モーダル表示して大きい入力欄で編集
+            openTextGenerateModal();
+        });
+    }
+    const openTextModalBtn = document.getElementById('openTextModal');
+    if (openTextModalBtn) {
+        openTextModalBtn.addEventListener('click', () => {
             openTextGenerateModal();
         });
     }
@@ -339,7 +708,6 @@ function setupEventListeners() {
     try {
         if (document.getElementById('imageDropArea')) {
             initializeImageCreateView();
-            console.log('画像から作成ビューを初期化しました');
         }
     } catch (e) {
         console.error('画像ビューの初期化エラー:', e);
@@ -591,6 +959,10 @@ function switchView(viewId) {
     // サイドバーとモバイルフッターのアクティブなタブを更新
     document.querySelectorAll('.sidebar-nav li, .mobile-footer-nav .nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.view === viewId);
+    });
+
+    document.querySelectorAll('.progress-steps li').forEach(step => {
+        step.classList.toggle('active', step.dataset.view === viewId);
     });
 
     // アクティブなビューを更新
@@ -1783,8 +2155,6 @@ async function generateQuestionsFromModal() {
     showToast('AIが問題を生成中です...', 'info');
     
     try {
-        console.log('送信データ:', { text, type, count });
-        
         const response = await fetch('/api/generate/questions', {
             method: 'POST',
             headers: {
