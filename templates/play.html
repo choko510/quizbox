@@ -2205,9 +2205,72 @@
             dueOrNewIndices = filterBySessionPhase(dueOrNewIndices);
 
             if (dueOrNewIndices.length === 0) {
-                notie.alert({ type: 'success', text: '今日の復習は完了です！お疲れ様でした。明日また挑戦しましょう。', time: 3 });
-                swiper.slideTo(0); // 進捗画面に戻る
-                return undefined; // これ以上問題を出さない
+                const todayDate = new Date(today);
+                const MS_PER_DAY = 1000 * 60 * 60 * 24;
+                const upcomingCandidates = [];
+
+                for (let i = 0; i < questions.length; i++) {
+                    const stats = questionStats.get(i);
+                    if (!stats || !stats.nextReviewDate) continue;
+
+                    const nextDate = new Date(stats.nextReviewDate);
+                    if (Number.isNaN(nextDate.getTime()) || nextDate <= todayDate) continue;
+
+                    const daysUntil = Math.max(1, Math.ceil((nextDate - todayDate) / MS_PER_DAY));
+                    const attempts = stats.attempts || 0;
+                    const accuracy = attempts > 0 ? (stats.correctAnswers || 0) / attempts : 0;
+
+                    upcomingCandidates.push({
+                        index: i,
+                        daysUntil,
+                        accuracy,
+                        isLongTime: !!stats.isLongTime,
+                        srsLevel: stats.srsLevel || 0,
+                        isWrong: !!stats.isWrong
+                    });
+                }
+
+                if (upcomingCandidates.length > 0) {
+                    const prioritized = upcomingCandidates
+                        .sort((a, b) => (a.daysUntil - b.daysUntil) || (a.accuracy - b.accuracy))
+                        .slice(0, Math.max(15, Math.ceil(upcomingCandidates.length * 0.4)));
+
+                    const weights = prioritized.map(candidate => {
+                        const readinessBoost = 1 / candidate.daysUntil;
+                        const accuracyPenalty = 1 - candidate.accuracy;
+                        const difficultyBoost = candidate.isLongTime ? 1.25 : 1;
+                        const wrongBoost = candidate.isWrong ? 1.35 : 1;
+                        const masteryFactor = 1 / Math.max(1, candidate.srsLevel);
+                        const weight = readinessBoost * (1 + accuracyPenalty) * difficultyBoost * wrongBoost * (0.7 + masteryFactor * 0.6);
+
+                        return {
+                            index: candidate.index,
+                            weight: Math.max(weight, 0.01)
+                        };
+                    });
+
+                    notie.alert({
+                        type: 'info',
+                        text: '予定分を先取りして学習を継続します。ハイペースで学習中！',
+                        time: 3
+                    });
+
+                    return weightedRandomSelection(weights);
+                }
+
+                if (questions.length > 0) {
+                    const allIndices = Array.from({ length: questions.length }, (_, idx) => idx);
+                    notie.alert({
+                        type: 'info',
+                        text: '全問題を対象に強化復習を行います。',
+                        time: 3
+                    });
+                    return weightedRandomSelection(calculateEnhancedWeights(allIndices));
+                }
+
+                notie.alert({ type: 'success', text: '学習できる問題が見つかりませんでした。', time: 3 });
+                swiper.slideTo(0);
+                return undefined;
             }
 
             // 短期履歴に含まれる問題を除外または重みを下げる
