@@ -873,7 +873,12 @@ class DB:
                     total = sum(1 for l in await f.readlines() if l.strip())
             else:
                 async with async_session() as s2:
-                    res = await s2.execute(sa_select(Mondai).filter_by(userid=id, name=ps))
+                    res = await s2.execute(
+                        sa_select(Mondai)
+                        .filter_by(userid=id, name=ps)
+                        .order_by(Mondai.id.desc())
+                        .limit(1)
+                    )
                     m: Optional[Mondai] = res.scalar_one_or_none()
                     if m and m.mondai:  # type: ignore
                         total = len(json.loads(m.mondai))  # type: ignore
