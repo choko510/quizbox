@@ -1035,11 +1035,11 @@ async def root(request: Request):
 
     return templates.TemplateResponse("main.html", {"request": request})
 
-async def reqAI(prompt: str, model: str = "gemini-2.5-flash-latest", images=None, stream: bool = False) -> str:
+async def reqAI(prompt: str, model: str = "gemini-3.0-flash", images=None, stream: bool = False) -> str:
     """
     Google GenAI SDK (google-genai) での統一的な生成関数
     - prompt: テキストプロンプト
-    - model: 使用モデル（例: gemini-2.5-flash）
+    - model: 使用モデル（例: gemini-3.0-flash）
     - images: PIL.Image.Image または その配列/パス
     - stream: ストリーミング応答を使用するか
     """
@@ -1089,7 +1089,7 @@ async def reqAI(prompt: str, model: str = "gemini-2.5-flash-latest", images=None
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {api_key}"}
             payload = {
-                "model": "deepseek/deepseek-chat-v3.1:free",
+                "model": "openrouter/free",
                 "messages": [{"role": "user", "content": prompt}],
             }
             async with aiohttp.ClientSession() as session:
@@ -1855,7 +1855,7 @@ async def process_image(data: Union[ImageData, TextData]):
         # reqAI関数を使用して画像処理を実行
         question_response_text = await reqAI(
             prompt=question_generation_prompt,
-            model="gemini-2.5-flash-latest",
+            model="gemini-3.0-flash",
             images=image
         )
 
@@ -2009,8 +2009,23 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
 
     # パスインジェクション対策：ファイル名のみを抽出し、ディレクトリトラバーサルを防止
     safe_name = os.path.basename(name)
-    path = f"./data/mondaiset/{safe_name}.txt"
+    file_name = f"{safe_name}.txt"
+    path = f"./data/mondaiset/{file_name}"
     
+    # info.json を読み込んでディレクトリを特定し、パスを適宜変換
+    info_path = "./data/mondaiset/info.json"
+    try:
+        async with aiofiles.open(info_path, mode="r", encoding="utf-8") as f:
+            content = await f.read()
+            info_data = json.loads(content)
+            
+        for d, files in info_data.items():
+            if file_name in files:
+                path = f"./data/mondaiset/{d}/{file_name}"
+                break
+    except Exception as e:
+        print(f"Error reading info.json: {e}")
+
     # 絶対パスを取得して、意図したディレクトリ内にあるか確認
     abs_path = os.path.abspath(path)
     intended_dir = os.path.abspath("./data/mondaiset")
@@ -2807,7 +2822,7 @@ async def search_word(data: WordData):
         回答は簡潔かつ分かりやすい日本語で、150-250字程度でまとめてください。
         また、HTMLタグは使用せず、マークダウン形式で回答してください。"""
 
-        response = await reqAI(prompt, "gemini-2.5-flash-latest")
+        response = await reqAI(prompt, "gemini-3.0-flash")
         return {
             "word": word,
             "definition": response,
@@ -2973,7 +2988,7 @@ async def get_advice(data: Data):
             """
 
     try:
-        response = await reqAI(prompt, "gemini-2.5-flash-latest")
+        response = await reqAI(prompt, "gemini-3.0-flash")
         advice = response.replace("\n", "<br>")
         return {"advice": advice}
     except Exception as e:

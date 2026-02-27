@@ -1,0 +1,25 @@
+{
+    "target":[
+       "target1000.txt",
+       "target1200.txt",
+       "target1400.txt",
+       "target1900.txt"
+    ],
+    "englishbook":[
+        "deruz1k.txt",
+        "leap.txt", 
+        "systemeitango.txt"
+    ],
+    "zenshokentei":[
+        "hard.txt",
+        "re.txt",
+        "for.txt",
+        "excel2.txt",
+        "prog.txt",
+        "mondai.txt",
+        "detabase.txt",
+        "proghard.txt",
+        "excelmondai.txt",
+        "hardbizinesu.txt"
+    ]
+}
