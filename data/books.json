@@ -33,5 +33,10 @@
         "title": "英検準１級 でる順パス単",
         "max_range": 1900,
         "step": 50
+    },
+    "karimen": {
+        "title": "仮免前問題",
+        "max_range": 300,
+        "step": 50
     }
 }

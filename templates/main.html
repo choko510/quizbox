@@ -4,8 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css"></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    </noscript>
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.1.0/css/all.css">
     <link rel="stylesheet" href="style.css">
     <title>Quizbox</title>
@@ -13,7 +16,7 @@
 </head>
 
 <body>
-    
+
     <div class="top">
         <div class="top-left">
             <a href="javascript:iconmodal();"><img class="icon" src="usericon.png"></a>
@@ -77,13 +80,8 @@
                 </div>
             </div>
 
-            
-            {{ html | safe}}
 
-            <div class="category">
-                <p>大会</p>
-                <a href="select/?id=taikai&multiselect=true">過去問</a>
-            </div>
+            {{ html | safe}}
 
             <div class="category">
                 <p>情報処理検定 1級全般</p>
@@ -105,12 +103,17 @@
                 <a href="play/?id=hardbizinesu">ビジネス 1級 ハードモード</a>
                 <a href="play/?id=excelmondai">ビジネス エクセル 1級</a>
             </div>
-            
+
             <div class="category">
                 <p>情報処理検定 2級全般</p>
                 <a href="play/?id=detabase">データベース全般</a>
                 <a href="play/?id=excel2">エクセル関数全般</a>
                 <a href="play/?id=mail">メールプロトコル</a>
+            </div>
+
+            <div class="category">
+                <p>運転免許</p>
+                <a href="select/?id=karimen">仮免問題</a>
             </div>
         </div>
     </div>
@@ -119,7 +122,8 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"
+        defer></script>
 
     <script>
         if (!Cookies.get('id')) {
@@ -246,7 +250,7 @@
                                 <button type="submit">変更</button>
                             </form>
                         </div>
-                        
+
                         <!-- ログインフォーム -->
                         <div class="account-section">
                             <h4>他のアカウントにログイン</h4>

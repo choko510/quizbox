@@ -1,0 +1,2652 @@
+[
+  {
+    "category": "仮免前",
+    "question_number": 1,
+    "question": "交差点（優先道路を通行している場合を除く）、踏切、横断歩道や自転車横断帯とこれらの手前３０メートル以内のところでは、すべて追い越しが禁止されている。",
+    "answer": "○",
+    "explanation": "設問のとおりです。設問にある場所では、追い越しが禁止されています。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 2,
+    "question": "道路交通法の目的は、道路における危険を防止し、交通の安全と円滑を図り、交通によって起きる障害の防止を図ることにある。",
+    "answer": "○",
+    "explanation": "道路交通法は、道路交通の基本となるもので、危険を防止し、交通の安全と円滑を図り、交通公害（障害）の防止を図るという目的があります。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 3,
+    "question": "図の道路標識のある道路で、バスが通行していないときは、普通自動車でも通行できる。",
+    "answer": "×",
+    "explanation": "路線バスの「専用通行帯」の標識です。この専用通行帯は、路線バスが通行していなくても、普通自動車は、原則として通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 4,
+    "question": "自動車は交差点で右折するときは、あらかじめできるだけ道路の中央に寄り、交差点の中心のすぐ外側を徐行して通行する。",
+    "answer": "×",
+    "explanation": "右折するときは、あらかじめできるだけ道路の中央に寄り、交差点の中心のすぐ内側を徐行して通行します。中心の外側ではありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 5,
+    "question": "一方通行の道路で、道路外に出るため右折しようとするときは、あらかじめできるだけ道路の右端に寄って徐行しなければならない。",
+    "answer": "○",
+    "explanation": "一方通行の道路で右折するときは、あらかじめ道路の右端に寄ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 6,
+    "question": "この標識の表示されたところでも、道路外の施設または自動車の保管場所に入るための左折を伴う横断は、禁止されていない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。禁止されているのは右横断です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 7,
+    "question": "安全地帯のある停留所に路面電車が停止していたが、乗降客がいなかったのでそのまま通過した。",
+    "answer": "×",
+    "explanation": "安全地帯のある停留所に路面電車が停止しているときは、乗降客の有無に関係なく徐行しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 8,
+    "question": "車を運転して横断歩道に近づいたとき、横断する人が明らかにいなかったので、そのままの速度で進行した。",
+    "answer": "○",
+    "explanation": "横断する人が明らかにいない場合は、そのまま進行することができます。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 9,
+    "question": "遮断機が上がった直後に踏切を通過するときは、一時停止しなくてもよい。",
+    "answer": "×",
+    "explanation": "遮断機が上がった直後でも、必ず一時停止しなければなりません。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 10,
+    "question": "左右の見通しのきかない交差点は危険な場所なので、どんな場合であっても徐行しなければならない。",
+    "answer": "×",
+    "explanation": "左右の見通しのきかない交差点は、徐行すべき場所ですが、信号機などで交通整理が行われている場合や、優先道路を通行している場合は、徐行する必要はありません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 11,
+    "question": "同一方向に二つの車両通行帯があるときは、左側の通行帯を通行しなければならない。",
+    "answer": "○",
+    "explanation": "二つの車両通行帯のあるときは左側の通行帯を通行しなければなりません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 12,
+    "question": "運転者は、自分本位の考えは捨てて、まわりの歩行者や運転者の立場を尊重し、お互いに譲り合う気持ちをもつことが大切である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路を通行するときは相手の立場になって思いやりの気持ちをもつことが大切です。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 13,
+    "question": "進行方向別通行区分を通行しているとき、緊急自動車が近づいてきた場合は、その指定区分に従わなくてもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。緊急自動車に進路を譲る場合と工事中の場合は従う必要はありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 14,
+    "question": "遮断機が上がった直後に踏切を通過するときは、一時停止しなくてもよい。",
+    "answer": "×",
+    "explanation": "遮断機が上がった直後でも、必ず一時停止しなければなりません。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 15,
+    "question": "図のマークは、７０歳以上の運転者が普通自動車を運転するときに表示するマークである。",
+    "answer": "○",
+    "explanation": "このマークは、「高齢運転者標識（高齢者マーク）」です。７０歳以上の運転者が普通自動車を運転するとき、車の前と後ろの定められた位置に表示するマークです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 16,
+    "question": "図の信号では、自動車、一般原動機付自転車、軽車両と特定小型原動機付自転車は直進し、右折し、左折することができる。",
+    "answer": "×",
+    "explanation": "青色の信号では、軽車両と特定小型原動機付自転車は、右折できません。また、片側三車線以上の道路では、一般原動機付自転車も右折できません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 17,
+    "question": "前の車が右左折や進路を変えるため合図をしているときは、急ブレーキや急ハンドルでさけなければならないとき以外は、その進路の変更を妨げてはならない。",
+    "answer": "○",
+    "explanation": "設問のような場合を除いて、前車の進路変更を妨げてはいけません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 18,
+    "question": "進行方向別通行区分を通行しているとき、緊急自動車が近づいてきた場合は、その指定区分に従わなくてもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。緊急自動車に進路を譲る場合と工事中の場合は従う必要はありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 19,
+    "question": "自動車に６歳未満の幼児を乗せて運転するときは、発育の程度に応じた形状のチャイルドシートを使用しなければならない。",
+    "answer": "○",
+    "explanation": "自動車に６歳未満の幼児を乗せて運転するときは、発育の程度に応じた形状のチャイルドシートを使用しましょう。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 20,
+    "question": "図の標識は、この先に押しボタン式の信号機があることを表している。",
+    "answer": "×",
+    "explanation": "「信号機あり」の警戒標識ですが、押しボタン式の信号とは限りません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 21,
+    "question": "中型免許を受ける場合は、原則として２０歳以上でかつ普通免許などを受けていた期間が通算して２年以上の資格が必要であるが、政令で定められた教習を修了した者は、１９歳以上でかつ普通免許などを受けていた期間が通算して１年以上の資格でよい。",
+    "answer": "○",
+    "explanation": "中型免許受験資格は、原則として２０歳以上でかつ普通免許などを受けていた期間が通算して２年以上ですが、政令で定められた教習を修了した者は、１９歳以上でかつ普通免許などを受けていた期間が通算して１年以上です。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 22,
+    "question": "遮断機が上がった直後に踏切を通過するときは、一時停止しなくてもよい。",
+    "answer": "×",
+    "explanation": "遮断機が上がった直後でも、必ず一時停止しなければなりません。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 23,
+    "question": "図の信号では、自動車、一般原動機付自転車、軽車両と特定小型原動機付自転車は直進し、右折し、左折することができる。",
+    "answer": "×",
+    "explanation": "青色の信号では、軽車両と特定小型原動機付自転車は、右折できません。また、片側三車線以上の道路では、一般原動機付自転車も右折できません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 24,
+    "question": "オートマチック車でエンジンを始動するときは、エンジンを始動する前にブレーキペダルを踏んでその位置を確認し、アクセルペダルの位置も目で見て確認することが大切である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。装置の位置を間違えないように、目で見て確かめます。",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 25,
+    "question": "横断歩道のない道路を横断している歩行者に対しては、車の方が優先する。",
+    "answer": "×",
+    "explanation": "横断歩道がなくても横断している歩行者の通行を妨げてはいけません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 26,
+    "question": "交差点以外の場所で横断歩道や自転車横断帯も踏切もないところに信号機があるときの停止位置は、信号機の直前で停止する。",
+    "answer": "○",
+    "explanation": "設問のとおりです。信号機の直前（信号が見える位置）で停止しなければなりません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 27,
+    "question": "図のＡは「一方通行」の標識、Ｂは「左折可」を表す標示板である。",
+    "answer": "×",
+    "explanation": "Ａは「左折可」の標示板、Ｂは「一方通行」の標識です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 28,
+    "question": "制動距離は、空走距離と停止距離を合わせた距離である。",
+    "answer": "×",
+    "explanation": "制動距離は、ブレーキが効き始めてから車が止まるまでに走る距離をいいます。空走距離と制動距離を合わせた距離を停止距離といいます。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 29,
+    "question": "普通二輪免許で、小型特殊自動車の運転ができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。普通二輪免許では普通自動二輪車と小型特殊自動車、一般原動機付自転車が運転できます。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 30,
+    "question": "左右の見通しのきかない交差点は危険な場所なので、どんな場合であっても徐行しなければならない。",
+    "answer": "×",
+    "explanation": "左右の見通しのきかない交差点は、徐行すべき場所ですが、信号機などで交通整理が行われている場合や、優先道路を通行している場合は、徐行する必要はありません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 31,
+    "question": "交差点（優先道路を通行している場合を除く）、踏切、横断歩道や自転車横断帯とこれらの手前３０メートル以内のところでは、すべて追い越しが禁止されている。",
+    "answer": "○",
+    "explanation": "設問のとおりです。設問にある場所では、追い越しが禁止されています。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 32,
+    "question": "横断歩道のない道路を横断している歩行者に対しては、車の方が優先する。",
+    "answer": "×",
+    "explanation": "横断歩道がなくても横断している歩行者の通行を妨げてはいけません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 33,
+    "question": "一方通行の道路で、道路外に出るため右折しようとするときは、あらかじめできるだけ道路の右端に寄って徐行しなければならない。",
+    "answer": "○",
+    "explanation": "一方通行の道路で右折するときは、あらかじめ道路の右端に寄ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 34,
+    "question": "制動距離は、空走距離と停止距離を合わせた距離である。",
+    "answer": "×",
+    "explanation": "制動距離は、ブレーキが効き始めてから車が止まるまでに走る距離をいいます。空走距離と制動距離を合わせた距離を停止距離といいます。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 35,
+    "question": "この標識の表示されたところでも、道路外の施設または自動車の保管場所に入るための左折を伴う横断は、禁止されていない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。禁止されているのは右横断です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 36,
+    "question": "前車が右折するため、道路の中央に寄ろうとして合図をしたが、前車の右側があいていたので、右側を通行した。",
+    "answer": "×",
+    "explanation": "前車が右折するため、道路の中央に寄ろうとして合図をしたときは、その左側を通行しなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 37,
+    "question": "交差点で右折するときに、反対方向から左折しようとする車があっても、これに優先して右折することができる。",
+    "answer": "×",
+    "explanation": "反対方向からの直進車や左折車があるときは、その車の進行を妨害してはいけません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 38,
+    "question": "車両通行帯のある道路では、車両通行帯をみだりに変えて通行すると、後続車の迷惑になったり事故の原因にもなるので、追い越しなどやむを得ない場合のほかは、同一の通行帯を通行しなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。みだりに車両通行帯を変えて運転してはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 39,
+    "question": "図のＡは「一方通行」の標識、Ｂは「左折可」を表す標示板である。",
+    "answer": "×",
+    "explanation": "Ａは「左折可」の標示板、Ｂは「一方通行」の標識です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 40,
+    "question": "図のような道路標示は、転回禁止の規制が終わったことを表している。",
+    "answer": "×",
+    "explanation": "「転回禁止」の道路標示で、この場所での転回を禁止しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 41,
+    "question": "この標示は、「この中に車を乗り入れてはならない」ことを示している。",
+    "answer": "○",
+    "explanation": "この標示は「立ち入り禁止部分」を示し、車はこの標示の中に入ってはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 42,
+    "question": "他人に迷惑をかけるような大きな騒音を発する急発進や急加速、空ぶかしをしてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。他人に迷惑をかけるような運転をしてはいけません。",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 43,
+    "question": "図の標識があるところでは、自動車の通行は認められているが、後方から路面電車が近づいてきたときは、すみやかに軌道敷外に出るか十分な距離を保たなければならない。",
+    "answer": "○",
+    "explanation": "「軌道敷内通行可」の標識です。軌道敷内の通行はできますが、路面電車が近づいてきたら軌道敷外に出るか、十分な距離を保たなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 44,
+    "question": "自動車に６歳未満の幼児を乗せて運転するときは、発育の程度に応じた形状のチャイルドシートを使用しなければならない。",
+    "answer": "○",
+    "explanation": "自動車に６歳未満の幼児を乗せて運転するときは、発育の程度に応じた形状のチャイルドシートを使用しましょう。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 45,
+    "question": "道路外に出るため、右折や左折の合図をする時期は、その行為をしようとする地点の３０メートル手前に達したときである。",
+    "answer": "○",
+    "explanation": "設問のとおりです。右左折する３０メートル手前で合図をします。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 46,
+    "question": "図の標識は、この先に押しボタン式の信号機があることを表している。",
+    "answer": "×",
+    "explanation": "「信号機あり」の警戒標識ですが、押しボタン式の信号とは限りません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 47,
+    "question": "他人に迷惑をかけるような大きな騒音を発する急発進や急加速、空ぶかしをしてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。他人に迷惑をかけるような運転をしてはいけません。",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 48,
+    "question": "左右の見通しのきかない交差点は危険な場所なので、どんな場合であっても徐行しなければならない。",
+    "answer": "×",
+    "explanation": "左右の見通しのきかない交差点は、徐行すべき場所ですが、信号機などで交通整理が行われている場合や、優先道路を通行している場合は、徐行する必要はありません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 49,
+    "question": "運転者は、自分本位の考えは捨てて、まわりの歩行者や運転者の立場を尊重し、お互いに譲り合う気持ちをもつことが大切である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路を通行するときは相手の立場になって思いやりの気持ちをもつことが大切です。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "question_number": 50,
+    "question": "進行方向別通行区分を通行しているとき、緊急自動車が近づいてきた場合は、その指定区分に従わなくてもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。緊急自動車に進路を譲る場合と工事中の場合は従う必要はありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 1,
+    "question": "図のＡは「一方通行」の標識、Ｂは「左折可」を表す標示板である。",
+    "answer": "×",
+    "explanation": "Ａは「左折可」の標示板、Ｂは「一方通行」の標識です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 2,
+    "question": "軌道敷内は、原則として車の通行が禁止されているが、右折、左折、転回などで軌道敷内を横切るときは、通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。右左折や転回などをするときは、軌道敷内を横切ることができます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 3,
+    "question": "大型第二種免許を取得しており、その免許が停止処分中のときに、一般原動機付自転車を運転したのは違反である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。停止処分中は、一般原動機付自転車であっても運転してはいけません。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 4,
+    "question": "専用通行帯、優先通行帯とも、右左折するときや工事などのためやむを得ない場合は、通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。専用通行帯、優先通行帯であっても、右左折する場合や道路工事でなどでやむを得ない場合は、通行することができます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 5,
+    "question": "図の標示のある通行帯を普通自動車で通行中、後方から路線バスが近づいてきたので、すぐにその通行帯から出た。",
+    "answer": "○",
+    "explanation": "図の標示は「路線バス等優先通行帯」です。後方から路線バスなどが近づいて来たときは、その通行帯から出なければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 6,
+    "question": "自転車横断帯を横断している自転車がいたので、すぐに止まれるような速度まで落として通過した。",
+    "answer": "×",
+    "explanation": "横断しているとき、横断しようとしているときは、一時停止しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 7,
+    "question": "図のような標示のあるところでは、信号待ちのためであれば停止することができる。",
+    "answer": "×",
+    "explanation": "「停止禁止部分」の標示です。信号待ちでも停止できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 8,
+    "question": "図の標識は、高速自動車国道または自動車専用道路を表している。",
+    "answer": "○",
+    "explanation": "図は「自動車専用」の標識で、高速自動車国道または自動車専用道路を示しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 9,
+    "question": "「初心運転者標識」や「高齢運転者標識」をつけている車を、追い越したり追い抜いたりすることは禁止されている。",
+    "answer": "×",
+    "explanation": "幅寄せや割り込みは禁止されていますが、追い越しや追い抜きは禁止されていません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 10,
+    "question": "図の指示標示は、「自転車専用道路」であることを表している。",
+    "answer": "×",
+    "explanation": "「自転車横断帯」の標示で、自転車が道路を横断するための場所であることを示します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 11,
+    "question": "図の二つの標識は、これに対面した車に対し、この先には、進めないことを表している。",
+    "answer": "○",
+    "explanation": "左は「車両通行止め」、右は「車両進入禁止」を表します。いずれも、この標識から先へは通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 12,
+    "question": "図の標識は、トンネルや切り通しなどの出口に見られ、横風のためハンドルがとられやすいから注意することを表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「横風注意」の標識です。横風のためハンドルがとられやすいので注意を促しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 13,
+    "question": "この標識のあるところでは、特定小型原動機付自転車と自転車（自転車道を通行してはならないものを除く）以外の車は通行できない。",
+    "answer": "○",
+    "explanation": "「普通自転車等及び歩行者等専用」の標識であり、特定小型原動機付自転車と自転車（自転車道を通行してはならないものを除く）以外の車は通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 14,
+    "question": "一般道路での大型貨物自動車、中型貨物自動車、準中型貨物自動車、および普通貨物自動車の法定速度は、６０キロメートル毎時である。",
+    "answer": "○",
+    "explanation": "一般道路での法定最高速度は、貨物や乗用にかかわらず、自動車はすべて６０キロメートル毎時です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 15,
+    "question": "上り坂の頂上付近で前車の速度が遅いときは、追い越してもよい。",
+    "answer": "×",
+    "explanation": "上り坂の頂上付近は追い越し禁止の場所です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 16,
+    "question": "一般道路での大型貨物自動車、中型貨物自動車、準中型貨物自動車、および普通貨物自動車の法定速度は、６０キロメートル毎時である。",
+    "answer": "○",
+    "explanation": "一般道路での法定最高速度は、貨物や乗用にかかわらず、自動車はすべて６０キロメートル毎時です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 17,
+    "question": "踏切に信号機があり青色の灯火信号のときは、安全を確かめれば一時停止しないで通過できる。",
+    "answer": "○",
+    "explanation": "信号機がある場合は、左右の安全を確かめ、信号に従って通過することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 18,
+    "question": "一般道路での大型貨物自動車、中型貨物自動車、準中型貨物自動車、および普通貨物自動車の法定速度は、６０キロメートル毎時である。",
+    "answer": "○",
+    "explanation": "一般道路での法定最高速度は、貨物や乗用にかかわらず、自動車はすべて６０キロメートル毎時です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 19,
+    "question": "図の二つの標識は、これに対面した車に対し、この先には、進めないことを表している。",
+    "answer": "○",
+    "explanation": "左は「車両通行止め」、右は「車両進入禁止」を表します。いずれも、この標識から先へは通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 20,
+    "question": "停留所で止まっている路面電車に乗り降りする人がいる場合であっても、安全地帯があるときは徐行して通過してもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。安全地帯がある場合は乗降客の有無にかかわらず徐行して通過できます。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 21,
+    "question": "このような路側帯は、軽車両は通行してはならない。",
+    "answer": "×",
+    "explanation": "「駐停車禁止路側帯」ですが、歩行者と軽車両は通行することができます。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 22,
+    "question": "図の二つの標識は、これに対面した車に対し、この先には、進めないことを表している。",
+    "answer": "○",
+    "explanation": "左は「車両通行止め」、右は「車両進入禁止」を表します。いずれも、この標識から先へは通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 23,
+    "question": "安全地帯は、歩行者がいるときに限り、乗り入れてはならない。",
+    "answer": "×",
+    "explanation": "安全地帯には、いかなる場合も乗り入れてはいけません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 24,
+    "question": "図の青色の灯火の信号に対面する車は、直進し、右折し、左折することができる。",
+    "answer": "×",
+    "explanation": "設問は「車は」となっていますので、原動機付自転車と軽車両も含まれます。二段階右折をする一般原動機付自転車と軽車両、特定小型原動機付自転車は右折することができません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 25,
+    "question": "オートマチック車を駐車するときは、道路の状態や時間に関係なくチェンジレバーを「Ｐ」に入れる。",
+    "answer": "○",
+    "explanation": "オートマチック車で駐車するときは、道路の状態や時間に関係なく、「Ｐ（パーキング）」に入れておきます。",
+    "topic_category": "駐停車"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 26,
+    "question": "走行中、進路変更の合図をすれば、他の車の前に割り込んでもよい。",
+    "answer": "×",
+    "explanation": "たとえ合図をしても、割り込みや幅寄せをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 27,
+    "question": "図の標識は、トンネルや切り通しなどの出口に見られ、横風のためハンドルがとられやすいから注意することを表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「横風注意」の標識です。横風のためハンドルがとられやすいので注意を促しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 28,
+    "question": "走行中、進路変更の合図をすれば、他の車の前に割り込んでもよい。",
+    "answer": "×",
+    "explanation": "たとえ合図をしても、割り込みや幅寄せをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 29,
+    "question": "上り坂の頂上付近で前車の速度が遅いときは、追い越してもよい。",
+    "answer": "×",
+    "explanation": "上り坂の頂上付近は追い越し禁止の場所です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 30,
+    "question": "図のような場合、Ａ車が先に交差点に入っているときは、Ｂ車より先に右折してもよい。",
+    "answer": "×",
+    "explanation": "直進車が優先ですので、Ａ車は、直進車のＢ車が通過するまで待ちます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 31,
+    "question": "このような路側帯は、軽車両は通行してはならない。",
+    "answer": "×",
+    "explanation": "「駐停車禁止路側帯」ですが、歩行者と軽車両は通行することができます。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 32,
+    "question": "片側一車線の道路が渋滞しているときは、中央線から右側の部分を通行することができる。",
+    "answer": "×",
+    "explanation": "追い越しや道路工事などでやむを得ない場合以外は、右側部分を通行してはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 33,
+    "question": "合図の戻し忘れは、他の交通に迷いを与え、危険を高めることになるので、進路変更などの行為が終わったら、すみやかに合図をやめなければならない。",
+    "answer": "○",
+    "explanation": "不必要に合図を出し続けてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 34,
+    "question": "交差点で進行方向が指定されている通行区分を通行中、後方から緊急自動車が近づいてきたので、緊急自動車に進路を譲るため通行区分には従わなかった。",
+    "answer": "○",
+    "explanation": "緊急自動車に進路を譲る場合は、指定された通行区分に従う必要はありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 35,
+    "question": "この標識が設置してある場所は、車両のみ通行が禁止されており、人は通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は「車両通行止め」の標識で、車は通行できませんが、人は通行が可能です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 36,
+    "question": "緊急自動車に道を譲るときは、一方通行の道路であっても、必ず道路の左側に寄って進路を譲らなければならない。",
+    "answer": "×",
+    "explanation": "一方通行の道路で緊急自動車が近づいてきたとき、左側に寄るとかえって緊急自動車の妨げとなるときは、道路の右側に寄って進路を譲ります。",
+    "topic_category": "緊急自動車"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 37,
+    "question": "この標識のあるところでは、特定小型原動機付自転車と自転車（自転車道を通行してはならないものを除く）以外の車は通行できない。",
+    "answer": "○",
+    "explanation": "「普通自転車等及び歩行者等専用」の標識であり、特定小型原動機付自転車と自転車（自転車道を通行してはならないものを除く）以外の車は通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 38,
+    "question": "オートマチック車を駐車するときは、道路の状態や時間に関係なくチェンジレバーを「Ｐ」に入れる。",
+    "answer": "○",
+    "explanation": "オートマチック車で駐車するときは、道路の状態や時間に関係なく、「Ｐ（パーキング）」に入れておきます。",
+    "topic_category": "駐停車"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 39,
+    "question": "安全地帯は、歩行者がいるときに限り、乗り入れてはならない。",
+    "answer": "×",
+    "explanation": "安全地帯には、いかなる場合も乗り入れてはいけません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 40,
+    "question": "普通自動二輪車で追い越しをするときは、前の車の左側を通行するのが原則である。",
+    "answer": "×",
+    "explanation": "車（普通自動二輪車を含む）は他の車を追い越すときは、原則としてその右側を通行しなければなりません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 41,
+    "question": "路線バスの専用通行帯では、自動二輪車であればいつでも通行することができる。",
+    "answer": "×",
+    "explanation": "路線バスの専用通行帯をいつでも通行できる車は、標識や標示で指定された車と小型特殊自動車、原動機付自転車、軽車両だけです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 42,
+    "question": "この標識が設置してある場所は、車両のみ通行が禁止されており、人は通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は「車両通行止め」の標識で、車は通行できませんが、人は通行が可能です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 43,
+    "question": "図のような場合、Ａ車が先に交差点に入っているときは、Ｂ車より先に右折してもよい。",
+    "answer": "×",
+    "explanation": "直進車が優先ですので、Ａ車は、直進車のＢ車が通過するまで待ちます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 44,
+    "question": "車を運転して交差点内を通行中、信号が黄色に変わったときは、ただちにその場に停止しなければならない。",
+    "answer": "×",
+    "explanation": "設問の場合、交差点内で停止してしまうと、他の交通を妨害することになるので、そのまま進むことができます。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 45,
+    "question": "けん引免許がなくても、けん引装置のある普通自動車では、総重量が７５０ｋｇ以下の車をけん引することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。車両総重量が７５０Kg以下の車をけん引するときは、けん引免許は必要ありません。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 46,
+    "question": "軌道敷内は、原則として車の通行が禁止されているが、右折、左折、転回などで軌道敷内を横切るときは、通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。右左折や転回などをするときは、軌道敷内を横切ることができます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 47,
+    "question": "車を運転して交差点内を通行中、信号が黄色に変わったときは、ただちにその場に停止しなければならない。",
+    "answer": "×",
+    "explanation": "設問の場合、交差点内で停止してしまうと、他の交通を妨害することになるので、そのまま進むことができます。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 48,
+    "question": "「初心運転者標識」や「高齢運転者標識」をつけている車を、追い越したり追い抜いたりすることは禁止されている。",
+    "answer": "×",
+    "explanation": "幅寄せや割り込みは禁止されていますが、追い越しや追い抜きは禁止されていません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 49,
+    "question": "大型第二種免許を取得しており、その免許が停止処分中のときに、一般原動機付自転車を運転したのは違反である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。停止処分中は、一般原動機付自転車であっても運転してはいけません。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=30&start=1",
+    "question_number": 50,
+    "question": "交差点に図の標示板があるときは、前方の信号が赤色や黄色であっても、車は歩行者やまわりの交通に注意しながら左折することができる。",
+    "answer": "○",
+    "explanation": "図の標示板は「左折可」を表し、信号が赤色や黄色でも歩行者などに注意しながら左折ができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 1,
+    "question": "交差点や交差点付近で緊急自動車が接近してきたときは、交差点を避け、道路の左側に寄り、一時停止しなければならない。",
+    "answer": "○",
+    "explanation": "設問のように、交差点を避け、道路の左側に寄って一時停止して、緊急自動車に進路を譲ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 2,
+    "question": "交差点や交差点付近で緊急自動車が接近してきたときは、交差点を避け、道路の左側に寄り、一時停止しなければならない。",
+    "answer": "○",
+    "explanation": "設問のように、交差点を避け、道路の左側に寄って一時停止して、緊急自動車に進路を譲ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 3,
+    "question": "仮免許で運転の練習をするときは、自動車の前後に初心者マークをつけなければならない。",
+    "answer": "×",
+    "explanation": "初心者マークではなく、仮免許練習標識をつけなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 4,
+    "question": "路線バスの専用通行帯は、路線バスなどの通行を妨げるおそれのないときは、どんな車でも通行が認められている。",
+    "answer": "×",
+    "explanation": "専用通行帯は、指定された車と小型特殊自動車、原動機付自転車、軽車両以外の車は、原則として通行してはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 5,
+    "question": "道路の曲がり角付近は、見通しの良い悪いに関係なく追い越しをしてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路の曲がり角付近は、追い越し禁止場所であり、見通しが良い悪いに関係なく追い越しをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 6,
+    "question": "図の標識のある道路では、大型貨物自動車や特定中型貨物自動車、大型特殊自動車は、最も左側の車両通行帯を通行しなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は、「特定の種類の車両の通行区分」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 7,
+    "question": "警察官などが信号機の信号と違った手信号をした場合は、信号機の信号に従うようにする。",
+    "answer": "×",
+    "explanation": "信号機と異なった手信号をしているときは、警察官などの手信号に従います。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 8,
+    "question": "道路の曲がり角付近は、見通しの良い悪いに関係なく追い越しをしてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路の曲がり角付近は、追い越し禁止場所であり、見通しが良い悪いに関係なく追い越しをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 9,
+    "question": "図の標識は、車両通行止めを表し、車両は通行できないが人や路面電車は通行できる。",
+    "answer": "○",
+    "explanation": "図は「車両通行止め」の標識です。車は通行できませんが人や路面電車は通行できます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 10,
+    "question": "走行中、通行に支障がある高齢者が左前方を歩いていたが、路側帯の中だったので、そのままの速度で進行した。",
+    "answer": "×",
+    "explanation": "路側帯の中であっても、通行に支障がある高齢者のそばを通るときは、一時停止か徐行をしなければなりません。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 11,
+    "question": "追い越しを始めるときは、あらかじめ前車との車間距離を短くしてから始めるのがよい。",
+    "answer": "×",
+    "explanation": "あらかじめ前車との安全な間隔を保って追い越しを始めます。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 12,
+    "question": "車道の中央寄りを走っている路面電車を追い越すときは、その右側を通行する。",
+    "answer": "×",
+    "explanation": "車は、路面電車を追い越すときは、路面電車の左側を通行しなければなりません。",
+    "topic_category": "路面電車と軌道敷"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 13,
+    "question": "車は、道路の左側部分が混雑しているときは、中央から右の部分にはみ出して通行してもよい。",
+    "answer": "×",
+    "explanation": "混雑しているからといって、道路の右側にはみ出して通行してはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 14,
+    "question": "歩行者用道路であっても、二輪の自動車のエンジンを止めて押して歩く場合は通行してもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この場合、歩行者と見なされますので歩行者用道路を通行できます。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 15,
+    "question": "すり減ったタイヤで濡れた舗装道路を走行するときは、摩擦力が小さくなるため、停止距離は長くなる。",
+    "answer": "○",
+    "explanation": "濡れた路面でタイヤがすり減っている場合、摩擦力が小さくなるので停止距離は長くなります。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 16,
+    "question": "車道の中央寄りを走っている路面電車を追い越すときは、その右側を通行する。",
+    "answer": "×",
+    "explanation": "車は、路面電車を追い越すときは、路面電車の左側を通行しなければなりません。",
+    "topic_category": "路面電車と軌道敷"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 17,
+    "question": "車両通行帯のない道路では、特定小型原動機付自転車や軽車両は左側端を、一般原動機付自転車は左寄りを、自動車は道路の中央寄りを通行しなければならない。",
+    "answer": "×",
+    "explanation": "自動車も原動機付自転車と同様に、道路の左寄りを通行しなければなりません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 18,
+    "question": "図の標示のあるところでは、Ａの通行帯からＢの通行帯へ進路を変えることはできない。",
+    "answer": "×",
+    "explanation": "ＢからＡへは進路変更できませんが、ＡからＢへは進路変更できます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 19,
+    "question": "進路変更をしようとしたところ、後方の車が接近してきたので、進路変更をやめて後方の車に進路を譲った。",
+    "answer": "○",
+    "explanation": "進路変更すると後続車が急ブレーキや急ハンドルで避けなければならないような場合には、進路変更してはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 20,
+    "question": "図の標識は、車両通行止めを表し、車両は通行できないが人や路面電車は通行できる。",
+    "answer": "○",
+    "explanation": "図は「車両通行止め」の標識です。車は通行できませんが人や路面電車は通行できます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 21,
+    "question": "横断歩道に近づいたところ、横断歩道の直前に停止している車があったが、横断しようとする人がいなかったので、徐行してその車の側方を通過した。",
+    "answer": "×",
+    "explanation": "横断歩道の直前に停止している車があるときは、その前方に出る前に一時停止しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 22,
+    "question": "前方の信号が青色の灯火のとき、自動車は直進、右折、左折することができる。",
+    "answer": "○",
+    "explanation": "自動車はその信号に従い、直進、右折、左折することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 23,
+    "question": "一方通行の道路で緊急自動車が近づいてきたので、左側に寄って進路を譲ろうとしたが、かえってその進行を妨げることになるので、右側に寄って進路を譲った。",
+    "answer": "○",
+    "explanation": "設問のとおり、左側に寄るとかえって緊急自動車の妨げとなるようなときは、右側に寄って進路を譲ります。",
+    "topic_category": "緊急自動車"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 24,
+    "question": "道路の曲がり角付近は、見通しの良い悪いに関係なく追い越しをしてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路の曲がり角付近は、追い越し禁止場所であり、見通しが良い悪いに関係なく追い越しをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 25,
+    "question": "一方通行の道路で緊急自動車が近づいてきたので、左側に寄って進路を譲ろうとしたが、かえってその進行を妨げることになるので、右側に寄って進路を譲った。",
+    "answer": "○",
+    "explanation": "設問のとおり、左側に寄るとかえって緊急自動車の妨げとなるようなときは、右側に寄って進路を譲ります。",
+    "topic_category": "緊急自動車"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 26,
+    "question": "横断歩道に近づいたところ、横断歩道の直前に停止している車があったが、横断しようとする人がいなかったので、徐行してその車の側方を通過した。",
+    "answer": "×",
+    "explanation": "横断歩道の直前に停止している車があるときは、その前方に出る前に一時停止しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 27,
+    "question": "このような標示のところには、危険防止のためであっても、車を乗り入れてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。標示は「安全地帯」を示しています。危険防止であっても、車を乗り入れてはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 28,
+    "question": "運転免許には、第一種免許、第二種免許、原付免許の３種類がある。",
+    "answer": "×",
+    "explanation": "原付免許は誤りです。仮免許を含め、３種類に区分されています。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 29,
+    "question": "道路の曲がり角付近は、見通しの良い悪いに関係なく追い越しをしてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路の曲がり角付近は、追い越し禁止場所であり、見通しが良い悪いに関係なく追い越しをしてはいけません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 30,
+    "question": "オートマチック車のエンジンを始動させるときのチェンジレバーの位置は、ハンドブレーキをかけていれば「Ｎ」の位置でもよい。",
+    "answer": "×",
+    "explanation": "レバーがNの位置では、ハンドブレーキが十分でない場合、動き出すことも考えられるので、危険防止のため必ず、レバーがPの位置でエンジンをかけるようにします｡",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 31,
+    "question": "図の標識のある道路では、大型貨物自動車や特定中型貨物自動車、大型特殊自動車は、最も左側の車両通行帯を通行しなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は、「特定の種類の車両の通行区分」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 32,
+    "question": "図の標示のあるところでは、Ａの通行帯からＢの通行帯へ進路を変えることはできない。",
+    "answer": "×",
+    "explanation": "ＢからＡへは進路変更できませんが、ＡからＢへは進路変更できます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 33,
+    "question": "図の標示は、前方の交差する道路が優先道路であることを表している。",
+    "answer": "×",
+    "explanation": "図の標示は、前方に横断歩道や自転車横断帯があることを表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 34,
+    "question": "踏切内で故障などのため動けなくなったときは、一刻も早く列車の運転士に知らせるとともに、車をすみやかに踏切の外へ出すことが大切である。",
+    "answer": "○",
+    "explanation": "非常ボタンなどを押して運転士に知らせ、車を踏切外へ移動させます。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 35,
+    "question": "路線バスの専用通行帯は、路線バスなどの通行を妨げるおそれのないときは、どんな車でも通行が認められている。",
+    "answer": "×",
+    "explanation": "専用通行帯は、指定された車と小型特殊自動車、原動機付自転車、軽車両以外の車は、原則として通行してはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 36,
+    "question": "交差点に図の標示板があるときは、前方の信号が赤色や黄色であっても、車は歩行者やまわりの交通に注意しながら左折することができる。",
+    "answer": "○",
+    "explanation": "図の標示板は「左折可」を表し、信号が赤色や黄色でも歩行者などに注意しながら左折ができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 37,
+    "question": "図の標示がある通行帯は、普通自動車も通行することができるが、路線バスが近づいてきたときは、すみやかにそこから出なければならない。",
+    "answer": "○",
+    "explanation": "路線バスなどの優先通行帯は、普通自動車も通行することができますが、路線バスなどが接近してきたら、そこから出なければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 38,
+    "question": "図の標識は、前方に橋があることを示しているので、早めに道路の中央に出て走行する。",
+    "answer": "×",
+    "explanation": "図の標識は「幅員減少」の標識であり、道幅が狭くなることを表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 39,
+    "question": "前の車に続いて走行するときは、自車の停止距離と同じ距離以上の車間距離をとる必要がある。",
+    "answer": "○",
+    "explanation": "設問のとおりです。走行中の車間距離は、停止距離以上の距離が必要とされています。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 40,
+    "question": "車両通行帯のない道路では、特定小型原動機付自転車や軽車両は左側端を、一般原動機付自転車は左寄りを、自動車は道路の中央寄りを通行しなければならない。",
+    "answer": "×",
+    "explanation": "自動車も原動機付自転車と同様に、道路の左寄りを通行しなければなりません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 41,
+    "question": "踏切の手前３０メートル以内は追い越し禁止場所であるが、踏切の向こう側では追い越しをしてもよい。",
+    "answer": "○",
+    "explanation": "踏切とその手前３０メートル以内は、追い越し禁止場所ですが、踏切の向こう側は追い越し禁止場所ではありません。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 42,
+    "question": "後退の合図は、後退しようとする約３秒前に行う。",
+    "answer": "×",
+    "explanation": "後退の合図は、後退しようとするときに行います。ギアをＲ（リバース）の位置に入れると、合図（後退灯がつく）が出ます。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 43,
+    "question": "路線バスの専用通行帯は、路線バスなどの通行を妨げるおそれのないときは、どんな車でも通行が認められている。",
+    "answer": "×",
+    "explanation": "専用通行帯は、指定された車と小型特殊自動車、原動機付自転車、軽車両以外の車は、原則として通行してはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 44,
+    "question": "図の標示は、前方の交差する道路が優先道路であることを表している。",
+    "answer": "×",
+    "explanation": "図の標示は、前方に横断歩道や自転車横断帯があることを表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 45,
+    "question": "歩行者専用道路は、原則として車の通行が禁止されているが、自転車であれば通行できる。",
+    "answer": "×",
+    "explanation": "自転車を含む軽車両も、通行が禁止されています。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 46,
+    "question": "横断歩道に近づいたところ、横断歩道の直前に停止している車があったが、横断しようとする人がいなかったので、徐行してその車の側方を通過した。",
+    "answer": "×",
+    "explanation": "横断歩道の直前に停止している車があるときは、その前方に出る前に一時停止しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 47,
+    "question": "三輪やエンジンの総排気量６６０ｃｃ以下の普通貨物自動車の一般道路での法定速度は、５０キロメートル毎時である。",
+    "answer": "×",
+    "explanation": "一般道路では、普通自動車はすべて６０キロメートル毎時です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 48,
+    "question": "このような標示のところには、危険防止のためであっても、車を乗り入れてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。標示は「安全地帯」を示しています。危険防止であっても、車を乗り入れてはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 49,
+    "question": "車の乗り降りは、いかなる場合でも右側のドアからするのがよい。",
+    "answer": "×",
+    "explanation": "交通量の多いところでは、左側のドアから乗り降りします。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=31&start=1",
+    "question_number": 50,
+    "question": "警察官などが信号機の信号と違った手信号をした場合は、信号機の信号に従うようにする。",
+    "answer": "×",
+    "explanation": "信号機と異なった手信号をしているときは、警察官などの手信号に従います。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 1,
+    "question": "歩行者専用道路は、原則として車の通行が禁止されているが、自転車であれば通行できる。",
+    "answer": "×",
+    "explanation": "自転車を含む軽車両も、通行が禁止されています。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 2,
+    "question": "このような標示のところには、危険防止のためであっても、車を乗り入れてはいけない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。標示は「安全地帯」を示しています。危険防止であっても、車を乗り入れてはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 3,
+    "question": "前方が混雑のため横断歩道に停止するおそれがあったが、歩行者がいなかったので、そのまま入った。",
+    "answer": "×",
+    "explanation": "歩行者の有無に関係なく、横断歩道で停止するおそれがある場合は入ってはいけません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 4,
+    "question": "図のような交差点では、Ｂ車はＡ車より先に通行してもよい。",
+    "answer": "×",
+    "explanation": "Ａ車の道路は優先道路です。Ｂ車はＡ車の通行を妨げてはなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 5,
+    "question": "交差点で対面する信号が赤色の点滅を表示しているときは、車は必ず停止位置で一時停止しなければならない。",
+    "answer": "○",
+    "explanation": "必ず停止位置で一時停止し、安全を確かめてから進行します。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 6,
+    "question": "すべての中型貨物自動車は、この標識のある道路を、通行してはいけない。",
+    "answer": "×",
+    "explanation": "車両総重量８トン未満、最大積載量５トン未満の中型貨物自動車は、通行することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 7,
+    "question": "図の標識は、軽車両以外の車は通行止めを意味するものである。",
+    "answer": "×",
+    "explanation": "「二輪の自動車以外の自動車通行止め」を表す標識です。自動二輪車、原動機付自転車、軽車両は通行できます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 8,
+    "question": "図のような交差点では、Ｂ車はＡ車より先に通行してもよい。",
+    "answer": "×",
+    "explanation": "Ａ車の道路は優先道路です。Ｂ車はＡ車の通行を妨げてはなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 9,
+    "question": "踏切の遮断機が上がっているときは、安全を確かめれば一時停止しないで踏切を通過できる。",
+    "answer": "×",
+    "explanation": "遮断機が上がっていても、踏切の直前で必ず一時停止して、安全を確かめなければなりません。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 10,
+    "question": "急発進、急加速、空ぶかしなどで著しく他人に迷惑を及ぼす騒音を出すような車の運転は禁止されている。",
+    "answer": "○",
+    "explanation": "他人に迷惑を及ぼすような運転は、してはいけません。",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 11,
+    "question": "車から乗り降りするときは、周囲の状況に関係なく、いかなる場合も右側のドアから乗り降りしなければならない。",
+    "answer": "×",
+    "explanation": "交通量の多いところでは、左側のドアから乗り降りします。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 12,
+    "question": "急発進、急加速、空ぶかしなどで著しく他人に迷惑を及ぼす騒音を出すような車の運転は禁止されている。",
+    "answer": "○",
+    "explanation": "他人に迷惑を及ぼすような運転は、してはいけません。",
+    "topic_category": "基本操作と心得"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 13,
+    "question": "交差点付近を走行中、緊急自動車が近づいて来たので、交差点をさけ左側に寄って徐行して進路を譲った。",
+    "answer": "×",
+    "explanation": "設問のような場合、交差点を避けて左側に寄り、一時停止しなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 14,
+    "question": "「追越し禁止」の標識のあるところで、タクシーが一般原動機付自転車を追い越したのは違反である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「追越し禁止」の標識のあるところでは、一般原動機付自転車であっても追い越すことはできません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 15,
+    "question": "車から乗り降りするときは、周囲の状況に関係なく、いかなる場合も右側のドアから乗り降りしなければならない。",
+    "answer": "×",
+    "explanation": "交通量の多いところでは、左側のドアから乗り降りします。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 16,
+    "question": "すべての中型貨物自動車は、この標識のある道路を、通行してはいけない。",
+    "answer": "×",
+    "explanation": "車両総重量８トン未満、最大積載量５トン未満の中型貨物自動車は、通行することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 17,
+    "question": "この警察官の灯火による信号は、矢印の交通に対しては信号機の黄信号を表している。",
+    "answer": "×",
+    "explanation": "警察官の身体の正面に対面するときは、赤色信号と同じです。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 18,
+    "question": "車は歩行者のいる安全地帯のそばを通るときは徐行しなければならないが、歩行者がいないときは徐行しなくてもよい。",
+    "answer": "○",
+    "explanation": "安全地帯に歩行者がいないときは、徐行する必要はありません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 19,
+    "question": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがまっすぐに伸びた状態に合わせるとよい。",
+    "answer": "×",
+    "explanation": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがわずかに曲がる程度に調節します。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 20,
+    "question": "すべての中型貨物自動車は、この標識のある道路を、通行してはいけない。",
+    "answer": "×",
+    "explanation": "車両総重量８トン未満、最大積載量５トン未満の中型貨物自動車は、通行することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 21,
+    "question": "車は歩行者のいる安全地帯のそばを通るときは徐行しなければならないが、歩行者がいないときは徐行しなくてもよい。",
+    "answer": "○",
+    "explanation": "安全地帯に歩行者がいないときは、徐行する必要はありません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 22,
+    "question": "図の標示は、「自転車専用道路」であることを表している。",
+    "answer": "×",
+    "explanation": "図の標示は、「自転車横断帯」であることを示しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 23,
+    "question": "普通自動車で歩道や路側帯のない道路を通行する場合は、路肩にはみ出して通行することができない。",
+    "answer": "○",
+    "explanation": "歩道や路側帯のない道路を通行するときは、路肩（路端から０.５メートル以内）にはみ出して通行してはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 24,
+    "question": "歩行者のそばを通るときは、どんな場合でも徐行しなければならない。",
+    "answer": "×",
+    "explanation": "歩行者のそばを通るときは、安全な間隔がとれれば必ずしも徐行する必要はありせん。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 25,
+    "question": "この標識は、「横断歩道」であることを表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は、「横断歩道」を表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 26,
+    "question": "乗車定員１１人のマイクロバスは、準中型免許で運転できる。",
+    "answer": "×",
+    "explanation": "乗車定員１１人以上２９人以下のマイクロバスは、中型自動車です。準中型免許では運転できません。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 27,
+    "question": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがまっすぐに伸びた状態に合わせるとよい。",
+    "answer": "×",
+    "explanation": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがわずかに曲がる程度に調節します。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 28,
+    "question": "速度制限のない一般道路における中型貨物自動車の最高速度は５０キロメートル毎時である。",
+    "answer": "×",
+    "explanation": "一般道路の法定速度は、自動車の種類にかかわらず、すべて時速６０キロメートルです。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 29,
+    "question": "交差点で対面する信号が赤色の点滅を表示しているときは、車は必ず停止位置で一時停止しなければならない。",
+    "answer": "○",
+    "explanation": "必ず停止位置で一時停止し、安全を確かめてから進行します。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 30,
+    "question": "踏切の遮断機が上がっているときは、安全を確かめれば一時停止しないで踏切を通過できる。",
+    "answer": "×",
+    "explanation": "遮断機が上がっていても、踏切の直前で必ず一時停止して、安全を確かめなければなりません。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 31,
+    "question": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがまっすぐに伸びた状態に合わせるとよい。",
+    "answer": "×",
+    "explanation": "シートの前後の位置は、クラッチを踏み込んだとき、ひざがわずかに曲がる程度に調節します。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 32,
+    "question": "「追越し禁止」の標識のあるところで、タクシーが一般原動機付自転車を追い越したのは違反である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「追越し禁止」の標識のあるところでは、一般原動機付自転車であっても追い越すことはできません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 33,
+    "question": "道路の左側部分の幅が通行するのに十分でないところでは、右側部分にはみ出して通行することができる。",
+    "answer": "○",
+    "explanation": "設問のようなところでは、右側にはみ出して通行することができます。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 34,
+    "question": "交差点を右折するときは、あらかじめできるだけ道路の中央に寄って、交差点の中心のすぐ内側を徐行しながら通行しなければならない。",
+    "answer": "○",
+    "explanation": "交差点を右折するときは、設問のような方法で行います。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 35,
+    "question": "運転者は、危険を避けるためやむを得ない場合のほかは、急ブレーキをかけてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。車を運転するときは、危険を避けるためやむを得ない場合のほかは、急ブレーキをかけてはいけません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 36,
+    "question": "普通免許で運転できる普通自動車は、乗車定員１０人以下の乗用自動車と車両総重量３.５トン未満、最大積載量２トン未満の貨物自動車である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。普通免許では、乗車定員１０人以下、車両総重量３.５トン未満、最大積載量２トン未満のものが運転できます。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 37,
+    "question": "「追越し禁止」の標識のあるところで、タクシーが一般原動機付自転車を追い越したのは違反である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「追越し禁止」の標識のあるところでは、一般原動機付自転車であっても追い越すことはできません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 38,
+    "question": "近くに交差点がない一方通行の道路で、緊急自動車が近づいてきた場合は、必ず道路の左側に寄り、進路を譲らなければならない。",
+    "answer": "×",
+    "explanation": "近くに交差点のない一方通行の道路で、左側に寄るとかえって緊急自動車の妨げになるときは、右側に寄って進路を譲ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 39,
+    "question": "普通免許で運転できる普通自動車は、乗車定員１０人以下の乗用自動車と車両総重量３.５トン未満、最大積載量２トン未満の貨物自動車である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。普通免許では、乗車定員１０人以下、車両総重量３.５トン未満、最大積載量２トン未満のものが運転できます。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 40,
+    "question": "この警察官の灯火による信号は、矢印の交通に対しては信号機の黄信号を表している。",
+    "answer": "×",
+    "explanation": "警察官の身体の正面に対面するときは、赤色信号と同じです。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 41,
+    "question": "図の交通整理が行われていない横断歩道で（ア）の車が、停止している（イ）の車の側方を通過する場合、（A）の地点で一時停止しなければならない。",
+    "answer": "○",
+    "explanation": "一時停止して、車のかげから歩行者や自転車の急な飛び出しに注意します。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 42,
+    "question": "交差点付近を走行中、緊急自動車が近づいて来たので、交差点をさけ左側に寄って徐行して進路を譲った。",
+    "answer": "×",
+    "explanation": "設問のような場合、交差点を避けて左側に寄り、一時停止しなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 43,
+    "question": "追い越しをしようとするときは、前方の安全を確かめるとともに、バックミラーなどで右側や右斜め後方の安全を確かめなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。バックミラーで見えない部分は目視により確認をします。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 44,
+    "question": "左側部分が６メートル未満の道路でも、中央線が黄色の実線のところでは、その線から右側部分にはみ出して追い越しをしてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。左側部分が６メートル未満の道路でも、中央線が黄色の実線のところでは、その線から右側部分にはみ出して追い越しをしてはいけません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 45,
+    "question": "速度制限のない一般道路における中型貨物自動車の最高速度は５０キロメートル毎時である。",
+    "answer": "×",
+    "explanation": "一般道路の法定速度は、自動車の種類にかかわらず、すべて時速６０キロメートルです。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 46,
+    "question": "人の乗り降りのため停止している通学通園バスのそばを通るときは、徐行して安全を確かめなければならない。",
+    "answer": "○",
+    "explanation": "急な飛び出しに備え、徐行して安全を確かめます。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 47,
+    "question": "図の標示は、「自転車専用道路」であることを表している。",
+    "answer": "×",
+    "explanation": "図の標示は、「自転車横断帯」であることを示しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 48,
+    "question": "交差点で警察官が北を向いて腕を垂直に上げているとき、東西の方向に進行する交通は赤色の灯火信号と同じである。",
+    "answer": "×",
+    "explanation": "設問の手による信号は、黄色の灯火信号と同じ意味を表します。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 49,
+    "question": "この標識は、「横断歩道」であることを表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。この標識は、「横断歩道」を表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=32&start=1",
+    "question_number": 50,
+    "question": "歩行者のそばを通るときは、どんな場合でも徐行しなければならない。",
+    "answer": "×",
+    "explanation": "歩行者のそばを通るときは、安全な間隔がとれれば必ずしも徐行する必要はありせん。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 1,
+    "question": "追い越しをしようとするときは、前方の安全を確かめるとともに、バックミラーなどで右側や右斜め後方の安全を確かめなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。バックミラーで見えない部分は目視により確認をします。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 2,
+    "question": "図の標示は、前方に横断歩道や自転車横断帯があることを表している。",
+    "answer": "×",
+    "explanation": "この標示がある道路は、交差する前方の道路が優先道路であることを示しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 3,
+    "question": "図の標識は、大型貨物自動車と特定中型貨物自動車、大型特殊自動車の右左折を禁止しているが、その他の車は直進や右左折することができる。",
+    "answer": "○",
+    "explanation": "図の補助標識は「大型貨物自動車と特定中型貨物自動車、大型特殊自動車」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 4,
+    "question": "踏切で安全確認をする場合、一方からの列車が通過しても、その直後に反対の方向からの列車が近づいてくることがあるので、必ず反対方向の安全も確かめる。",
+    "answer": "○",
+    "explanation": "踏切では、一方から列車が通過しても、その直後に反対方向から列車が近づいてくることを予測して、必ず反対方向の安全も確かめます。",
+    "topic_category": "踏切"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 5,
+    "question": "図の標識のある場所でも、道路の右側にはみ出さなければ追い越しをしてもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。追い越しのための右側部分はみ出し通行禁止ですから、右側部分にはみ出さない追い越しはできます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 6,
+    "question": "大型免許を受けた者は、大型自動車、中型自動車、準中型自動車、普通自動車、大型自動二輪車、普通自動二輪車、小型特殊自動車、一般原動機付自転車を運転することができる。",
+    "answer": "×",
+    "explanation": "大型自動二輪車、普通自動二輪車は、大型二輪免許か普通二輪免許がないと運転できません。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 7,
+    "question": "図の標識は、大型貨物自動車と特定中型貨物自動車、大型特殊自動車の右左折を禁止しているが、その他の車は直進や右左折することができる。",
+    "answer": "○",
+    "explanation": "図の補助標識は「大型貨物自動車と特定中型貨物自動車、大型特殊自動車」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 8,
+    "question": "自動車検査証と自動車損害賠償責任保険証明書または責任共済証明書を車に備えておくと、紛失するおそれがあり再交付の手続きが面倒なので、コピーしたものだけを車の中に置いて運転した。",
+    "answer": "×",
+    "explanation": "コピーしたものでは、効力がありません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 9,
+    "question": "交差点以外で、横断歩道も自転車横断帯も踏切もないところに信号機があるときは、信号の見える信号機の直前が停止位置である。",
+    "answer": "○",
+    "explanation": "信号機の直前で停止します。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 10,
+    "question": "図のように、車両通行帯が黄色の線で区画されている場合は、Ｂの通行帯を通行している車は、この黄色の線を越えて進路の変更をしてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。進路変更禁止の道路標示のため、この線を越えて進路を変更することはできません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 11,
+    "question": "左折するとき、後輪は前輪より外側を通るので、前輪は角すれすれに通るようにすればよい。",
+    "answer": "×",
+    "explanation": "後輪は前輪より内側を通ります。前輪を角すれすれに通すと、後輪は脱輪してしまいます。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 12,
+    "question": "自動車や一般原動機付自転車は、歩道や路側帯や自転車道であっても、道路に面した場所に出入りするため横切る場合は通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路に面した場所に出入りするため歩道や路側帯を横切るときなどは通行できます。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 13,
+    "question": "進路変更、転回や後退などするときに、他の通行車両がなければ合図しなくてもよい。",
+    "answer": "×",
+    "explanation": "他の行動へ移るときは、安全確認をし、他の交通車両がなくても必ず合図をしなければいけません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 14,
+    "question": "同一方向に、三つの車両通行帯のある道路では、普通乗用車は最も右寄りの通行帯を通行しなければならない。",
+    "answer": "×",
+    "explanation": "三つの車両通行帯のある道路では、最も右側の車両通行帯は追い越しなどのためにあけておき、速度の遅い車は左側の通行帯を、速度が速くなるにつれて順次右側寄りの通行帯を通行します。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 15,
+    "question": "見とおしの悪い交差点でも、優先道路を走行しているときは、徐行しなくてもよい。",
+    "answer": "○",
+    "explanation": "設問のとおりです。信号機がある交差点や優先道路を通行しているときは、徐行しないで通行することができます。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 16,
+    "question": "交通整理の行われていない交差点で、交差する道路が優先道路や道幅の広い道路の場合は、必ず徐行して交差道路を通行する車などの進行を妨げてはならない。",
+    "answer": "○",
+    "explanation": "交通整理の行われていない交差点では、設問のように通行します。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 17,
+    "question": "初心運転者標識や高齢運転者標識や仮免許練習標識をつけている車を追い越したり追い抜くことは禁止されている。",
+    "answer": "×",
+    "explanation": "禁止されているのは、その車に幅寄せや割り込みをすることです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 18,
+    "question": "こう配の急な下り坂であっても、「徐行」の標識がなければ徐行する必要はない。",
+    "answer": "×",
+    "explanation": "こう配の急な下り坂は徐行しなければいけない場所なので、「徐行」の標識がなくても、徐行しなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 19,
+    "question": "道路の中央寄りを通行中、後方から緊急自動車が近づいてきたが、交差点付近ではないのでそのまま進行した。",
+    "answer": "×",
+    "explanation": "交差点やその付近以外の場所では、道路の左側に寄り、進路を譲らなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 20,
+    "question": "ぬかるみや水溜りのあるところを通行するときは、徐行さえしていれば歩行者に泥水をかけても運転者には責任がない。",
+    "answer": "×",
+    "explanation": "歩行者に泥水をかける行為は、たとえ徐行していても、運転者の責任になります。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 21,
+    "question": "普通免許を受けていれば、最大積載量２トンのトラックを運転することができる。",
+    "answer": "×",
+    "explanation": "普通免許では、最大積載量２トン未満の車を運転できます。２トン以上（２トンを含む）は、準中型免許、中型免許または大型免許が必要です。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 22,
+    "question": "交通整理の行われていない交差点で、交差する道路が優先道路や道幅の広い道路の場合は、必ず徐行して交差道路を通行する車などの進行を妨げてはならない。",
+    "answer": "○",
+    "explanation": "交通整理の行われていない交差点では、設問のように通行します。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 23,
+    "question": "こう配の急な下り坂であっても、「徐行」の標識がなければ徐行する必要はない。",
+    "answer": "×",
+    "explanation": "こう配の急な下り坂は徐行しなければいけない場所なので、「徐行」の標識がなくても、徐行しなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 24,
+    "question": "横断歩道や自転車横断帯とその手前３０メートル以内では、自動車や一般原動機付自転車を、追い越しのため進路を変えたり、その横を通りすぎてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。追い越し禁止場所では軽車両以外の車を追い越すことを禁止しています。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 25,
+    "question": "追い越されるときは、追い越しが終わるまで速度をあげない。また追い越しに十分な余地がないときは、できるだけ左に寄って進路を譲らなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。追い越されるときは、追い越しが終わるまで速度を上げてはいけません。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 26,
+    "question": "指示標識は、道路上の危険や注意すべき状況等を前もって道路利用者に知らせて注意をうながすものである。",
+    "answer": "×",
+    "explanation": "設問は、警戒標識の内容です。指示標識とは、特定の交通方法ができることや、道路交通上決められた場所などを指示するものです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 27,
+    "question": "交差点で、警察官が「止まれ」の手信号をしていたので、警察官の１メートル手前で停止した。",
+    "answer": "×",
+    "explanation": "警察官の手信号で停止する場合、交差点で停止線のあるときは停止線の直前、ない場合は交差点の直前で停止します。警察官の１メートル手前ではありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 28,
+    "question": "許可を受けて歩行者用道路を通行する車は、歩行者がいるときだけ徐行すればよい。",
+    "answer": "×",
+    "explanation": "歩行者がいるいないに関係なく、徐行しなければなりません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 29,
+    "question": "初心運転者標識や高齢運転者標識や仮免許練習標識をつけている車を追い越したり追い抜くことは禁止されている。",
+    "answer": "×",
+    "explanation": "禁止されているのは、その車に幅寄せや割り込みをすることです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 30,
+    "question": "通学・通園バスが止まっていて、園児などが乗り降りしている際、側方を通って前方に出ようとするときは、園児などの飛び出しに気をつけて徐行しなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。児童・幼児の安全確保のため、徐行して通行します。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 31,
+    "question": "二輪の自動車の一般道路での法定最高速度は、エンジンの総排気量に関係なく６０キロメートル毎時である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。一般道路での法定最高速度は、二輪の自動車はすべて６０キロメートル毎時です。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 32,
+    "question": "横断歩道や自転車横断帯とその手前３０メートル以内では、自動車や一般原動機付自転車を、追い越しのため進路を変えたり、その横を通りすぎてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。追い越し禁止場所では軽車両以外の車を追い越すことを禁止しています。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 33,
+    "question": "交通整理の行われていない交差点で、交差する道路が優先道路や道幅の広い道路の場合は、必ず徐行して交差道路を通行する車などの進行を妨げてはならない。",
+    "answer": "○",
+    "explanation": "交通整理の行われていない交差点では、設問のように通行します。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 34,
+    "question": "指示標識は、道路上の危険や注意すべき状況等を前もって道路利用者に知らせて注意をうながすものである。",
+    "answer": "×",
+    "explanation": "設問は、警戒標識の内容です。指示標識とは、特定の交通方法ができることや、道路交通上決められた場所などを指示するものです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 35,
+    "question": "自動車や一般原動機付自転車は、歩道や路側帯や自転車道であっても、道路に面した場所に出入りするため横切る場合は通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路に面した場所に出入りするため歩道や路側帯を横切るときなどは通行できます。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 36,
+    "question": "雨の道路を走るときや、タイヤがすり減っているときは、路面とタイヤの摩擦が大きく、停止距離も短くなる。",
+    "answer": "×",
+    "explanation": "設問のような場合は、路面とタイヤとの摩擦が小さくなり、停止距離は長くなります。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 37,
+    "question": "交通整理の行われていない交差点で、交差する道路が優先道路や道幅の広い道路の場合は、必ず徐行して交差道路を通行する車などの進行を妨げてはならない。",
+    "answer": "○",
+    "explanation": "交通整理の行われていない交差点では、設問のように通行します。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 38,
+    "question": "自動車検査証と自動車損害賠償責任保険証明書または責任共済証明書を車に備えておくと、紛失するおそれがあり再交付の手続きが面倒なので、コピーしたものだけを車の中に置いて運転した。",
+    "answer": "×",
+    "explanation": "コピーしたものでは、効力がありません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 39,
+    "question": "車は、なるべく道路の中央寄りを通行しなければならない。",
+    "answer": "×",
+    "explanation": "車は、原則として道路の中央から左側部分の左側寄りを通行します。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 40,
+    "question": "図の標示は、前方に横断歩道や自転車横断帯があることを表している。",
+    "answer": "×",
+    "explanation": "この標示がある道路は、交差する前方の道路が優先道路であることを示しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 41,
+    "question": "図のように駐車しているときは、Ａ車は駐車違反になるが、Ｂ車は駐車違反にならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。図の標識は「駐車可」の「終わり」を表します。したがって、標識の手前まで駐車することができます。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 42,
+    "question": "初心運転者標識や高齢運転者標識や仮免許練習標識をつけている車を追い越したり追い抜くことは禁止されている。",
+    "answer": "×",
+    "explanation": "禁止されているのは、その車に幅寄せや割り込みをすることです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 43,
+    "question": "交差点以外で、横断歩道も自転車横断帯も踏切もないところに信号機があるときは、信号の見える信号機の直前が停止位置である。",
+    "answer": "○",
+    "explanation": "信号機の直前で停止します。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 44,
+    "question": "図の標識は、大型貨物自動車と特定中型貨物自動車、大型特殊自動車の右左折を禁止しているが、その他の車は直進や右左折することができる。",
+    "answer": "○",
+    "explanation": "図の補助標識は「大型貨物自動車と特定中型貨物自動車、大型特殊自動車」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 45,
+    "question": "指示標識は、道路上の危険や注意すべき状況等を前もって道路利用者に知らせて注意をうながすものである。",
+    "answer": "×",
+    "explanation": "設問は、警戒標識の内容です。指示標識とは、特定の交通方法ができることや、道路交通上決められた場所などを指示するものです。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 46,
+    "question": "自動車や一般原動機付自転車は、歩道や路側帯や自転車道であっても、道路に面した場所に出入りするため横切る場合は通行することができる。",
+    "answer": "○",
+    "explanation": "設問のとおりです。道路に面した場所に出入りするため歩道や路側帯を横切るときなどは通行できます。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 47,
+    "question": "車は、なるべく道路の中央寄りを通行しなければならない。",
+    "answer": "×",
+    "explanation": "車は、原則として道路の中央から左側部分の左側寄りを通行します。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 48,
+    "question": "図の標示は、普通自転車がこの標示を越えて交差点に進入してはならないことを表している。",
+    "answer": "○",
+    "explanation": "図は「普通自転車の交差点進入禁止」を表し、この標示を越えて交差点に進入してはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 49,
+    "question": "追い越されるときは、追い越しが終わるまで速度をあげない。また追い越しに十分な余地がないときは、できるだけ左に寄って進路を譲らなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。追い越されるときは、追い越しが終わるまで速度を上げてはいけません。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=33&start=1",
+    "question_number": 50,
+    "question": "図の標識は、大型貨物自動車と特定中型貨物自動車、大型特殊自動車の右左折を禁止しているが、その他の車は直進や右左折することができる。",
+    "answer": "○",
+    "explanation": "図の補助標識は「大型貨物自動車と特定中型貨物自動車、大型特殊自動車」を表します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 1,
+    "question": "図の道路標識のあるところでは、警音器を鳴らさなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「警笛鳴らせ」の標識なので、この標識のあるところで警音器を鳴らさなければいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 2,
+    "question": "図のＡの標識は、図Ｂの矢印のような通行を禁止している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。図のＡの標識は、転回禁止を表しています。図Ｂは、転回の通行を表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 3,
+    "question": "図のような交通整理の行われていない道幅が違う交差点では、普通自動車は路面電車に進路を譲らなければならない。",
+    "answer": "×",
+    "explanation": "設問の場合は、道幅の広い道路を通行する普通自動車が優先です。路面電車は、普通自動車に進路を譲らなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 4,
+    "question": "図の標識がある道路では、けん引自動車は、最も左側の車両通行帯を通行しなければならない。",
+    "answer": "○",
+    "explanation": "｢けん引自動車の自動車専用道路第一通行帯通行指定区間」の標識です。けん引自動車は、最も左側の車両通行帯を通行しなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 5,
+    "question": "図の標識は、「路肩がくずれやすくなっているので注意する必要がある」ことを表している。",
+    "answer": "×",
+    "explanation": "この標識は、「落石のおそれあり」を示す標識です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 6,
+    "question": "交差点以外で、横断歩道などがないところに信号機があるときの停止位置は、信号機の１メートル手前である。",
+    "answer": "×",
+    "explanation": "設問の場合の停止位置は、信号機の直前（信号の見える位置）です。警察官等の場合が１メートル手前です。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 7,
+    "question": "このような標識は、積載した荷物も含めて２.２メートルより広い幅の車の通行を禁止している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。図の標識は「最大幅」を表し、表示されている幅を超える車（積んだ荷物を含めた幅）は通行することができません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 8,
+    "question": "同じ道幅の、信号機のない交差点に自動車が同時に入ろうとしたときは、右側から進行してくる車の通行を妨げてはならない。",
+    "answer": "×",
+    "explanation": "道幅が同じような道路の交差点では、左方からくる車があるときは、その進行を妨げてはいけません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 9,
+    "question": "この標識は、普通自動車以外の車両は通行できないことを表している。",
+    "answer": "×",
+    "explanation": "「二輪の自動車以外の自動車通行止め」の標識で、二輪の自動車（大型自動二輪車や普通自動二輪車など）は通行できますが、その他の自動車は通行できません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 10,
+    "question": "追い越しをするときは、周囲の車の動向に注意し、道路の状況に応じてできる限り安全な速度と方法で行わなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおり、できる限り安全な速度と方法で追い越しをします。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 11,
+    "question": "転回するときの合図の時期は、転回しようとするときの約３秒前である。",
+    "answer": "×",
+    "explanation": "３秒前は誤りです。３０メートル手前から合図を行います。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 12,
+    "question": "自動車が一方通行の道路から右折するときは、あらかじめ道路の中央に寄り、交差点の中心の内側を徐行して通行しなければならない。",
+    "answer": "×",
+    "explanation": "一方通行の道路を右折するときは、あらかじめ道路の右端により通行します。道路の中央ではありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 13,
+    "question": "図のような交通整理の行われていない道幅が違う交差点では、普通自動車は路面電車に進路を譲らなければならない。",
+    "answer": "×",
+    "explanation": "設問の場合は、道幅の広い道路を通行する普通自動車が優先です。路面電車は、普通自動車に進路を譲らなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 14,
+    "question": "同一方向に二つ車両通行帯が設けられているときは、普通自動車は中央寄りの通行帯を通行しなければならない。",
+    "answer": "×",
+    "explanation": "二つの車両通行帯のある道路では、車は中央寄りの通行帯は空けておき、左側の通行帯を通行します。",
+    "topic_category": "追い越し・進路変更"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 15,
+    "question": "この標識は、徐行して安全を確かめることを示しているものであるから、状況によっては一時停止してさらに安全を確かめることも必要である。",
+    "answer": "○",
+    "explanation": "「徐行」を表す標識で、設問のとおり、状況によっては一時停止し安全を確かめる慎重さが必要です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 16,
+    "question": "安全地帯の側方を車が通行するときは、安全地帯に歩行者がいるいないにかかわらず、徐行しなければならない。",
+    "answer": "×",
+    "explanation": "安全地帯に歩行者がいないときは、徐行する必要はありません。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 17,
+    "question": "警察官が図のように手を上げたとき、矢印の方向の交通に対しては、信号機の黄色の灯火と同じ意味を表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。手を上げたときの、身体の正面に平行する交通に対しては黄色の灯火と同じ意味です。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 18,
+    "question": "空走距離は、路面に関係ないが、制動距離は速度や路面とタイヤの摩擦に大きな関係がある。",
+    "answer": "○",
+    "explanation": "設問のとおりです。制動距離は、速度や路面とタイヤの摩擦に大きな関係があります。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 19,
+    "question": "交差点で横の信号機が赤ならば、対面する前方の信号は青である。",
+    "answer": "×",
+    "explanation": "横の信号が赤であっても対面の信号が青とは限りません。時差式信号機やスクランブル交差点などがあります。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 20,
+    "question": "路線バス等優先通行帯を普通自動車で走行中、通園バスが後方に接近してきたが、路線バスではないので、そのまま進行した。",
+    "answer": "×",
+    "explanation": "通園バスは路線バスなどに含まれるので、その通行帯から出て進路を譲らなければなりません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 21,
+    "question": "路線バス等優先通行帯を普通自動車で走行中、通園バスが後方に接近してきたが、路線バスではないので、そのまま進行した。",
+    "answer": "×",
+    "explanation": "通園バスは路線バスなどに含まれるので、その通行帯から出て進路を譲らなければなりません。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 22,
+    "question": "図のような交通整理の行われていない道幅が違う交差点では、普通自動車は路面電車に進路を譲らなければならない。",
+    "answer": "×",
+    "explanation": "設問の場合は、道幅の広い道路を通行する普通自動車が優先です。路面電車は、普通自動車に進路を譲らなければなりません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 23,
+    "question": "普通自動車や準中型自動車、中型自動車、大型自動車や大型特殊自動車で車両総重量７５０キログラムを超える:車（故障車を除く）をけん引するときは、けん引する自動車の免許のほかにけん引免許が必要である。",
+    "answer": "○",
+    "explanation": "設問のとおりです。車両総重量７５０キログラムを超える:車（故障車を除く）をけん引するときは、けん引する自動車の免許のほかにけん引免許が必要です。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 24,
+    "question": "この道路標示は、前方の路上に障害物のあることを示している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。「安全地帯または路上障害物に接近」を示す指示標示です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 25,
+    "question": "交差点に入ろうとしたとき図の標識があっても、安全が確認できれば一時停止しなくてもよい。",
+    "answer": "×",
+    "explanation": "一時停止の標識です。停止線がある所は停止線の直前、停止線がない所では交差点の直前で一時停止します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 26,
+    "question": "横断歩道や自転車横断帯の手前３０メートル以内のところでは、追い越しだけでなく、追い抜きもしてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。歩行者保護のため追い越しも追い抜きも禁止されています。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 27,
+    "question": "交差点で横の信号機が赤ならば、対面する前方の信号は青である。",
+    "answer": "×",
+    "explanation": "横の信号が赤であっても対面の信号が青とは限りません。時差式信号機やスクランブル交差点などがあります。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 28,
+    "question": "図のような標識のあるところでは、車は直進することはできない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。標識は、右左折（矢印の方向）はできますが、直進（矢印のない方向）はできないことを表しています。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 29,
+    "question": "同じ道幅の、信号機のない交差点に自動車が同時に入ろうとしたときは、右側から進行してくる車の通行を妨げてはならない。",
+    "answer": "×",
+    "explanation": "道幅が同じような道路の交差点では、左方からくる車があるときは、その進行を妨げてはいけません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 30,
+    "question": "空走距離は、路面に関係ないが、制動距離は速度や路面とタイヤの摩擦に大きな関係がある。",
+    "answer": "○",
+    "explanation": "設問のとおりです。制動距離は、速度や路面とタイヤの摩擦に大きな関係があります。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 31,
+    "question": "自動車は、歩道や路側帯や自転車道であっても、道路に面した場所に出入りするため横切る場合は、通行することができる。",
+    "answer": "○",
+    "explanation": "横切らなければ道路に面した場所に出入りができないので、通行が認められています。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 32,
+    "question": "歩行者のそばを通るときは、歩行者との間に安全な間隔をあけるか徐行しなければならない。",
+    "answer": "○",
+    "explanation": "歩行者を保護するために、安全な間隔をあけるか徐行します。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 33,
+    "question": "停留所で止まっている路線バスなどが方向指示器などで発進の合図をしたときは、後方の車は、急ブレーキ急ハンドルでさけなければならない場合以外は、その発進を妨げてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。減速、徐行するなどして路線バスの発進を妨げないようにします。",
+    "topic_category": "速度と車間距離"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 34,
+    "question": "普通免許、または、準中型免許を受けて１年を経過しない者が、普通自動車、または、準中型自動車を運転するときは、その車の前または後ろのどちらかに初心者マークをつければよい。",
+    "answer": "×",
+    "explanation": "前または後ろは誤りです。前と後ろの定められた位置につけなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 35,
+    "question": "進路の前方に障害物があるときは、一時停止か減速をして、反対方向からの車に進路を譲る。",
+    "answer": "○",
+    "explanation": "進路の前方に障害物のある側の車が一時停止するなどして、対向車に道を譲ります。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 36,
+    "question": "交差点に入ろうとしたとき図の標識があっても、安全が確認できれば一時停止しなくてもよい。",
+    "answer": "×",
+    "explanation": "一時停止の標識です。停止線がある所は停止線の直前、停止線がない所では交差点の直前で一時停止します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 37,
+    "question": "旅客運送業に使用する乗車定員１１名のマイクロバスを運転する者は、大型二種または中型二種の運転免許取得者でなければならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。旅客を運送する目的で旅客自動車を運転するときは、第二種免許が必要です。",
+    "topic_category": "免許と資格"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 38,
+    "question": "横断歩道のないところを横断している歩行者に対しても、徐行や減速するなどしてその通行を妨げてはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。徐行や一時停止は義務づけられていませんが、横断者が安全に通れるよう運転しましょう。",
+    "topic_category": "歩行者・自転車の保護"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 39,
+    "question": "四輪車で同乗者が不用意に開けたドアにより起きた事故は、運転者にも責任がある。",
+    "answer": "○",
+    "explanation": "設問のとおりです。車の運転者は、同乗者が不用意にドアを開けたりしないように注意する責任があります。",
+    "topic_category": "その他・総合"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 40,
+    "question": "普通免許、または、準中型免許を受けて１年を経過しない者が、普通自動車、または、準中型自動車を運転するときは、その車の前または後ろのどちらかに初心者マークをつければよい。",
+    "answer": "×",
+    "explanation": "前または後ろは誤りです。前と後ろの定められた位置につけなければなりません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 41,
+    "question": "図の標示内は、通行してもよいが停止してはならない。",
+    "answer": "○",
+    "explanation": "設問のとおりです。前方の状況により、この中で停止するおそれがあるときは、この中に入ってはいけません。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 42,
+    "question": "同じ道幅の、信号機のない交差点に自動車が同時に入ろうとしたときは、右側から進行してくる車の通行を妨げてはならない。",
+    "answer": "×",
+    "explanation": "道幅が同じような道路の交差点では、左方からくる車があるときは、その進行を妨げてはいけません。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 43,
+    "question": "警察官が図のように手を上げたとき、矢印の方向の交通に対しては、信号機の黄色の灯火と同じ意味を表している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。手を上げたときの、身体の正面に平行する交通に対しては黄色の灯火と同じ意味です。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 44,
+    "question": "片側に三つ以上の車両通行帯がある道路で、通行区分を示す標識などがないときは、自動車は中央線に接する車両通行帯を通行する。",
+    "answer": "×",
+    "explanation": "三つ以上の車両通行帯のある道路では、中央線に接する（最も右側の）車両通行帯は、追い越しなどのためあけておき、それ以外の通行帯を通行します。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 45,
+    "question": "道路外に出るため、左折しようとするときは、その直前に道路の左端に寄るようにしなければならない。",
+    "answer": "×",
+    "explanation": "直前に寄るのは誤りです。あらかじめできるだけ道路の左端に寄ります。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 46,
+    "question": "交差点以外で、横断歩道などがないところに信号機があるときの停止位置は、信号機の１メートル手前である。",
+    "answer": "×",
+    "explanation": "設問の場合の停止位置は、信号機の直前（信号の見える位置）です。警察官等の場合が１メートル手前です。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 47,
+    "question": "交差点で横の信号機が赤ならば、対面する前方の信号は青である。",
+    "answer": "×",
+    "explanation": "横の信号が赤であっても対面の信号が青とは限りません。時差式信号機やスクランブル交差点などがあります。",
+    "topic_category": "信号機"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 48,
+    "question": "図は、「一方通行」を意味する道路標識である。",
+    "answer": "×",
+    "explanation": "「一方通行」の標識ではなく、交差点で信号が黄または赤でも左折できることを示す、「左折可」の標示板です。",
+    "topic_category": "標識・標示"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 49,
+    "question": "自動車が一方通行の道路から右折するときは、あらかじめ道路の中央に寄り、交差点の中心の内側を徐行して通行しなければならない。",
+    "answer": "×",
+    "explanation": "一方通行の道路を右折するときは、あらかじめ道路の右端により通行します。道路の中央ではありません。",
+    "topic_category": "交差点・右左折"
+  },
+  {
+    "category": "仮免前",
+    "workbook_url": "https://www.musasi.jp/workbook/4/1205/no?workbook=34&start=1",
+    "question_number": 50,
+    "question": "図のＡの標識は、図Ｂの矢印のような通行を禁止している。",
+    "answer": "○",
+    "explanation": "設問のとおりです。図のＡの標識は、転回禁止を表しています。図Ｂは、転回の通行を表しています。",
+    "topic_category": "標識・標示"
+  }
+]

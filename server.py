@@ -2023,6 +2023,10 @@ async def get_mondai(name: str, start: Optional[int] = None, end: Optional[int] 
             if file_name in files:
                 path = f"./data/mondaiset/{d}/{file_name}"
                 break
+            elif f"{safe_name}.json" in files:
+                file_name = f"{safe_name}.json"
+                path = f"./data/mondaiset/{d}/{file_name}"
+                break
     except Exception as e:
         print(f"Error reading info.json: {e}")
 
@@ -2099,11 +2103,42 @@ async def _load_mondai_lines(abs_path: str) -> List[str]:
         return cache_entry["lines"]  # type: ignore[return-value]
 
     lines: List[str] = []
-    async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
-        async for raw in f:
-            line = raw.strip()
-            if line and not line.startswith('#'):
-                lines.append(line)
+    
+    if abs_path.endswith('.json'):
+        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+            content = await f.read()
+            try:
+                data = json.loads(content)
+                if isinstance(data, list):
+                    def get_cat(item):
+                        if isinstance(item, dict):
+                            return item.get("topic_category") or item.get("category") or "その他"
+                        return "その他"
+                    data.sort(key=get_cat)
+
+                    for item in data:
+                        if isinstance(item, dict):
+                            question = item.get("question", "")
+                            answer = item.get("answer", "")
+                            explanation = item.get("explanation", "")
+                            
+                            description = answer
+                            if explanation:
+                                description = f"{answer} 【解説】{explanation}"
+                            
+                            description = description.replace("|", "｜").replace("\n", " ")
+                            question = question.replace("|", "｜").replace("\n", " ")
+                            
+                            if question and description:
+                                lines.append(f"{question}|{description}")
+            except json.JSONDecodeError:
+                pass
+    else:
+        async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+            async for raw in f:
+                line = raw.strip()
+                if line and not line.startswith('#'):
+                    lines.append(line)
 
     mondai_file_cache[abs_path] = {"mtime": mtime, "lines": lines}
 
@@ -3050,6 +3085,20 @@ async def get_ranges(book_id: str):
         safe_name = os.path.basename(book_id)
         path = f"./data/mondaiset/{safe_name}.txt"
         
+        info_path = "./data/mondaiset/info.json"
+        try:
+            with open(info_path, "r", encoding="utf-8") as f:
+                info_data = json.load(f)
+            for d, files in info_data.items():
+                if f"{safe_name}.txt" in files:
+                    path = f"./data/mondaiset/{d}/{safe_name}.txt"
+                    break
+                elif f"{safe_name}.json" in files:
+                    path = f"./data/mondaiset/{d}/{safe_name}.json"
+                    break
+        except Exception:
+            pass
+            
         abs_path = os.path.abspath(path)
         intended_dir = os.path.abspath("./data/mondaiset")
         
@@ -3058,6 +3107,48 @@ async def get_ranges(book_id: str):
             
         try:
             ranges = []
+            
+            if abs_path.endswith('.json'):
+                async with aiofiles.open(abs_path, mode="r", encoding="utf-8") as f:
+                    content = await f.read()
+                    try:
+                        data = json.loads(content)
+                        if isinstance(data, list):
+                            def get_cat(item):
+                                if isinstance(item, dict):
+                                    return item.get("topic_category") or item.get("category") or "その他"
+                                return "その他"
+                            data.sort(key=get_cat)
+
+                            # JSON内の `topic_category` や `category` でグループ化
+                            category_ranges = {}
+                            for i, item in enumerate(data):
+                                if isinstance(item, dict):
+                                    index = i + 1
+                                    cat_name = get_cat(item)
+                                    if cat_name not in category_ranges:
+                                        category_ranges[cat_name] = {"start": index, "end": index}
+                                    else:
+                                        category_ranges[cat_name]["end"] = index
+                            
+                            if category_ranges:
+                                for cat_name, r in category_ranges.items():
+                                    ranges.append({
+                                        "start": r["start"],
+                                        "end": r["end"],
+                                        "label": cat_name
+                                    })
+                            else:
+                                # カテゴリが全く取れなかった場合のフォールバック
+                                ranges.append({
+                                    "start": 1,
+                                    "end": len(data),
+                                    "label": book_id
+                                })
+                    except Exception:
+                        pass
+                return ranges
+                
             current_label = None
             range_start_line = 1
             problem_count_in_range = 0

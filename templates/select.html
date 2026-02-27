@@ -4,10 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css"></noscript>
-    <link rel="preload" href="https://site-assets.fontawesome.com/releases/v7.1.0/css/all.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.1.0/css/all.css"></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css">
+    </noscript>
+    <link rel="preload" href="https://site-assets.fontawesome.com/releases/v7.1.0/css/all.css" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.1.0/css/all.css">
+    </noscript>
     <link rel="stylesheet" href="/select/style.css">
     <title>範囲選択</title>
     <link rel="manifest" href="/manifest.json">
@@ -22,7 +28,9 @@
             <div id="book-title" class="book-title">教材を読み込み中...</div>
             <div class="book-info">
                 <div id="book-image-container" class="book-image-container">
-                    <img id="book-image" class="book-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="教材表紙" style="display: none;">
+                    <img id="book-image" class="book-image"
+                        src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="教材表紙"
+                        style="display: none;">
                 </div>
                 <div class="description">
                     <div class="book-summary">
@@ -52,80 +60,82 @@
                     </div>
                 </div>
             </div>
-            </div>
-
-            
-            
-            <div id="loading" class="loading">範囲リストを読み込み中...</div>
-            <div id="error-message" class="error-message" style="display: none;"></div>
-
-            <!-- 特殊な範囲アイテム（全ての問題をプレイ） -->
-            <div class="special-range-item">
-                <button id="play-all-button" class="special-range-button">
-                    <i class="fas fa-play-circle"></i> 全て
-                </button>
-                <div class="special-range-text">全ての問題をプレイします</div>
-            </div>
-
-            <!-- 特殊な範囲アイテム（単語リスト表示） -->
-            <div class="special-range-item">
-                <button id="toggle-word-list" class="special-range-button">
-                    <i class="fas fa-list"></i> 単語カード
-                </button>
-                <div class="special-range-text">単語リストを表示します</div>
-            </div>
-
-            <!-- 前回プレイした範囲 -->
-            <div class="special-range-item" id="last-played-item" style="display:none;">
-                <button id="last-played-button" class="special-range-button">
-                    <i class="fas fa-history"></i> 前回の範囲
-                </button>
-                <div class="special-range-text" id="last-played-text">前回プレイした範囲をもう一度プレイします</div>
-            </div>
-
-            <!-- カスタム範囲選択 (アコーディオン) -->
-            <div class="special-range-item custom-range-item accordion" id="custom-range-accordion">
-                <div class="accordion-header" id="custom-range-header">
-                    <div class="range-header">
-                        <i class="fas fa-sliders-h"></i>
-                        <span>カスタム範囲でプレイ</span>
-                    </div>
-                    <i class="fas fa-chevron-down accordion-icon"></i>
-                </div>
-                <div class="accordion-content" id="custom-range-content">
-                    <div class="range-controls">
-                        <div class="range-inputs">
-                            <input type="number" id="custom-start" min="1" max="9999" value="1" placeholder="開始">
-                            <span class="range-dash">～</span>
-                            <input type="number" id="custom-end" min="1" max="9999" value="100" placeholder="終了">
-                            <span id="range-count" class="range-count">100問</span>
-                        </div>
-                        <div class="range-slider">
-                            <div class="slider-track"></div>
-                            <div class="slider-fill" id="slider-fill"></div>
-                            <input type="range" id="start-slider" min="1" max="9999" value="1" class="slider-input start-slider">
-                            <input type="range" id="end-slider" min="1" max="9999" value="100" class="slider-input end-slider">
-                        </div>
-                    </div>
-                    <button id="custom-range-play" class="custom-play-button">
-                        <i class="fas fa-play"></i> この範囲でプレイ
-                    </button>
-                    <div id="custom-range-error" class="custom-error" style="display:none;"></div>
-                </div>
-            </div>
-            
-            <div id="range-container" class="range-container"></div>
         </div>
 
-   <div class="multiselect-footer">
-       <button id="multiselect-play-button" disabled>選択した範囲でプレイ (0)</button>
-   </div>
+
+
+        <div id="loading" class="loading">範囲リストを読み込み中...</div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- 特殊な範囲アイテム（全ての問題をプレイ） -->
+        <div class="special-range-item">
+            <button id="play-all-button" class="special-range-button">
+                <i class="fas fa-play-circle"></i> 全て
+            </button>
+            <div class="special-range-text">全ての問題をプレイします</div>
+        </div>
+
+        <!-- 特殊な範囲アイテム（単語リスト表示） -->
+        <div class="special-range-item">
+            <button id="toggle-word-list" class="special-range-button">
+                <i class="fas fa-list"></i> 単語カード
+            </button>
+            <div class="special-range-text">単語リストを表示します</div>
+        </div>
+
+        <!-- 前回プレイした範囲 -->
+        <div class="special-range-item" id="last-played-item" style="display:none;">
+            <button id="last-played-button" class="special-range-button">
+                <i class="fas fa-history"></i> 前回の範囲
+            </button>
+            <div class="special-range-text" id="last-played-text">前回プレイした範囲をもう一度プレイします</div>
+        </div>
+
+        <!-- カスタム範囲選択 (アコーディオン) -->
+        <div class="special-range-item custom-range-item accordion" id="custom-range-accordion">
+            <div class="accordion-header" id="custom-range-header">
+                <div class="range-header">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>カスタム範囲でプレイ</span>
+                </div>
+                <i class="fas fa-chevron-down accordion-icon"></i>
+            </div>
+            <div class="accordion-content" id="custom-range-content">
+                <div class="range-controls">
+                    <div class="range-inputs">
+                        <input type="number" id="custom-start" min="1" max="9999" value="1" placeholder="開始">
+                        <span class="range-dash">～</span>
+                        <input type="number" id="custom-end" min="1" max="9999" value="100" placeholder="終了">
+                        <span id="range-count" class="range-count">100問</span>
+                    </div>
+                    <div class="range-slider">
+                        <div class="slider-track"></div>
+                        <div class="slider-fill" id="slider-fill"></div>
+                        <input type="range" id="start-slider" min="1" max="9999" value="1"
+                            class="slider-input start-slider">
+                        <input type="range" id="end-slider" min="1" max="9999" value="100"
+                            class="slider-input end-slider">
+                    </div>
+                </div>
+                <button id="custom-range-play" class="custom-play-button">
+                    <i class="fas fa-play"></i> この範囲でプレイ
+                </button>
+                <div id="custom-range-error" class="custom-error" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div id="range-container" class="range-container"></div>
+    </div>
+
+    <div class="multiselect-footer">
+        <button id="multiselect-play-button" disabled>選択した範囲でプレイ (0)</button>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 
     <script>
-       let selectedRanges = [];
-        
+        let selectedRanges = [];
+
         function pageback() {
             const referrer = document.referrer;
             const currentHost = location.hostname;
@@ -166,8 +176,8 @@
                 return null;
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', async function() {
+
+        document.addEventListener('DOMContentLoaded', async function () {
             allBookData = await fetchBookData();
             if (!allBookData) return;
 
@@ -180,46 +190,46 @@
                 showError('教材IDが指定されていません。');
                 return;
             }
-           
-           if (isMultiSelect) {
-               document.body.classList.add('multiselect-mode');
-           }
-             
+
+            if (isMultiSelect) {
+                document.body.classList.add('multiselect-mode');
+            }
+
             // 教材名を設定
             updateBookTitle(bookId);
-            
+
             // 教材名を説明部分にも設定
             document.getElementById('book-title-name').textContent = bookTitles[bookId] || bookId;
-            
+
             // サーバーから教材の範囲リストを取得
-           fetchRanges(bookId, isMultiSelect);
+            fetchRanges(bookId, isMultiSelect);
 
             // 全ての問題をプレイするボタンの設定
             const playAllButton = document.getElementById('play-all-button');
-            playAllButton.addEventListener('click', function() {
+            playAllButton.addEventListener('click', function () {
                 const maxRange = getMaxRangeForBook(bookId);
-               if (isMultiSelect) {
-                   saveLastPlayedMultiRange(bookId, [{ start: 1, end: maxRange }]);
-                   window.location.href = `/play/?id=${bookId}&ranges=1-${maxRange}`;
-               } else {
-                   saveLastPlayedRange(bookId, 1, maxRange);
-                   window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
-               }
+                if (isMultiSelect) {
+                    saveLastPlayedMultiRange(bookId, [{ start: 1, end: maxRange }]);
+                    window.location.href = `/play/?id=${bookId}&ranges=1-${maxRange}`;
+                } else {
+                    saveLastPlayedRange(bookId, 1, maxRange);
+                    window.location.href = `/play/?id=${bookId}&start=1&end=${maxRange}`;
+                }
             });
-            
-           if (isMultiSelect) {
-               setupMultiSelectPlayButton(bookId);
-           }
+
+            if (isMultiSelect) {
+                setupMultiSelectPlayButton(bookId);
+            }
             // 単語リスト表示ボタンの設定
             const toggleWordListButton = document.getElementById('toggle-word-list');
-            
-            toggleWordListButton.addEventListener('click', function() {
+
+            toggleWordListButton.addEventListener('click', function () {
                 window.location.href = `/flashcard/?id=${bookId}`;
             });
 
             // カスタム範囲の設定
             setupCustomRangeSelector(bookId, isMultiSelect);
-            
+
             // 前回プレイした範囲の設定
             setupLastPlayedRange(bookId);
 
@@ -233,14 +243,14 @@
 
         // 教材IDから教材名と画像を取得して表示
         function updateBookTitle(bookId) {
-            
+
             const bookTitle = bookTitles[bookId] || bookId;
             document.getElementById('book-title').textContent = `${bookTitle}`;
-            
+
             // 教材画像の表示
             const bookImage = document.getElementById('book-image');
             const imagePath = `/img/book/${bookId}.webp`;
-            
+
             // 画像の存在確認
             fetch(imagePath)
                 .then(response => {
@@ -252,195 +262,242 @@
                 })
                 .catch(error => {
                 });
-                
-            }
-            
-            async function loadRangeProgress(bookId, ranges) {
-                try {
-                    const rangeParams = ranges.map(r => `${r.start},${r.end}`).join(';');
-                    const response = await fetch(`/api/get/ranges_progress/${bookId}?ranges=${rangeParams}`);
-                    
-                    if (!response.ok) {
-                        throw new Error('進捗データの取得に失敗しました');
-                    }
-                    
-                    const data = await response.json();
-                    const { overall, ranges: rangesData } = data;
-                    
-                    // 範囲ボタンの要素をキーでマップ化して高速アクセスできるようにする
-                    const rangeMap = {};
-                    document.querySelectorAll('.range-item').forEach(item => {
-                        const btn = item.querySelector('button');
-                        const key = `${btn.dataset.start},${btn.dataset.end}`;
-                        rangeMap[key] = item;
-                    });
-                    
-                    // 各範囲の進捗を一括で更新
-                    rangesData.forEach(range => {
-                        const key = `${range.start},${range.end}`;
-                        const item = rangeMap[key];
-                        if (!item) return;
-                        
-                        const btn = item.querySelector('button');
-                        const textEl = item.querySelector('.progress-text');
-                        const bar = item.querySelector('.progress-value');
-                        
-                        textEl.textContent = `${range.learned}/${range.total}`;
-                        
-                        const percent = Math.round(range.learned / range.total * 100);
-                        bar.style.width = `${percent}%`;
-                        
-                        // 進捗に応じてボタンの色を変更
-                        if (percent === 100) {
-                            btn.classList.add('completed');
-                        } else if (percent > 0) {
-                            btn.classList.add('in-progress');
-                        }
-                    });
-                    
-                    // 全体の進捗を更新
-                    if (overall.total > 0) {
-                        const overallPercent = Math.round(overall.learned / overall.total * 100);
-                        
-                        const overallProgressBar = document.querySelector('.overall-progress-value');
-                        const overallProgressText = document.querySelector('.overall-progress-text');
-                        
-                        if (overallProgressBar && overallProgressText) {
-                            overallProgressBar.style.width = `${overallPercent}%`;
-                            overallProgressText.textContent = `${overallPercent}%`;
-                        }
-                        
-                        // 統計情報を更新
-                        const remainingWords = overall.total - overall.learned;
-                        
-                        document.getElementById('total-words').textContent = overall.total+1;
-                        document.getElementById('learned-words').textContent = overall.learned;
-                        document.getElementById('remaining-words').textContent = remainingWords+1;
-                    }
-                } catch (e) {
+
+        }
+
+        async function loadRangeProgress(bookId, ranges) {
+            try {
+                const rangeParams = ranges.map(r => `${r.start},${r.end}`).join(';');
+                const response = await fetch(`/api/get/ranges_progress/${bookId}?ranges=${rangeParams}`);
+
+                if (!response.ok) {
+                    throw new Error('進捗データの取得に失敗しました');
                 }
+
+                const data = await response.json();
+                const { overall, ranges: rangesData } = data;
+
+                // 範囲ボタンの要素をキーでマップ化して高速アクセスできるようにする
+                const rangeMap = {};
+                document.querySelectorAll('.range-item').forEach(item => {
+                    const btn = item.querySelector('button');
+                    const key = `${btn.dataset.start},${btn.dataset.end}`;
+                    rangeMap[key] = item;
+                });
+
+                // 各範囲の進捗を一括で更新
+                rangesData.forEach(range => {
+                    const key = `${range.start},${range.end}`;
+                    const item = rangeMap[key];
+                    if (!item) return;
+
+                    const btn = item.querySelector('button');
+                    const textEl = item.querySelector('.progress-text');
+                    const bar = item.querySelector('.progress-value');
+
+                    textEl.textContent = `${range.learned}/${range.total}`;
+
+                    const percent = Math.round(range.learned / range.total * 100);
+                    bar.style.width = `${percent}%`;
+
+                    // 進捗に応じてボタンの色を変更
+                    if (percent === 100) {
+                        btn.classList.add('completed');
+                    } else if (percent > 0) {
+                        btn.classList.add('in-progress');
+                    }
+                });
+
+                // 全体の進捗を更新
+                if (overall.total > 0) {
+                    const overallPercent = Math.round(overall.learned / overall.total * 100);
+
+                    const overallProgressBar = document.querySelector('.overall-progress-value');
+                    const overallProgressText = document.querySelector('.overall-progress-text');
+
+                    if (overallProgressBar && overallProgressText) {
+                        overallProgressBar.style.width = `${overallPercent}%`;
+                        overallProgressText.textContent = `${overallPercent}%`;
+                    }
+
+                    // 統計情報を更新
+                    const remainingWords = overall.total - overall.learned;
+
+                    document.getElementById('total-words').textContent = overall.total + 1;
+                    document.getElementById('learned-words').textContent = overall.learned;
+                    document.getElementById('remaining-words').textContent = remainingWords + 1;
+                }
+            } catch (e) {
             }
+        }
         async function fetchRanges(bookId, isMultiSelect = false) {
             try {
                 // APIからデータを取得
                 // 注: このAPIエンドポイントはserver.pyに実装する必要があります
                 const response = await fetch(`/api/get/ranges/${bookId}`);
-                
+
                 if (!response.ok) {
                     throw new Error('範囲データの取得に失敗しました');
                 }
-                
+
                 const ranges = await response.json();
-                
+
                 // 範囲データがない場合は、デフォルトの範囲を生成
                 if (ranges.length === 0) {
                     generateDefaultRanges(bookId);
                 } else {
-                   displayRanges(bookId, ranges, isMultiSelect);
+                    displayRanges(bookId, ranges, isMultiSelect);
                     if (window.Cookies && Cookies.get('id') && Cookies.get('password')) {
                         loadRangeProgress(bookId, ranges);
                     }
                 }
             } catch (error) {
-                
+
                 // APIがまだ実装されていない場合は、デフォルトの範囲を使用
                 generateDefaultRanges(bookId);
             }
-            
+
             // ローディング表示を非表示
             document.getElementById('loading').style.display = 'none';
         }
-        
+
         // 教材ごとの最大範囲を取得
         function getMaxRangeForBook(bookId) {
             const bookData = allBookData[bookId];
             return bookData ? bookData.max_range : 100;
         }
-        
+
         // 範囲リストを表示
-       function displayRanges(bookId, ranges, isMultiSelect) {
+        function displayRanges(bookId, ranges, isMultiSelect) {
             const container = document.getElementById('range-container');
             container.innerHTML = '';
-            
+
+            // ラベル名（カテゴリ名）でグループ化する
+            const groupedRanges = {};
+            let isGrouped = false;
+
+            // 従来の数値ラベルか、カテゴリ名のラベルかを判定
+            // (数値-数値の形式でない場合はカテゴリ名とみなす)
             ranges.forEach(range => {
-               const rangeItem = document.createElement('div');
-               rangeItem.className = 'range-item';
-               rangeItem.dataset.start = range.start;
-               rangeItem.dataset.end = range.end;
+                let groupName = "問題リスト";
+                const isNumericRange = /^\d+-\d+$/.test(range.label);
+                if (!isNumericRange) {
+                    groupName = range.label;
+                    isGrouped = true;
+                }
 
-               rangeItem.addEventListener('click', function() {
-                   if (isMultiSelect) {
-                       toggleRangeSelection(this, range);
-                   } else {
-                       saveLastPlayedRange(bookId, range.start, range.end);
-                       window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
-                   }
-               });
-
-                // 通常の問題ボタン
-                const button = document.createElement('button');
-                button.className = 'range-button';
-                button.textContent = range.label;
-                button.dataset.start = range.start;
-                button.dataset.end = range.end;
-                
-               button.addEventListener('click', function(event) {
-                   // rangeItemのクリックイベントが発火するので、ここでは何もしないか、
-                   // もしくは、rangeItemのイベントに伝播させないようにする
-                   event.stopPropagation(); // 親要素へのイベント伝播を停止
-                   if (isMultiSelect) {
-                       toggleRangeSelection(rangeItem, range);
-                   } else {
-                       saveLastPlayedRange(bookId, range.start, range.end);
-                       window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
-                   }
-               });
-                
-                // 単語カードボタン（新規追加）
-                const flashcardButton = document.createElement('button');
-                flashcardButton.className = 'flashcard-button';
-                flashcardButton.title = '単語カードで学習';
-                flashcardButton.dataset.start = range.start;
-                flashcardButton.dataset.end = range.end;
-                
-                // アイコンの追加
-                const icon = document.createElement('i');
-                icon.className = 'fas fa-regular fa-cards-blank';
-                flashcardButton.appendChild(icon);
-                
-                // クリックイベント - 単語カードページへリダイレクト
-                flashcardButton.addEventListener('click', function() {
-                    window.location.href = `/flashcard/?id=${bookId}&start=${range.start}&end=${range.end}`;
-                });
-                
-                // ボタンコンテナの作成（新規追加）
-                const buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'range-buttons';
-                buttonsContainer.appendChild(button);
-                buttonsContainer.appendChild(flashcardButton);
-
-                // 進捗表示用コンテナを作成
-                const progressContainer = document.createElement('div');
-                progressContainer.className = 'range-progress-container';
-                const totalCount = range.end - range.start;
-                progressContainer.innerHTML = `
-                    <div class="progress-bar">
-                        <div class="progress-value" style="width:0%"></div>
-                    </div>
-                    <span class="progress-text">0/${totalCount}</span>`;
-
-                // rangeItemにボタンコンテナと進捗コンテナを追加
-                rangeItem.appendChild(buttonsContainer);
-                rangeItem.appendChild(progressContainer);
-
-                container.appendChild(rangeItem);
+                if (!groupedRanges[groupName]) {
+                    groupedRanges[groupName] = [];
+                }
+                groupedRanges[groupName].push(range);
             });
 
-           if (isMultiSelect) {
-               restoreLastPlayedMultiRange(bookId);
-           }
+            for (const [groupName, groupRanges] of Object.entries(groupedRanges)) {
+                // グループ化されている場合（カテゴリなど）はセクション見出しを追加
+                if (isGrouped) {
+                    const groupHeader = document.createElement('h3');
+                    groupHeader.className = 'range-group-header';
+                    groupHeader.textContent = groupName;
+                    groupHeader.style.marginTop = '20px';
+                    groupHeader.style.marginBottom = '10px';
+                    groupHeader.style.borderBottom = '2px solid #005A9C';
+                    groupHeader.style.paddingBottom = '5px';
+                    groupHeader.style.color = '#333';
+                    container.appendChild(groupHeader);
+                }
+
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'range-group-container';
+                if (!isGrouped) {
+                    groupContainer.style.display = 'contents'; // グループ化されない場合は元のレイアウトを保つ
+                }
+
+                groupRanges.forEach(range => {
+                    const rangeItem = document.createElement('div');
+                    rangeItem.className = 'range-item';
+                    rangeItem.dataset.start = range.start;
+                    rangeItem.dataset.end = range.end;
+
+                    rangeItem.addEventListener('click', function () {
+                        if (isMultiSelect) {
+                            toggleRangeSelection(this, range);
+                        } else {
+                            saveLastPlayedRange(bookId, range.start, range.end);
+                            window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                        }
+                    });
+
+                    // 通常の問題ボタン
+                    const button = document.createElement('button');
+                    button.className = 'range-button';
+                    // カテゴリ表示の場合は、ボタンのテキストを「1〜50問」のようにする
+                    if (isGrouped) {
+                        button.textContent = `全 ${range.end - range.start + 1} 問`;
+                    } else {
+                        button.textContent = range.label;
+                    }
+                    button.dataset.start = range.start;
+                    button.dataset.end = range.end;
+
+                    button.addEventListener('click', function (event) {
+                        event.stopPropagation(); // 親要素へのイベント伝播を停止
+                        if (isMultiSelect) {
+                            toggleRangeSelection(rangeItem, range);
+                        } else {
+                            saveLastPlayedRange(bookId, range.start, range.end);
+                            window.location.href = `/play/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                        }
+                    });
+
+                    // 単語カードボタン（新規追加）
+                    const flashcardButton = document.createElement('button');
+                    flashcardButton.className = 'flashcard-button';
+                    flashcardButton.title = '単語カードで学習';
+                    flashcardButton.dataset.start = range.start;
+                    flashcardButton.dataset.end = range.end;
+
+                    // アイコンの追加
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-regular fa-cards-blank';
+                    flashcardButton.appendChild(icon);
+
+                    // クリックイベント - 単語カードページへリダイレクト
+                    flashcardButton.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        window.location.href = `/flashcard/?id=${bookId}&start=${range.start}&end=${range.end}`;
+                    });
+
+                    // ボタンコンテナの作成（新規追加）
+                    const buttonsContainer = document.createElement('div');
+                    buttonsContainer.className = 'range-buttons';
+                    buttonsContainer.appendChild(button);
+                    buttonsContainer.appendChild(flashcardButton);
+
+                    // 進捗表示用コンテナを作成
+                    const progressContainer = document.createElement('div');
+                    progressContainer.className = 'range-progress-container';
+                    const totalCount = range.end - range.start + 1; // +1を追加して正確な問題数に
+                    progressContainer.innerHTML = `
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width:0%"></div>
+                        </div>
+                        <span class="progress-text">0/${totalCount}</span>`;
+
+                    // rangeItemにボタンコンテナと進捗コンテナを追加
+                    rangeItem.appendChild(buttonsContainer);
+                    rangeItem.appendChild(progressContainer);
+
+                    groupContainer.appendChild(rangeItem);
+                });
+
+                container.appendChild(groupContainer);
+            }
+
+            if (isMultiSelect) {
+                restoreLastPlayedMultiRange(bookId);
+            }
         }
-        
+
         // エラーメッセージを表示
         function showError(message) {
             const errorElement = document.getElementById('error-message');
@@ -460,7 +517,7 @@
             const playBtn = document.getElementById('custom-range-play');
             const rangeCount = document.getElementById('range-count');
             const errorDiv = document.getElementById('custom-range-error');
-            
+
             // 最大値を設定
             customStart.max = maxRange;
             customEnd.max = maxRange;
@@ -468,17 +525,17 @@
             endSlider.max = maxRange;
             customEnd.value = Math.min(100, maxRange);
             endSlider.value = Math.min(100, maxRange);
-            
+
             // 範囲更新関数
             function updateRange() {
                 const start = parseInt(customStart.value) || 1;
                 const end = parseInt(customEnd.value) || 1;
                 const count = Math.max(0, end - start + 1);
                 rangeCount.textContent = `${count}問`;
-                
+
                 // スライダーの表示範囲を更新
                 updateSliderFill();
-                
+
                 // エラーチェック
                 errorDiv.style.display = 'none';
                 if (start > end) {
@@ -492,20 +549,20 @@
                     errorDiv.style.display = 'block';
                 }
             }
-            
+
             // スライダーの塗りつぶし範囲を更新
             function updateSliderFill() {
                 const start = parseInt(customStart.value) || 1;
                 const end = parseInt(customEnd.value) || 1;
                 const startPercent = ((start - 1) / (maxRange - 1)) * 100;
                 const endPercent = ((end - 1) / (maxRange - 1)) * 100;
-                
+
                 sliderFill.style.left = startPercent + '%';
                 sliderFill.style.width = Math.max(0, endPercent - startPercent) + '%';
             }
-            
+
             // スライダーのイベント (ドラッグ中に5刻み処理)
-            startSlider.addEventListener('input', function() {
+            startSlider.addEventListener('input', function () {
                 // 1を基点として5刻みにスナップ
                 let startValue = Math.floor((parseInt(this.value) - 1) / 5) * 5 + 1;
                 this.value = startValue;
@@ -522,7 +579,7 @@
                 updateRange();
             });
 
-            endSlider.addEventListener('input', function() {
+            endSlider.addEventListener('input', function () {
                 // 5の倍数にスナップ
                 let endValue = Math.ceil(parseInt(this.value) / 5) * 5;
                 endValue = Math.min(endValue, maxRange);
@@ -587,59 +644,59 @@
             endSlider.addEventListener('mouseup', () => setSliderZIndex(endSlider, ''));
             endSlider.addEventListener('touchstart', () => setSliderZIndex(endSlider, 10));
             endSlider.addEventListener('touchend', () => setSliderZIndex(endSlider, ''));
-            
+
             // プレイボタンのイベント
-            playBtn.addEventListener('click', function() {
+            playBtn.addEventListener('click', function () {
                 const start = parseInt(customStart.value);
                 const end = parseInt(customEnd.value);
-                
+
                 if (isNaN(start) || isNaN(end) || start < 1 || end < 1 || start > end || end > maxRange) {
                     errorDiv.textContent = `1～${maxRange}の正しい範囲を指定してください`;
                     errorDiv.style.display = 'block';
                     return;
                 }
-                
-               if (isMultiSelect) {
-                   saveLastPlayedMultiRange(bookId, [{ start, end }]);
-                   window.location.href = `/play/?id=${bookId}&ranges=${start}-${end}`;
-               } else {
-                   saveLastPlayedRange(bookId, start, end);
-                   window.location.href = `/play/?id=${bookId}&start=${start}&end=${end}`;
-               }
+
+                if (isMultiSelect) {
+                    saveLastPlayedMultiRange(bookId, [{ start, end }]);
+                    window.location.href = `/play/?id=${bookId}&ranges=${start}-${end}`;
+                } else {
+                    saveLastPlayedRange(bookId, start, end);
+                    window.location.href = `/play/?id=${bookId}&start=${start}&end=${end}`;
+                }
             });
-            
+
             updateRange();
         }
-       
-       function setupMultiSelectPlayButton(bookId) {
-           const playButton = document.getElementById('multiselect-play-button');
-           playButton.addEventListener('click', () => {
-               if (selectedRanges.length > 0) {
-                   saveLastPlayedMultiRange(bookId, selectedRanges);
-                   const rangesParam = selectedRanges.map(r => `${r.start}-${r.end}`).join(',');
-                   window.location.href = `/play/?id=${bookId}&ranges=${rangesParam}`;
-               }
-           });
-       }
 
-       function toggleRangeSelection(itemElement, range) {
-           const index = selectedRanges.findIndex(r => r.start === range.start && r.end === range.end);
-           if (index > -1) {
-               selectedRanges.splice(index, 1);
-               itemElement.classList.remove('selected');
-           } else {
-               selectedRanges.push(range);
-               itemElement.classList.add('selected');
-           }
-           updateMultiSelectPlayButton();
-       }
+        function setupMultiSelectPlayButton(bookId) {
+            const playButton = document.getElementById('multiselect-play-button');
+            playButton.addEventListener('click', () => {
+                if (selectedRanges.length > 0) {
+                    saveLastPlayedMultiRange(bookId, selectedRanges);
+                    const rangesParam = selectedRanges.map(r => `${r.start}-${r.end}`).join(',');
+                    window.location.href = `/play/?id=${bookId}&ranges=${rangesParam}`;
+                }
+            });
+        }
 
-       function updateMultiSelectPlayButton() {
-           const playButton = document.getElementById('multiselect-play-button');
-           const count = selectedRanges.length;
-           playButton.textContent = `選択した範囲でプレイ (${count})`;
-           playButton.disabled = count === 0;
-       }
+        function toggleRangeSelection(itemElement, range) {
+            const index = selectedRanges.findIndex(r => r.start === range.start && r.end === range.end);
+            if (index > -1) {
+                selectedRanges.splice(index, 1);
+                itemElement.classList.remove('selected');
+            } else {
+                selectedRanges.push(range);
+                itemElement.classList.add('selected');
+            }
+            updateMultiSelectPlayButton();
+        }
+
+        function updateMultiSelectPlayButton() {
+            const playButton = document.getElementById('multiselect-play-button');
+            const count = selectedRanges.length;
+            playButton.textContent = `選択した範囲でプレイ (${count})`;
+            playButton.disabled = count === 0;
+        }
 
         // 前回プレイした範囲の設定
         function setupLastPlayedRange(bookId) {
@@ -648,47 +705,47 @@
                 const item = document.getElementById('last-played-item');
                 const button = document.getElementById('last-played-button');
                 const text = document.getElementById('last-played-text');
-                
+
                 text.textContent = `前回の範囲: ${lastPlayed.start}～${lastPlayed.end}問 (${lastPlayed.end - lastPlayed.start + 1}問)`;
                 item.style.display = 'flex';
-                
-                button.addEventListener('click', function() {
+
+                button.addEventListener('click', function () {
                     saveLastPlayedRange(bookId, lastPlayed.start, lastPlayed.end);
                     window.location.href = `/play/?id=${bookId}&start=${lastPlayed.start}&end=${lastPlayed.end}`;
                 });
             }
         }
 
-       function saveLastPlayedMultiRange(bookId, ranges) {
-           localStorage.setItem(`lastPlayed_multi_${bookId}`, JSON.stringify(ranges));
-       }
+        function saveLastPlayedMultiRange(bookId, ranges) {
+            localStorage.setItem(`lastPlayed_multi_${bookId}`, JSON.stringify(ranges));
+        }
 
-       function getLastPlayedMultiRange(bookId) {
-           try {
-               const data = localStorage.getItem(`lastPlayed_multi_${bookId}`);
-               return data ? JSON.parse(data) : [];
-           } catch (e) {
-               return [];
-           }
-       }
+        function getLastPlayedMultiRange(bookId) {
+            try {
+                const data = localStorage.getItem(`lastPlayed_multi_${bookId}`);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
 
-       function restoreLastPlayedMultiRange(bookId) {
-           const lastPlayed = getLastPlayedMultiRange(bookId);
-           if (lastPlayed.length > 0) {
-               selectedRanges = lastPlayed;
-               const allRangeItems = Array.from(document.querySelectorAll('.range-item'));
-               selectedRanges.forEach(savedRange => {
-                   const rangeElement = allRangeItems.find(item =>
-                       parseInt(item.dataset.start) === savedRange.start &&
-                       parseInt(item.dataset.end) === savedRange.end
-                   );
-                   if (rangeElement) {
-                       rangeElement.classList.add('selected');
-                   }
-               });
-               updateMultiSelectPlayButton();
-           }
-       }
+        function restoreLastPlayedMultiRange(bookId) {
+            const lastPlayed = getLastPlayedMultiRange(bookId);
+            if (lastPlayed.length > 0) {
+                selectedRanges = lastPlayed;
+                const allRangeItems = Array.from(document.querySelectorAll('.range-item'));
+                selectedRanges.forEach(savedRange => {
+                    const rangeElement = allRangeItems.find(item =>
+                        parseInt(item.dataset.start) === savedRange.start &&
+                        parseInt(item.dataset.end) === savedRange.end
+                    );
+                    if (rangeElement) {
+                        rangeElement.classList.add('selected');
+                    }
+                });
+                updateMultiSelectPlayButton();
+            }
+        }
         // 前回プレイした範囲を保存
         function saveLastPlayedRange(bookId, start, end) {
             const data = { start: start, end: end, timestamp: Date.now() };
